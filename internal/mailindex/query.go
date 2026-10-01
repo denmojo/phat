@@ -159,8 +159,10 @@ func (ix *Index) FolderCounts() (map[string]Count, error) {
 
 // matchExpr turns what a user typed into an FTS5 query: every word and every
 // "quoted phrase" becomes a quoted string, so hyphens, plus signs, at-signs
-// and bare operators like AND are searched as text. Terms are ANDed. An
-// unbalanced quote runs to the end of the input.
+// and bare operators like AND are searched as text. A typed word also
+// matches longer words it begins ("gen" finds generator); a quoted phrase
+// matches exactly. Terms are ANDed. An unbalanced quote runs to the end of
+// the input.
 func matchExpr(text string) string {
 	var terms []string
 	for len(text) > 0 {
@@ -169,7 +171,8 @@ func matchExpr(text string) string {
 			break
 		}
 		var term string
-		if text[0] == '"' {
+		quoted := text[0] == '"'
+		if quoted {
 			end := strings.IndexByte(text[1:], '"')
 			if end < 0 {
 				term, text = text[1:], ""
@@ -184,7 +187,12 @@ func matchExpr(text string) string {
 			term, text = text[:end], text[end:]
 		}
 		if strings.TrimSpace(term) != "" {
-			terms = append(terms, `"`+strings.ReplaceAll(term, `"`, `""`)+`"`)
+			t := `"` + strings.ReplaceAll(term, `"`, `""`) + `"`
+			// A typed word matches any word it begins; a quoted phrase is exact.
+			if !quoted {
+				t += "*"
+			}
+			terms = append(terms, t)
 		}
 	}
 	return strings.Join(terms, " ")

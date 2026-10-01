@@ -159,3 +159,28 @@ func TestOpenRebuildsCorruptIndex(t *testing.T) {
 		t.Fatalf("corrupt file not kept aside: %v", matches)
 	}
 }
+
+// A typed word matches words that start with it, so search-as-you-type
+// finds mail mid-word; a quoted phrase stays exact.
+func TestSearchMatchesWordPrefixes(t *testing.T) {
+	mb := newMailbox(t)
+	a := writeMsg(t, mb, "in", "Generator fuel at the shelter", "Need 5 gallons by 1800", false)
+	ix := openReconciled(t, mb)
+	for _, q := range []string{"gen", "Gen", "shel", "gen fu", "N0C", "k6x"} {
+		rows, err := ix.Search(q, 10)
+		if err != nil || len(rows) != 1 || rows[0].MID != a {
+			t.Errorf("Search(%q) = %d rows, %v", q, len(rows), err)
+		}
+	}
+	for _, q := range []string{"-", "+", "gen -", "@"} {
+		if _, err := ix.Search(q, 10); err != nil {
+			t.Errorf("Search(%q): %v", q, err)
+		}
+	}
+	for _, q := range []string{"rator", `"gen"`, "gen zzz"} {
+		rows, err := ix.Search(q, 10)
+		if err != nil || len(rows) != 0 {
+			t.Errorf("Search(%q) = %d rows, %v; want none", q, len(rows), err)
+		}
+	}
+}
