@@ -389,7 +389,7 @@ func (h Handler) postOutboundMessageHandler(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusCreated)
 	var buf bytes.Buffer
 	_ = msg.Write(&buf)
-	_, _ = fmt.Fprintf(w, "Message posted (%.2f kB)", float64(buf.Len()/1024))
+	_, _ = fmt.Fprintf(w, "Message posted (%.2f kB)", float64(buf.Len())/1024)
 }
 
 func addAttachmentFromMultipartFile(msg *fbb.Message, f *multipart.FileHeader) error {
