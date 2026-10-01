@@ -1,11 +1,17 @@
 import { signal } from '@preact/signals';
-import { type Release, ignoreVersion, remindLater } from '../../lib/version';
+import { type Release, checkNewVersion, ignoreVersion, remindLater } from '../../lib/version';
 import { Button } from '../../ui/Button';
 import { Dialog } from '../../ui/Dialog';
 
 // versionOffer holds a newer release to tell the user about.
 export const versionOffer = signal<Release | null>(null);
 const dismiss = () => { versionOffer.value = null; };
+
+// offerNewVersion runs the release check once at startup, as the old
+// client did, and raises the dialog when there is something newer.
+export function offerNewVersion(): void {
+  void checkNewVersion().then((r) => { if (r) versionOffer.value = r; });
+}
 
 export function VersionDialog() {
   const r = versionOffer.value;

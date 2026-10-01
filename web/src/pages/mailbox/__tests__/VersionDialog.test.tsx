@@ -1,5 +1,9 @@
-import { render, screen, fireEvent } from '@testing-library/preact';
-import { VersionDialog, versionOffer } from '../VersionDialog';
+vi.mock('../../../lib/api', async (orig) => ({
+  ...(await orig<typeof import('../../../lib/api')>()),
+  newReleaseCheck: vi.fn(async () => ({ version: '0.2.0', release_url: 'https://example.invalid/releases/0.2.0' })),
+}));
+import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
+import { VersionDialog, offerNewVersion, versionOffer } from '../VersionDialog';
 
 const r = { version: '0.2.0', release_url: 'https://example.invalid/releases/0.2.0' };
 
@@ -35,4 +39,11 @@ test('Download opens the release page', () => {
   fireEvent.click(screen.getByRole('button', { name: 'Download' }));
   expect(open).toHaveBeenCalledWith(r.release_url, '_blank', 'noopener');
   vi.unstubAllGlobals();
+});
+
+test('the startup check offers a newer release', async () => {
+  sessionStorage.clear();
+  versionOffer.value = null;
+  offerNewVersion();
+  await waitFor(() => expect(versionOffer.value).toEqual(r));
 });

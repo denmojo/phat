@@ -405,6 +405,10 @@ func (h Handler) newReleaseCheckHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Error getting latest version: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+	if release == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 
 	currentVer, err := version.NewVersion(buildinfo.Version)
 	if err != nil {
