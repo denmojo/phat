@@ -25,7 +25,7 @@ func newMailbox(t *testing.T) string {
 func writeMsg(t *testing.T, mboxPath, folder, subject, body string, unread bool) string {
 	t.Helper()
 	msg := fbb.NewMessage(fbb.Private, "N0CALL")
-	msg.AddTo("K6XYZ")
+	msg.AddTo("N8CALL")
 	msg.SetSubject(subject)
 	if err := msg.SetBody(body); err != nil {
 		t.Fatal(err)

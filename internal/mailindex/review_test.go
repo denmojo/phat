@@ -167,7 +167,7 @@ func TestSearchMatchesWordPrefixes(t *testing.T) {
 	mb := newMailbox(t)
 	a := writeMsg(t, mb, "in", "Generator fuel at the shelter", "Need 5 gallons by 1800", false)
 	ix := openReconciled(t, mb)
-	for _, q := range []string{"gen", "Gen", "shel", "gen fu", "N0C", "k6x"} {
+	for _, q := range []string{"gen", "Gen", "shel", "gen fu", "N0C", "n8c"} {
 		rows, err := ix.Search(q, 10)
 		if err != nil || len(rows) != 1 || rows[0].MID != a {
 			t.Errorf("Search(%q) = %d rows, %v", q, len(rows), err)

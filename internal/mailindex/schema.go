@@ -53,7 +53,7 @@ INSERT OR IGNORE INTO meta(key, value) VALUES ('schema_version', '1');
 
 -- emails is the table for people querying index.db by hand: one row per
 -- message, with its body, star and labels, so plain SQL such as
---   SELECT * FROM emails WHERE sender = 'W6EOC'
+--   SELECT * FROM emails WHERE sender = 'EOC-1'
 -- works without knowing how the tables above divide the data. It holds
 -- nothing of its own and is recreated on every open, so it always matches
 -- the tables. Dates are UTC; bodies use plain newlines instead of Winlink's

@@ -7,7 +7,7 @@ vi.mock('../../../lib/api', async (orig) => ({
   registration: vi.fn(async () => ({ exists: true })),
   register: vi.fn(async () => ''),
   gpsPosition: vi.fn(async () => { throw new Error('no gps'); }),
-  coordsToLocator: vi.fn(async () => ({ locator: 'CM98hp' })),
+  coordsToLocator: vi.fn(async () => ({ locator: 'FN31pr' })),
 }));
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/preact';
 import { act } from 'preact/test-utils';
@@ -16,7 +16,7 @@ import { App } from '../App';
 
 const mock = (f: unknown) => f as ReturnType<typeof vi.fn>;
 const base = () => ({
-  mycall: 'N0CALL', secure_login_password: '', auxiliary_addresses: null, locator: 'CM98', auto_download_size_limit: -1,
+  mycall: 'N0CALL', secure_login_password: '', auxiliary_addresses: null, locator: 'FN31', auto_download_size_limit: -1,
   ui: { appearance: '' }, connect_aliases: null, listen: ['telnet'], hamlib_rigs: { ic7300: { network: 'tcp', address: 'localhost:4532', VFO: '' } },
   ax25: { engine: 'agwpe', rig: '', beacon: { every: 0, message: '', destination: '' } }, ax25_linux: { port: 'wl2k' },
   agwpe: { addr: 'localhost:8000', radio_port: 0 }, 'serial-tnc': { path: '', serial_baud: 9600, hbaud: 1200, type: '' },
@@ -36,10 +36,10 @@ beforeEach(() => {
 test('Save writes only what changed, then offers a restart that waits for the server', async () => {
   render(<App />);
   const loc = await screen.findByLabelText(/Maidenhead locator/);
-  expect((loc as HTMLInputElement).value).toBe('CM98');
-  fireEvent.input(loc, { target: { value: 'CM98hp' } });
+  expect((loc as HTMLInputElement).value).toBe('FN31');
+  fireEvent.input(loc, { target: { value: 'FN31pr' } });
   fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-  await waitFor(() => expect(api.saveConfig).toHaveBeenCalledWith({ ...base(), locator: 'CM98hp' }));
+  await waitFor(() => expect(api.saveConfig).toHaveBeenCalledWith({ ...base(), locator: 'FN31pr' }));
   const dlg = await screen.findByRole('dialog', { name: 'Restart required' });
   mock(api.status).mockRejectedValueOnce(new Error('down')).mockResolvedValue({});
   fireEvent.click(within(dlg).getByRole('button', { name: 'Restart now' }));

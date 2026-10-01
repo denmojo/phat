@@ -28,8 +28,8 @@ test('digipeaters stay in the target path', () => {
 });
 
 test('build drops empty parameters and radio_only when off', () => {
-  expect(build({ transport: 'varafm', addr: '', target: 'W6EOC', freq: '', bw: '', radioOnly: false, connectRequests: '', extra: new URLSearchParams() }))
-    .toBe('varafm:///W6EOC');
+  expect(build({ transport: 'varafm', addr: '', target: 'EOC-1', freq: '', bw: '', radioOnly: false, connectRequests: '', extra: new URLSearchParams() }))
+    .toBe('varafm:///EOC-1');
 });
 
 test('a malformed string parses to an empty telnet URL rather than throwing', () => {

@@ -6,13 +6,13 @@ const full = (): Config => ({
   mycall: 'N0CALL',
   secure_login_password: '[REDACTED]',
   auxiliary_addresses: ['N0CALL-1', 'EMCOMM:secret'],
-  locator: 'CM98',
+  locator: 'FN31',
   auto_download_size_limit: 50000,
   service_codes: ['PUBLIC'],
   http_addr: '127.0.0.1:8080',
   ui: { appearance: 'dark' },
   motd: ['hello'],
-  connect_aliases: { telnet: 'telnet://{mycall}:CMSTelnet@cms.winlink.org:8772/wl2k', eoc: 'ardop:///W6EOC?freq=7102.2' },
+  connect_aliases: { telnet: 'telnet://{mycall}:CMSTelnet@cms.winlink.org:8772/wl2k', eoc: 'ardop:///EOC-1?freq=7102.2' },
   listen: ['telnet', 'ardop'],
   hamlib_rigs: { ic7300: { network: 'tcp', address: 'localhost:4532', VFO: 'A' }, ft891: { address: '/dev/ttyUSB1', VFO: '' } },
   ax25: { engine: 'serial-tnc', rig: 'ic7300', port: 'old', beacon: { every: 3600, message: 'Pat here', destination: 'IDENT' } },
@@ -32,7 +32,7 @@ const full = (): Config => ({
 
 // A fresh install: empty collections come back as null.
 const bare = (): Config => ({
-  mycall: 'N0CALL', secure_login_password: '', auxiliary_addresses: null, locator: 'CM98', auto_download_size_limit: -1,
+  mycall: 'N0CALL', secure_login_password: '', auxiliary_addresses: null, locator: 'FN31', auto_download_size_limit: -1,
   service_codes: ['PUBLIC'], http_addr: '127.0.0.1:8090', ui: { appearance: '' }, motd: null,
   connect_aliases: { telnet: 'telnet://{mycall}:CMSTelnet@cms.winlink.org:8772/wl2k' }, listen: ['telnet'], hamlib_rigs: null,
   ax25: { engine: 'agwpe', rig: '', beacon: { every: 0, message: '', destination: '' } }, ax25_linux: { port: 'wl2k' },
@@ -62,7 +62,7 @@ test('edits map back to their config fields', () => {
   s.ardop.bandwidth = '2000MAX';
   s.ardop.beacon = '';
   s.varahf.bandwidth = '500';
-  s.aliases.push({ name: 'eoc', url: 'ardop:///W6EOC' }, { name: '', url: 'dropped' });
+  s.aliases.push({ name: 'eoc', url: 'ardop:///EOC-1' }, { name: '', url: 'dropped' });
   s.rigs.push({ name: 'ic7300', network: 'tcp', address: 'localhost:4532', vfo: 'B' }, { name: 'noaddr', network: 'tcp', address: '', vfo: '' });
   s.schedule.push({ expr: '@every 30m', cmd: 'connect telnet' });
   s.listen = ['telnet', 'varahf'];
@@ -73,7 +73,7 @@ test('edits map back to their config fields', () => {
   expect(c.ardop.arq_bandwidth).toEqual({ Forced: false, Max: 2000 });
   expect(c.ardop.beacon_interval).toBe(0);
   expect(c.varahf.bandwidth).toBe(500);
-  expect(c.connect_aliases).toEqual({ telnet: 'telnet://{mycall}:CMSTelnet@cms.winlink.org:8772/wl2k', eoc: 'ardop:///W6EOC' });
+  expect(c.connect_aliases).toEqual({ telnet: 'telnet://{mycall}:CMSTelnet@cms.winlink.org:8772/wl2k', eoc: 'ardop:///EOC-1' });
   expect(c.hamlib_rigs).toEqual({ ic7300: { network: 'tcp', address: 'localhost:4532', VFO: 'B' } });
   expect(c.schedule).toEqual({ '@every 30m': 'connect telnet' });
   expect(c.listen).toEqual(['telnet', 'varahf']);

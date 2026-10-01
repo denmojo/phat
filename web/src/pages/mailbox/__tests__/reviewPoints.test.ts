@@ -11,7 +11,7 @@ import * as store from '../store';
 import type { Row } from '../../../lib/types';
 
 const row = (mid: string, extra: Partial<Row> = {}): Row => ({
-  MID: mid, Folder: 'in', From: 'W6EOC', To: 'N0CALL', Cc: '', Subject: mid, Date: '2026-09-30T15:31:00Z',
+  MID: mid, Folder: 'in', From: 'EOC-1', To: 'N0CALL', Cc: '', Subject: mid, Date: '2026-09-30T15:31:00Z',
   Size: 1, Attachments: 0, Unread: false, P2POnly: false, Starred: false, Labels: [], ...extra,
 });
 function deferred<T>() {

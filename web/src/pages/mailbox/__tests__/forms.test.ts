@@ -23,7 +23,7 @@ afterEach(() => {
 
 test('polling sets the forminstance cookie, retries each second, then fills the composer', async () => {
   poll.mockRejectedValueOnce(new Error('404')).mockResolvedValueOnce({
-    msg_to: 'W6EOC;K6ABC', msg_cc: '', msg_subject: '', msg_body: 'Form body',
+    msg_to: 'EOC-1;N5CALL', msg_cc: '', msg_subject: '', msg_body: 'Form body',
   });
   startFormPolling();
   expect(document.cookie).toMatch(/forminstance=\d+/);
@@ -31,7 +31,7 @@ test('polling sets the forminstance cookie, retries each second, then fills the 
   expect(poll).toHaveBeenCalledTimes(1);
   await vi.advanceTimersByTimeAsync(1000);
   expect(poll).toHaveBeenCalledTimes(2);
-  expect(store.draft.value.to).toEqual(['W6EOC', 'K6ABC']);
+  expect(store.draft.value.to).toEqual(['EOC-1', 'N5CALL']);
   expect(store.draft.value.body).toBe('Form body');
   // An empty subject from the form keeps the reply's Re: subject.
   expect(store.draft.value.subject).toBe('Re: ICS-213');
@@ -48,7 +48,7 @@ test('stopping clears the cookie and the retry', async () => {
 });
 
 const formMsg = (name: string): Message => ({
-  MID: 'm1', Folder: 'in', From: { Addr: 'W6EOC' }, To: [], Cc: null, Subject: 's', Date: '', Size: 1,
+  MID: 'm1', Folder: 'in', From: { Addr: 'EOC-1' }, To: [], Cc: null, Subject: 's', Date: '', Size: 1,
   Unread: false, P2POnly: false, Starred: false, Labels: [], Body: '', BodyHTML: '', Files: [{ Name: name, Size: 1 }],
 });
 

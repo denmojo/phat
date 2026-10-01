@@ -11,7 +11,7 @@
 #   status   show whether it runs and where
 #
 # PREVIEW_ADDR overrides the listen address (default 127.0.0.1:8090), for
-# example the tailnet address to review from another device.
+# example a LAN address to review from another device.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -46,7 +46,7 @@ start() {
 	echo "$ADDR" >"$ROOT/addr"
 	go build -o "$ROOT/phat" .
 	if [[ ! -f "$ROOT/config.json" ]]; then
-		printf '{"mycall":"%s","locator":"CM98","http_addr":"%s","version_reporting_disabled":true}\n' "$CALL" "$ADDR" >"$ROOT/config.json"
+		printf '{"mycall":"%s","locator":"FN31","http_addr":"%s","version_reporting_disabled":true}\n' "$CALL" "$ADDR" >"$ROOT/config.json"
 	fi
 	if [[ ! -d "$ROOT/mailbox/$CALL" ]]; then
 		go run ./tools/previewseed "$ROOT/mailbox" "$CALL"

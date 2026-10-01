@@ -15,26 +15,26 @@ const list = api.rmslist as unknown as ReturnType<typeof vi.fn>;
 beforeEach(() => vi.clearAllMocks());
 
 test('loads for the mode and band, and a row click hands back its URL', async () => {
-  list.mockResolvedValue([rms('K6SDR'), rms('W6EOC')]);
+  list.mockResolvedValue([rms('N9CALL'), rms('EOC-1')]);
   const pick = vi.fn();
   render(<RmsList mode="ardop" onPick={pick} />);
   await waitFor(() => expect(api.rmslist).toHaveBeenCalledWith({ mode: 'ardop', band: '' }, false));
-  expect(await screen.findByText('K6SDR')).toBeInTheDocument();
+  expect(await screen.findByText('N9CALL')).toBeInTheDocument();
   expect(screen.getAllByText('51 km')).toHaveLength(2);
   expect(screen.queryByText('Quality')).toBeNull();
-  fireEvent.click(screen.getByText('W6EOC'));
-  expect(pick).toHaveBeenCalledWith('ardop:///W6EOC?freq=7102.2');
+  fireEvent.click(screen.getByText('EOC-1'));
+  expect(pick).toHaveBeenCalledWith('ardop:///EOC-1?freq=7102.2');
   change(screen.getByLabelText('Band'), '40m');
   await waitFor(() => expect(api.rmslist).toHaveBeenLastCalledWith({ mode: 'ardop', band: '40m' }, false));
 });
 
 test('the callsign filter matches prefixes', async () => {
-  list.mockResolvedValue([rms('K6SDR'), rms('W6EOC'), rms('K6ABC')]);
+  list.mockResolvedValue([rms('N9CALL'), rms('EOC-1'), rms('N5CALL')]);
   render(<RmsList mode="ardop" onPick={() => {}} />);
-  await screen.findByText('K6SDR');
-  fireEvent.input(screen.getByLabelText('Callsign'), { target: { value: 'k6' } });
-  expect(screen.queryByText('W6EOC')).toBeNull();
-  expect(screen.getByText('K6ABC')).toBeInTheDocument();
+  await screen.findByText('N9CALL');
+  fireEvent.input(screen.getByLabelText('Callsign'), { target: { value: 'n' } });
+  expect(screen.queryByText('EOC-1')).toBeNull();
+  expect(screen.getByText('N5CALL')).toBeInTheDocument();
 });
 
 test('shows 100 rows at a time', async () => {
@@ -56,8 +56,8 @@ test('Update cache forces a download', async () => {
 
 test('link quality shows when predictions exist, with details on hover and the raw output on click', async () => {
   list.mockResolvedValue([
-    rms('K6SDR', { prediction: { link_quality: 78, output_values: { SNR: '12 dB', MUF: '9.1' }, output_raw: 'RAW VOACAP' } }),
-    rms('W6EOC'),
+    rms('N9CALL', { prediction: { link_quality: 78, output_values: { SNR: '12 dB', MUF: '9.1' }, output_raw: 'RAW VOACAP' } }),
+    rms('EOC-1'),
   ]);
   const pick = vi.fn();
   render(<RmsList mode="ardop" onPick={pick} />);
@@ -68,5 +68,5 @@ test('link quality shows when predictions exist, with details on hover and the r
   fireEvent.click(q);
   expect(pick).not.toHaveBeenCalled();
   expect(await screen.findByText('RAW VOACAP')).toBeInTheDocument();
-  expect(screen.getByText('Propagation prediction: K6SDR')).toBeInTheDocument();
+  expect(screen.getByText('Propagation prediction: N9CALL')).toBeInTheDocument();
 });

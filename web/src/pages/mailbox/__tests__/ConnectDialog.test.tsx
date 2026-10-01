@@ -66,27 +66,27 @@ test('AX.25 hides Radio only; telnet hides bandwidth when the mode has none', as
 });
 
 test('a frequency the rig took goes into the URL', async () => {
-  localStorage.setItem('pat_connect_url_N0CALL', 'varahf:///W6EOC');
+  localStorage.setItem('pat_connect_url_N0CALL', 'varahf:///EOC-1');
   render(<ConnectDialog />);
   commit(screen.getByLabelText('Frequency'), '7102.2');
   await waitFor(() => expect(api.qsy).toHaveBeenCalledWith('varahf', 7102.2));
-  await waitFor(() => expect(urlField().value).toBe('varahf:///W6EOC?freq=7102.2'));
+  await waitFor(() => expect(urlField().value).toBe('varahf:///EOC-1?freq=7102.2'));
 });
 
 test('without rig control the frequency is struck through, explained, and left out of the URL', async () => {
   mock(api.qsy).mockRejectedValueOnce(new api.ApiError(503, 'rig control not configured'));
-  localStorage.setItem('pat_connect_url_N0CALL', 'varahf:///W6EOC');
+  localStorage.setItem('pat_connect_url_N0CALL', 'varahf:///EOC-1');
   render(<ConnectDialog />);
   const freq = screen.getByLabelText('Frequency');
   commit(freq, '7102.2');
   expect(await screen.findByText(/Rig control is not configured/)).toBeInTheDocument();
   expect(freq).toHaveClass('struck');
-  expect(urlField().value).toBe('varahf:///W6EOC');
+  expect(urlField().value).toBe('varahf:///EOC-1');
 });
 
 test('a failed QSY warns', async () => {
   mock(api.qsy).mockRejectedValueOnce(new api.ApiError(500, 'rig timeout'));
-  localStorage.setItem('pat_connect_url_N0CALL', 'varahf:///W6EOC');
+  localStorage.setItem('pat_connect_url_N0CALL', 'varahf:///EOC-1');
   render(<ConnectDialog />);
   commit(screen.getByLabelText('Frequency'), '7102.2');
   expect(await screen.findByText('QSY failure')).toBeInTheDocument();
@@ -105,7 +105,7 @@ test('Connect remembers the URL, closes, connects, and says when nothing came in
 
 test('a failed connect says so', async () => {
   mock(api.connect).mockRejectedValueOnce(new api.ApiError(500, 'Session failure'));
-  localStorage.setItem('pat_connect_url_N0CALL', 'varahf:///W6EOC');
+  localStorage.setItem('pat_connect_url_N0CALL', 'varahf:///EOC-1');
   render(<ConnectDialog />);
   fireEvent.click(screen.getByRole('button', { name: 'Connect' }));
   await waitFor(() => expect(mock(toast).mock.calls[0]![0]).toMatch(/^Connect failed/));
@@ -132,7 +132,7 @@ test('choosing an alias fills the dialog; editing a field clears the alias', asy
 });
 
 test('saving an alias checks the name, then stores the URL with its frequency', async () => {
-  localStorage.setItem('pat_connect_url_N0CALL', 'varahf:///W6EOC');
+  localStorage.setItem('pat_connect_url_N0CALL', 'varahf:///EOC-1');
   render(<ConnectDialog />);
   await waitFor(() => expect(api.connectAliases).toHaveBeenCalled());
   commit(screen.getByLabelText('Frequency'), '7102.2');
@@ -146,7 +146,7 @@ test('saving an alias checks the name, then stores the URL with its frequency', 
   expect(await screen.findByText('An alias with this name already exists.')).toBeInTheDocument();
   fireEvent.input(name, { target: { value: 'eoc-hf' } });
   fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-  await waitFor(() => expect(api.putAlias).toHaveBeenCalledWith('eoc-hf', 'varahf:///W6EOC?freq=7102.2'));
+  await waitFor(() => expect(api.putAlias).toHaveBeenCalledWith('eoc-hf', 'varahf:///EOC-1?freq=7102.2'));
 });
 
 test('deleting an alias asks first', async () => {

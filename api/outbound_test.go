@@ -15,7 +15,7 @@ func TestPostOutboundReportsSize(t *testing.T) {
 	h, _ := newTestHandler(t)
 	var buf bytes.Buffer
 	mw := multipart.NewWriter(&buf)
-	for k, v := range map[string]string{"to": "W6EOC", "subject": "Size check", "body": "Short body.", "date": "2026-09-30T22:00:00Z"} {
+	for k, v := range map[string]string{"to": "EOC-1", "subject": "Size check", "body": "Short body.", "date": "2026-09-30T22:00:00Z"} {
 		_ = mw.WriteField(k, v)
 	}
 	mw.Close()

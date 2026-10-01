@@ -13,7 +13,7 @@ import { Composer, compose, editAsNew, forward, reply } from '../Composer';
 import type { Message } from '../../../lib/types';
 
 const msg: Message = {
-  MID: 'm1', Folder: 'in', From: { Addr: 'W6EOC' }, To: [{ Addr: 'N0CALL' }, { Addr: 'K6ABC' }], Cc: [{ Addr: 'W6EOC' }, { Addr: 'KJ6XYZ' }],
+  MID: 'm1', Folder: 'in', From: { Addr: 'EOC-1' }, To: [{ Addr: 'N0CALL' }, { Addr: 'N5CALL' }], Cc: [{ Addr: 'EOC-1' }, { Addr: 'N6CALL' }],
   Subject: 'Shelter status', Date: '2026-09-30T15:31:00Z', Size: 1, Unread: false, P2POnly: false, Starred: false, Labels: [],
   Body: 'All good.\nTwo cots left.', BodyHTML: '', Files: null,
 };
@@ -39,10 +39,10 @@ test('reply all addresses the sender, copies everyone else but me and the sender
   reply(msg, true);
   const d = store.draft.value;
   expect(store.composerOpen.value).toBe(true);
-  expect(d.to).toEqual(['W6EOC']);
-  expect(d.cc).toEqual(['K6ABC', 'KJ6XYZ']);
+  expect(d.to).toEqual(['EOC-1']);
+  expect(d.cc).toEqual(['N5CALL', 'N6CALL']);
   expect(d.subject).toBe('Re: Shelter status');
-  expect(d.body).toBe('\n\n--- 2026-09-30T15:31:00Z W6EOC wrote: ---\n>All good.\n>Two cots left.\n');
+  expect(d.body).toBe('\n\n--- 2026-09-30T15:31:00Z EOC-1 wrote: ---\n>All good.\n>Two cots left.\n');
   expect(d.inReplyTo).toBe('in/m1');
 });
 
@@ -58,7 +58,7 @@ test('forward has no recipients, a Fw: subject, the quote, and refetches the att
   forward({ ...msg, Files: [{ Name: 'map.png', Size: 1 }] });
   expect(store.draft.value.to).toEqual([]);
   expect(store.draft.value.subject).toBe('Fw: Shelter status');
-  expect(store.draft.value.body.startsWith('--- 2026-09-30T15:31:00Z W6EOC wrote: ---\n>All good.')).toBe(true);
+  expect(store.draft.value.body.startsWith('--- 2026-09-30T15:31:00Z EOC-1 wrote: ---\n>All good.')).toBe(true);
   expect(fetchMock).toHaveBeenCalledWith('/api/mailbox/in/m1/map.png');
   await waitFor(() => expect(store.draft.value.files.map((f) => f.name)).toEqual(['map.png']));
   vi.unstubAllGlobals();
@@ -67,8 +67,8 @@ test('forward has no recipients, a Fw: subject, the quote, and refetches the att
 test('edit as new copies recipients, subject and body as they were', () => {
   vi.stubGlobal('fetch', vi.fn());
   editAsNew(msg);
-  expect(store.draft.value.to).toEqual(['N0CALL', 'K6ABC']);
-  expect(store.draft.value.cc).toEqual(['W6EOC', 'KJ6XYZ']);
+  expect(store.draft.value.to).toEqual(['N0CALL', 'N5CALL']);
+  expect(store.draft.value.cc).toEqual(['EOC-1', 'N6CALL']);
   expect(store.draft.value.subject).toBe('Shelter status');
   expect(store.draft.value.body).toBe('All good.\nTwo cots left.');
   vi.unstubAllGlobals();
@@ -77,11 +77,11 @@ test('edit as new copies recipients, subject and body as they were', () => {
 test('Send with an empty body and subject posts the defaults, a date, and closes', async () => {
   compose();
   render(<Composer />);
-  store.draft.value = { ...store.draft.value, to: ['W6EOC', 'K6ABC'] };
+  store.draft.value = { ...store.draft.value, to: ['EOC-1', 'N5CALL'] };
   fireEvent.click(await screen.findByRole('button', { name: 'Send' }));
   await waitFor(() => expect(api.send).toHaveBeenCalled());
   const f = sent();
-  expect(f.get('to')).toBe('W6EOC,K6ABC');
+  expect(f.get('to')).toBe('EOC-1,N5CALL');
   expect(f.get('body')).toBe('<No message body>');
   expect(f.get('subject')).toBe('<No subject>');
   expect(Number.isNaN(Date.parse(String(f.get('date'))))).toBe(false);

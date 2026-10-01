@@ -8,10 +8,10 @@ beforeEach(() => {
 });
 
 test('shows the server log lines as they arrive, and Clear empties it', () => {
-  store.addLogLine('Connecting to W6EOC (telnet)...');
+  store.addLogLine('Connecting to EOC-1 (telnet)...');
   store.addLogLine('Connected to 127.0.0.1:8775 (tcp)');
   render(<SessionLog />);
-  expect(screen.getByText(/Connecting to W6EOC/)).toBeInTheDocument();
+  expect(screen.getByText(/Connecting to EOC-1/)).toBeInTheDocument();
   expect(screen.getByText(/Connected to 127.0.0.1/)).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Clear log' }));
   expect(store.logLines.value).toEqual([]);

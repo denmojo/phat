@@ -31,7 +31,7 @@ test('Later hides the warning for 84 hours, per callsign', async () => {
   get.mockResolvedValue({ recovery_email: '' });
   dismissRecovery('N0CALL');
   expect(await checkRecovery('N0CALL')).toBe('skip');
-  expect(await checkRecovery('K6ABC')).toBe('warn');
+  expect(await checkRecovery('N5CALL')).toBe('warn');
   vi.setSystemTime(Date.now() + 85 * 3600 * 1000);
   expect(await checkRecovery('N0CALL')).toBe('warn');
 });

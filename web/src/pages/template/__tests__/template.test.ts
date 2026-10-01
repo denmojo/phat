@@ -55,7 +55,7 @@ test('renders a control per prompt, gates Submit on every prompt, and posts the 
 
   const submit = app.querySelector('button[type="submit"]') as HTMLButtonElement;
   expect(submit.disabled).toBe(true);
-  typeInto(recipient, 'W6EOC');
+  typeInto(recipient, 'EOC-1');
   typeInto(names[0]!, 'ada');
   expect((names[1] as HTMLInputElement).value).toBe('ADA');
   status.value = 'Y';
@@ -65,7 +65,7 @@ test('renders a control per prompt, gates Submit on every prompt, and posts the 
   expect(submit.disabled).toBe(false);
 
   expect(state.collectFormData()).toEqual({ responses: {
-    '<Var Recipient>': 'W6EOC',
+    '<Var Recipient>': 'EOC-1',
     '<Ask Your name,UP>': 'ADA',
     '<Select Status:Green=G,Yellow=Y,Red=R>': 'Y',
     '<Ask Remarks,MU>': 'All good',

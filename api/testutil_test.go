@@ -44,7 +44,7 @@ func newTestHandler(t *testing.T) (*Handler, string) {
 func seedMsg(t *testing.T, h *Handler, dir, folder, subject string) string {
 	t.Helper()
 	msg := fbb.NewMessage(fbb.Private, "N0CALL")
-	msg.AddTo("K6XYZ")
+	msg.AddTo("N8CALL")
 	msg.SetSubject(subject)
 	msg.SetBody("body of " + subject)
 	data, _ := msg.Bytes()

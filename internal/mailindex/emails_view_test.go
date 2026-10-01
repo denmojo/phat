@@ -24,7 +24,7 @@ func TestEmailsViewIsPlainSQL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if mid != a || folder != "in" || recipients != "K6XYZ" || subject != "Generator fuel" || body != "Need 5 gallons by 1800\n" ||
+	if mid != a || folder != "in" || recipients != "N8CALL" || subject != "Generator fuel" || body != "Need 5 gallons by 1800\n" ||
 		unread != 1 || starred != 1 || labels != "logistics, urgent" || attachments != 0 || len(sentAt) != len("2006-01-02 15:04:05") {
 		t.Fatalf("row: %q %q %q %q %q %q %d %d %q %d", mid, folder, recipients, subject, sentAt, body, unread, starred, labels, attachments)
 	}

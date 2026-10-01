@@ -72,6 +72,6 @@ test('close stops reconnecting', () => {
 test('routes server log lines', () => {
   const h = handlers();
   connectWs(h);
-  FakeWs.all[0]!.emit({ LogLine: 'Connecting to W6EOC (telnet)...' });
-  expect(h.onLogLine).toHaveBeenCalledWith('Connecting to W6EOC (telnet)...');
+  FakeWs.all[0]!.emit({ LogLine: 'Connecting to EOC-1 (telnet)...' });
+  expect(h.onLogLine).toHaveBeenCalledWith('Connecting to EOC-1 (telnet)...');
 });

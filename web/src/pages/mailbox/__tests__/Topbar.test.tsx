@@ -36,21 +36,21 @@ test('dialing: Abort disconnects, and a second press forces it', async () => {
 });
 
 test('connected: shows the remote and offers Disconnect', async () => {
-  store.status.value = st({ connected: true, remote_addr: 'W6EOC' });
+  store.status.value = st({ connected: true, remote_addr: 'EOC-1' });
   render(<Topbar />);
-  expect(screen.getByText('Connected W6EOC')).toBeInTheDocument();
+  expect(screen.getByText('Connected EOC-1')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Disconnect' }));
   await waitFor(() => expect(api.disconnect).toHaveBeenCalledWith(false));
 });
 
 test('the force option resets once the session ends', async () => {
-  store.status.value = st({ connected: true, remote_addr: 'W6EOC' });
+  store.status.value = st({ connected: true, remote_addr: 'EOC-1' });
   render(<Topbar />);
   fireEvent.click(screen.getByRole('button', { name: 'Disconnect' }));
   await screen.findByRole('button', { name: 'Force disconnect' });
   store.status.value = st();
   expect(await screen.findByRole('button', { name: 'Connect' })).toBeInTheDocument();
-  store.status.value = st({ connected: true, remote_addr: 'W6EOC' });
+  store.status.value = st({ connected: true, remote_addr: 'EOC-1' });
   expect(await screen.findByRole('button', { name: 'Disconnect' })).toBeInTheDocument();
 });
 

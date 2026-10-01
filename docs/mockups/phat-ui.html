@@ -240,18 +240,18 @@ svg.lucide { width: 18px; height: 18px; stroke-width: 1.9; flex: none; }
 const LABELS = { "net-control": "#2563eb", "urgent": "#dc2626", "logistics": "#16a34a", "follow up": "#d97706", "personal": "#7c3aed" };
 const CALL_COLORS = ["#2563eb", "#0891b2", "#7c3aed", "#db2777", "#ea580c", "#16a34a", "#4f46e5", "#b45309"];
 const MSGS = [
-  { from: "W6EOC", subj: "ICS-213: Shelter status at Rio Linda High", date: "3:31 PM", unread: true, star: true, labels: ["urgent", "net-control"] },
-  { from: "KJ6ABC", subj: "Re: Sunday net checklist", date: "12:31 PM", unread: true, labels: ["net-control"] },
+  { from: "EOC-1", subj: "ICS-213: Shelter status at Central High", date: "3:31 PM", unread: true, star: true, labels: ["urgent", "net-control"] },
+  { from: "NETCTL", subj: "Re: Sunday net checklist", date: "12:31 PM", unread: true, labels: ["net-control"] },
   { from: "SERVICE", subj: "Winlink system notice: CMS maintenance window", date: "8:31 AM", unread: true },
-  { from: "AG6QX", subj: "Antenna photos from the field day site", date: "Sep 29", att: true, labels: ["personal"] },
-  { from: "K6RCX", subj: "Club meeting moved to Thursday", date: "Sep 29", star: true, labels: ["follow up"] },
-  { from: "W6EOC", subj: "Resource request: 4x 5-gallon water", date: "Sep 28", labels: ["logistics"] },
-  { from: "N6TVN", subj: "VARA HF settings that worked", date: "Sep 27" },
-  { from: "KM6ZZO", subj: "P2P test from the hilltop", date: "Sep 26", p2p: true },
+  { from: "N1CALL", subj: "Antenna photos from the field day site", date: "Sep 29", att: true, labels: ["personal"] },
+  { from: "CLUB", subj: "Club meeting moved to Thursday", date: "Sep 29", star: true, labels: ["follow up"] },
+  { from: "EOC-1", subj: "Resource request: 4x 5-gallon water", date: "Sep 28", labels: ["logistics"] },
+  { from: "N2CALL", subj: "VARA HF settings that worked", date: "Sep 27" },
+  { from: "N3CALL", subj: "P2P test from the hilltop", date: "Sep 26", p2p: true },
   { from: "SERVICE", subj: "Your Winlink password was changed", date: "Sep 24" },
-  { from: "W6EOC", subj: "Damage assessment form, Garden Highway", date: "Sep 23", att: true, labels: ["urgent"] },
-  { from: "KJ6ABC", subj: "Lunch Saturday?", date: "Sep 22", labels: ["personal"] },
-  { from: "AA6XS", subj: "Grid square for the contest log", date: "Sep 19" },
+  { from: "EOC-1", subj: "Damage assessment form, River Road", date: "Sep 23", att: true, labels: ["urgent"] },
+  { from: "NETCTL", subj: "Lunch Saturday?", date: "Sep 22", labels: ["personal"] },
+  { from: "N4CALL", subj: "Grid square for the contest log", date: "Sep 19" },
 ];
 const NOTES = {
   list: "Inbox at rest. Unread rows carry bold type and an accent bar on the left edge. Label chips follow the subject in the label's color. The toolbar shows the view name, refresh, and the message count. Connect and the status light stay at the right in every state.",
@@ -345,7 +345,7 @@ function listPanel() {
        <button class="iconbtn" title="Sort">${ic("arrow-down-wide-narrow")}</button>`;
   const list = state.view === "search"
     ? [{ ...MSGS[0], subj: "Generator status", labels: [], folder: "Inbox", unread: false, date: "Sep 30" },
-       { from: "W6EOC", subj: "ICS-213: Shelter status at Rio Linda High", date: "3:31 PM", folder: "Inbox", labels: ["urgent"] }]
+       { from: "EOC-1", subj: "ICS-213: Shelter status at Central High", date: "3:31 PM", folder: "Inbox", labels: ["urgent"] }]
     : MSGS;
   return `<div class="panel"><div class="toolbar">${tb}</div>
     <div class="list">${rows(list, { selected, dragging: state.view === "drag" })}</div></div>`;
@@ -367,12 +367,12 @@ function messagePanel() {
     </div>
     <div class="msg">
       <h1>Antenna photos from the field day site ${chip("personal")}</h1>
-      <div class="hdr"><span class="avatar" style="--c:${color("AG6QX")}">AG</span>
-        <div><div class="from">AG6QX</div><div class="to">to N0CALL, cc K6RCX</div></div>
+      <div class="hdr"><span class="avatar" style="--c:${color("N1CALL")}">AG</span>
+        <div><div class="from">N1CALL</div><div class="to">to N0CALL, cc CLUB</div></div>
         <span class="when">Sep 29, 9:31 PM</span></div>
       <div class="body">Photos of the end-fed setup attached. The tuner sat at 1.4:1 across 40m.
 
-73, AG6QX</div>
+73, N1CALL</div>
       <div class="atts">
         <div class="attcard"><div class="thumb"></div><div class="meta"><span>efhw-mast.png</span><span>1 KB</span></div></div>
         <div class="attcard"><div class="thumb file">${ic("file-text")}</div><div class="meta"><span>tuner-readings.txt</span><span>30 B</span></div></div>
@@ -390,7 +390,7 @@ function composer() {
     <div class="dh">New message<span class="spacer"></span>
       <button class="iconbtn" title="Winlink form">${ic("clipboard-list")}</button>
       <button class="iconbtn" title="Close">${ic("x")}</button></div>
-    <div class="field"><label>To</label><span class="token">W6EOC ${ic("x")}</span><span class="token">KJ6ABC ${ic("x")}</span><input></div>
+    <div class="field"><label>To</label><span class="token">EOC-1 ${ic("x")}</span><span class="token">NETCTL ${ic("x")}</span><input></div>
     <div class="field"><label>Cc</label><input placeholder="Callsign or email"></div>
     <div class="field"><label>Subject</label><input value="Fuel run complete"></div>
     <div class="pending"><span class="token">${ic("paperclip")} fuel-receipt.jpg · 48 KB ${ic("x")}</span></div>

@@ -16,7 +16,7 @@ import * as store from '../store';
 import { MessagePane } from '../MessagePane';
 
 const msg = {
-  MID: 'm1', Folder: 'in', From: { Addr: 'W6EOC' }, To: [{ Addr: 'N0CALL' }], Cc: null, Subject: 'Shelter status',
+  MID: 'm1', Folder: 'in', From: { Addr: 'EOC-1' }, To: [{ Addr: 'N0CALL' }], Cc: null, Subject: 'Shelter status',
   Date: '2026-09-30T15:31:00Z', Size: 1, Unread: false, P2POnly: false, Starred: false, Labels: ['net'],
   Body: 'All good.', BodyHTML: '', Files: null,
 };
@@ -33,7 +33,7 @@ beforeEach(() => {
 test('shows subject, sender and label chips', () => {
   render(<MessagePane />);
   expect(screen.getByRole('heading', { name: /Shelter status/ })).toBeInTheDocument();
-  expect(screen.getByText('W6EOC')).toBeInTheDocument();
+  expect(screen.getByText('EOC-1')).toBeInTheDocument();
   expect(screen.getByText('net')).toBeInTheDocument();
 });
 
@@ -60,11 +60,11 @@ test('Back closes the message', () => {
 });
 
 test('the body renders the server-sanitized HTML, with P2P only and Cc in the headers', () => {
-  store.openMessage.value = { ...msg, P2POnly: true, Cc: [{ Addr: 'K6ABC' }], BodyHTML: '<p>All <blockquote>quoted</blockquote></p>' } as never;
+  store.openMessage.value = { ...msg, P2POnly: true, Cc: [{ Addr: 'N5CALL' }], BodyHTML: '<p>All <blockquote>quoted</blockquote></p>' } as never;
   render(<MessagePane />);
   expect(document.querySelector('.msg .body blockquote')).toHaveTextContent('quoted');
   expect(screen.getByText('P2P only')).toBeInTheDocument();
-  expect(screen.getByText(/Cc K6ABC/)).toBeInTheDocument();
+  expect(screen.getByText(/Cc N5CALL/)).toBeInTheDocument();
 });
 
 test('opening an unread message marks it read', async () => {
@@ -91,7 +91,7 @@ test('Reply opens the composer addressed to the sender', () => {
   render(<MessagePane />);
   fireEvent.click(screen.getByRole('button', { name: 'Reply' }));
   expect(store.composerOpen.value).toBe(true);
-  expect(store.draft.value.to).toEqual(['W6EOC']);
+  expect(store.draft.value.to).toEqual(['EOC-1']);
   store.composerOpen.value = false;
 });
 
