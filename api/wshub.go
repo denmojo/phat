@@ -12,8 +12,9 @@ import (
 	"io"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -23,6 +24,7 @@ import (
 	"github.com/la5nta/pat/api/types"
 	"github.com/la5nta/pat/app"
 	"github.com/la5nta/pat/internal/debug"
+	"github.com/la5nta/pat/internal/mailindex"
 	"github.com/la5nta/pat/internal/osutil"
 	"github.com/la5nta/wl2k-go/mailbox"
 )
@@ -109,6 +111,19 @@ func (w *WSHub) ClientAddrs() []string {
 }
 
 func (w *WSHub) WatchMBox(ctx context.Context, mbox *mailbox.DirHandler) {
+	w.watch(ctx, mbox, w.Index())
+}
+
+// isIndexFile reports whether p is the mailbox index or one of SQLite's
+// companion files beside it. Those change on every index write and say
+// nothing about the mailbox.
+func isIndexFile(p string) bool {
+	return strings.HasPrefix(filepath.Base(p), mailindex.FileName)
+}
+
+// watch reconciles the index and broadcasts UpdateMailbox on every change
+// under the mailbox. Custom folder directories are added as they appear.
+func (w *WSHub) watch(ctx context.Context, mbox *mailbox.DirHandler, ix *mailindex.Index) {
 	// Maximise ulimit -n:
 	//   fsnotify opens a file descriptor for every file in the directories it watches, which
 	//   may more files than the current soft limit. The is especially a problem on macOS which
@@ -126,26 +141,41 @@ func (w *WSHub) WatchMBox(ctx context.Context, mbox *mailbox.DirHandler) {
 	}
 	defer fsWatcher.Close()
 
-	// Add all directories in the mailbox to the watcher
-	for _, dir := range []string{mailbox.DIR_INBOX, mailbox.DIR_OUTBOX, mailbox.DIR_SENT, mailbox.DIR_ARCHIVE} {
-		p := path.Join(mbox.MBoxPath, dir)
-		debug.Printf("Adding '%s' to fs watcher", p)
-		if err := fsWatcher.Add(p); err != nil {
-			log.Printf("Unable to add path '%s' to fs watcher: %v", p, err)
+	addAll := func() {
+		// The root, so new folder directories are seen, plus every folder.
+		_ = fsWatcher.Add(mbox.MBoxPath)
+		folders, err := ix.Folders()
+		if err != nil {
+			log.Printf("mailindex folders: %v", err)
+			return
+		}
+		for _, f := range folders {
+			p := ix.FolderDir(f)
+			debug.Printf("Adding '%s' to fs watcher", p)
+			if err := fsWatcher.Add(p); err != nil {
+				log.Printf("Unable to add path '%s' to fs watcher: %v", p, err)
+			}
 		}
 	}
+	addAll()
 
-	// Listen for filesystem events and broadcast updates to all clients
+	// Listen for filesystem events, level the index and broadcast updates to all clients
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case e := <-fsWatcher.Events:
-			if e.Op == fsnotify.Chmod {
+			if e.Op == fsnotify.Chmod || isIndexFile(e.Name) {
 				continue
 			}
 			// Make sure we don't send many of these events over a short period.
 			drainUntilSilence(fsWatcher, 100*time.Millisecond)
+			// A new folder directory may be anywhere in the drained burst,
+			// so register directories again; re-adding a watched path is a no-op.
+			addAll()
+			if _, err := ix.Reconcile(); err != nil {
+				log.Printf("mailindex reconcile: %v", err)
+			}
 			w.WriteJSON(struct {
 				UpdateMailbox bool
 			}{true})

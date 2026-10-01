@@ -26,6 +26,7 @@ import (
 	"github.com/la5nta/pat/internal/debug"
 	"github.com/la5nta/pat/internal/directories"
 	"github.com/la5nta/pat/internal/forms"
+	"github.com/la5nta/pat/internal/mailindex"
 	"github.com/la5nta/pat/internal/propagation"
 	"github.com/la5nta/wl2k-go/fbb"
 	"github.com/la5nta/wl2k-go/mailbox"
@@ -75,6 +76,7 @@ type App struct {
 	OnReload func() error
 
 	mbox     *mailbox.DirHandler
+	index    *mailindex.Index
 	formsMgr *forms.Manager
 
 	exchangeChan   chan ex        // The channel that the exchange loop is listening on
@@ -118,6 +120,9 @@ func New(opts Options) *App {
 }
 
 func (a *App) Mailbox() *mailbox.DirHandler { return a.mbox }
+
+// Index is the SQLite index beside the mailbox.
+func (a *App) Index() *mailindex.Index { return a.index }
 
 func (a *App) FormsManager() *forms.Manager { return a.formsMgr }
 
@@ -278,6 +283,16 @@ func (a *App) Run(ctx context.Context, cmd Command, args []string) {
 	if err := a.mbox.Prepare(); err != nil {
 		log.Fatal(err)
 	}
+	ix, err := mailindex.Open(a.mbox.MBoxPath)
+	if err != nil {
+		log.Fatalf("Unable to open mailbox index: %v", err)
+	}
+	a.index = ix
+	if st, err := ix.Reconcile(); err != nil {
+		log.Printf("Mailbox index reconcile: %v", err)
+	} else {
+		debug.Printf("Mailbox index: %d added, %d updated, %d removed, %d skipped", st.Added, st.Updated, st.Removed, st.Skipped)
+	}
 
 	if cmd.MayConnect {
 		a.loadHamlibRigs(a.config.HamlibRigs)
@@ -382,6 +397,10 @@ func (a *App) Close() {
 			a.termWriter.Close()
 		}
 	}()
+
+	if a.index != nil {
+		a.index.Close()
+	}
 
 	debug.Printf("Closing active connection and/or listeners")
 	a.AbortActiveConnection(false)
