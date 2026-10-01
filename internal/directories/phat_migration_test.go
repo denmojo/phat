@@ -96,6 +96,71 @@ func TestMigrateFromPatNeverOverwritesPhatMail(t *testing.T) {
 	}
 }
 
+// A copy that fails partway must leave no config.json behind, since
+// config.json is what tells later starts the copy is done, and no
+// half-copied mailbox for those starts to mistake for Phat's own.
+func TestMigrateFromPatFailedCopyIsRetried(t *testing.T) {
+	if os.Getuid() == 0 {
+		t.Skip("root reads unreadable files")
+	}
+	home := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(home, "config"))
+	t.Setenv("XDG_DATA_HOME", filepath.Join(home, "data"))
+	resetForTest()
+	patCfg := filepath.Join(home, "config", "pat")
+	patIn := filepath.Join(home, "data", "pat", "mailbox", "N0CALL", "in")
+	must(t, os.MkdirAll(patCfg, 0o755))
+	must(t, os.MkdirAll(patIn, 0o755))
+	must(t, os.WriteFile(filepath.Join(patCfg, "config.json"), []byte(`{"mycall":"N0CALL"}`), 0o644))
+	must(t, os.WriteFile(filepath.Join(patIn, "ABC.b2f"), []byte("a"), 0o644))
+	bad := filepath.Join(patIn, "ZZZ.b2f")
+	must(t, os.WriteFile(bad, []byte("z"), 0o000))
+
+	if err := MigrateFromPat(); err == nil {
+		t.Fatal("expected the unreadable file to fail the copy")
+	}
+	if _, err := os.Stat(filepath.Join(ConfigDir(), "config.json")); err == nil {
+		t.Fatal("config.json was written although the mailbox copy failed")
+	}
+	if entries, _ := os.ReadDir(filepath.Join(DataDir(), "mailbox")); len(entries) > 0 {
+		t.Fatal("a half-copied mailbox was left in place")
+	}
+
+	must(t, os.Chmod(bad, 0o644))
+	if err := MigrateFromPat(); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"ABC.b2f", "ZZZ.b2f"} {
+		if _, err := os.Stat(filepath.Join(DataDir(), "mailbox", "N0CALL", "in", name)); err != nil {
+			t.Errorf("%s missing after the retry: %v", name, err)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(ConfigDir(), "config.json")); err != nil {
+		t.Fatalf("config.json missing after the retry: %v", err)
+	}
+}
+
+// Running Phat with its own --config, --mbox or --forms means the user has
+// chosen where Phat's files live; Pat's are copied only for the defaults.
+func TestUsesDefaultPaths(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(home, "config"))
+	t.Setenv("XDG_DATA_HOME", filepath.Join(home, "data"))
+	resetForTest()
+	cfg := filepath.Join(ConfigDir(), "config.json")
+	mbox := filepath.Join(DataDir(), "mailbox")
+	forms := filepath.Join(DataDir(), "Standard_Forms")
+	if !UsesDefaultPaths(cfg, mbox, forms) {
+		t.Fatal("the default paths were not recognized")
+	}
+	if UsesDefaultPaths(cfg, filepath.Join(home, "elsewhere"), forms) {
+		t.Fatal("a custom --mbox still counts as default")
+	}
+	if UsesDefaultPaths(filepath.Join(home, "my.json"), mbox, forms) {
+		t.Fatal("a custom --config still counts as default")
+	}
+}
+
 func must(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {

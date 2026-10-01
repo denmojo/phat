@@ -133,6 +133,14 @@ func MigrateLegacyDataDir() {
 	}
 }
 
+// UsesDefaultPaths reports whether Phat runs on its default config file,
+// mailbox and forms directory, the only case where Pat's are copied in.
+func UsesDefaultPaths(configPath, mboxPath, formsPath string) bool {
+	return filepath.Clean(configPath) == filepath.Join(ConfigDir(), "config.json") &&
+		filepath.Clean(mboxPath) == filepath.Join(DataDir(), "mailbox") &&
+		filepath.Clean(formsPath) == filepath.Join(DataDir(), "Standard_Forms")
+}
+
 // MigrateFromPat copies config.json, the mailbox tree and the forms
 // directory from Pat's XDG directories into Phat's on first run. It runs
 // only when Phat has no config.json yet, copies rather than moves so Pat
@@ -147,25 +155,35 @@ func MigrateFromPat() error {
 		return nil // no Pat install to migrate from
 	}
 	log.Printf("First run: copying Pat's files from %s and %s", patCfg, patData)
-	if err := copyFile(filepath.Join(patCfg, "config.json"), filepath.Join(ConfigDir(), "config.json")); err != nil {
-		return err
-	}
 	for _, name := range []string{"mailbox", "Standard_Forms"} {
 		src := filepath.Join(patData, name)
 		if _, err := os.Stat(src); err != nil {
 			continue
 		}
+		dst := filepath.Join(DataDir(), name)
 		// A tree Phat already holds is Phat's: copying into it would bring
 		// back messages deleted in Phat.
-		if entries, err := os.ReadDir(filepath.Join(DataDir(), name)); err == nil && len(entries) > 0 {
+		if entries, err := os.ReadDir(dst); err == nil && len(entries) > 0 {
 			log.Printf("Phat already has %s; not copying Pat's", name)
 			continue
 		}
-		if err := copyTree(src, filepath.Join(DataDir(), name)); err != nil {
+		// Copy beside the destination and rename into place, so a copy
+		// that fails or is killed partway never looks like Phat's own.
+		staging := dst + ".copying"
+		if err := os.RemoveAll(staging); err != nil {
+			return err
+		}
+		if err := copyTree(src, staging); err != nil {
+			os.RemoveAll(staging)
+			return err
+		}
+		os.Remove(dst) // an empty directory left by an earlier start
+		if err := os.Rename(staging, dst); err != nil {
 			return err
 		}
 	}
-	return nil
+	// config.json goes last: once it exists, later starts skip the copy.
+	return copyFile(filepath.Join(patCfg, "config.json"), filepath.Join(ConfigDir(), "config.json"))
 }
 
 // copyFile copies src to dst and never overwrites: a dst that already

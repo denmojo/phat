@@ -60,6 +60,13 @@ func main() {
 		return
 	}
 
+	// Pat's files are copied in only when Phat runs on its default paths.
+	if directories.UsesDefaultPaths(opts.ConfigPath, opts.MailboxPath, opts.FormsPath) {
+		if err := directories.MigrateFromPat(); err != nil {
+			log.Printf("Could not copy Pat's files: %v", err)
+		}
+	}
+
 	sig := notifySignals()
 
 	// Run app in a loop for config reloading
@@ -130,9 +137,6 @@ func optionsSet(opts *app.Options) *pflag.FlagSet {
 	set.BoolVarP(&opts.RadioOnly, "radio-only", "", false, "Radio Only mode (Winlink Hybrid RMS only).")
 	set.BoolVar(&opts.IgnoreBusy, "ignore-busy", false, "Don't wait for clear channel before connecting to a node.")
 
-	if err := directories.MigrateFromPat(); err != nil {
-		log.Printf("Could not copy Pat's files: %v", err)
-	}
 	defaultMBox := filepath.Join(directories.DataDir(), "mailbox")
 	defaultFormsPath := filepath.Join(directories.DataDir(), "Standard_Forms")
 	defaultConfigPath := filepath.Join(directories.ConfigDir(), "config.json")
