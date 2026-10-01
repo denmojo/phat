@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	_ "modernc.org/sqlite"
 )
@@ -38,14 +40,32 @@ func (ix *Index) rlock() func() {
 }
 
 // Open opens or creates <mboxPath>/index.db and applies the schema.
+//
+// The index is derived from the files, so a corrupt index.db is moved aside
+// as index.db.corrupt-<unix time> and a fresh one is built in its place.
+// Stars and labels in the corrupt file are lost; the messages are not.
 func Open(mboxPath string) (*Index, error) {
-	db, err := openDB(filepath.Join(mboxPath, FileName))
+	p := filepath.Join(mboxPath, FileName)
+	db, err := openDB(p)
 	if err != nil {
 		return nil, err
 	}
 	if _, err := db.Exec(schema); err != nil {
 		db.Close()
-		return nil, fmt.Errorf("mailindex: apply schema: %w", err)
+		aside := fmt.Sprintf("%s.corrupt-%d", p, time.Now().Unix())
+		log.Printf("mailindex: %s is unusable (%v); moving it to %s and rebuilding", p, err, aside)
+		if rerr := os.Rename(p, aside); rerr != nil {
+			return nil, fmt.Errorf("mailindex: apply schema: %w (moving it aside failed: %v)", err, rerr)
+		}
+		os.Remove(p + "-wal")
+		os.Remove(p + "-shm")
+		if db, err = openDB(p); err != nil {
+			return nil, err
+		}
+		if _, err := db.Exec(schema); err != nil {
+			db.Close()
+			return nil, fmt.Errorf("mailindex: apply schema: %w", err)
+		}
 	}
 	return &Index{mboxPath: mboxPath, db: db}, nil
 }

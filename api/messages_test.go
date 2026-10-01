@@ -3,6 +3,8 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/la5nta/pat/internal/mailindex"
@@ -119,9 +121,13 @@ func TestSearchEndpoint(t *testing.T) {
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("empty q: %d", rec.Code)
 	}
-	rec, _ = do(t, h, "GET", "/api/search?q=%22unbalanced", nil)
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("bad FTS syntax should be 400, got %d", rec.Code)
+	// Typed text is searched as words: an unbalanced quote and hyphenated
+	// terms are ordinary queries, not errors.
+	for _, q := range []string{"%22unbalanced", "ICS-213", "net-control"} {
+		rec, body = do(t, h, "GET", "/api/search?q="+q, nil)
+		if rec.Code != 200 {
+			t.Fatalf("q=%s: %d %s", q, rec.Code, body)
+		}
 	}
 }
 
@@ -162,5 +168,19 @@ func TestMessageCarriesStarAndLabels(t *testing.T) {
 	json.Unmarshal(body, &m)
 	if !m.Starred || len(m.Labels) != 1 || m.Labels[0] != "net" {
 		t.Fatalf("message JSON: %s", body)
+	}
+}
+
+// Moving onto a folder that already holds a file with the same MID is a
+// conflict, reported per MID, and nothing is overwritten.
+func TestBulkMoveConflictIsReported(t *testing.T) {
+	h, dir := newTestHandler(t)
+	a := seedMsg(t, h, dir, "in", "twin")
+	if err := os.WriteFile(filepath.Join(dir, "archive", a+".b2f"), []byte("other"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	rec, body := do(t, h, "POST", "/api/messages/move", map[string]any{"mids": []string{a}, "to": "archive"})
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("expected 409, got %d %s", rec.Code, body)
 	}
 }

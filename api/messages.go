@@ -14,16 +14,20 @@ type bulkResult struct {
 }
 
 // runBulk applies op to each MID and reports per-MID outcomes. 200 when
-// anything succeeded; 404 when nothing did and every failure was
-// not-found; 500 otherwise.
+// anything succeeded. When nothing did, the status follows the failures:
+// 404 when every one was not-found, 409 when every one was a conflict
+// (the destination already holds the message), 500 otherwise.
 func runBulk(w http.ResponseWriter, mids []string, op func(mid string) error) {
 	res := bulkResult{OK: []string{}, Failed: map[string]string{}}
-	allNotFound := true
+	allNotFound, allConflict := true, true
 	for _, mid := range mids {
 		if err := op(mid); err != nil {
 			res.Failed[mid] = err.Error()
 			if !errors.Is(err, mailindex.ErrNotFound) {
 				allNotFound = false
+			}
+			if !errors.Is(err, mailindex.ErrDestinationExists) {
+				allConflict = false
 			}
 			continue
 		}
@@ -33,6 +37,8 @@ func runBulk(w http.ResponseWriter, mids []string, op func(mid string) error) {
 	case len(res.OK) > 0:
 	case len(res.Failed) > 0 && allNotFound:
 		w.WriteHeader(http.StatusNotFound)
+	case len(res.Failed) > 0 && allConflict:
+		w.WriteHeader(http.StatusConflict)
 	case len(res.Failed) > 0:
 		w.WriteHeader(http.StatusInternalServerError)
 	}

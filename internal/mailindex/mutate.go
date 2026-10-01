@@ -17,18 +17,23 @@ var (
 	ErrFolderExists      = errors.New("mailindex: folder exists")
 	ErrFolderNotEmpty    = errors.New("mailindex: folder not empty")
 	ErrSystemFolder      = errors.New("mailindex: system folder")
+	ErrDestinationExists = errors.New("mailindex: destination already holds this message")
 )
 
 var folderNameRe = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9 _-]{0,31}$`)
 
+// viewNames are the virtual views the API serves beside folders.
+var viewNames = map[string]bool{"all": true, "starred": true}
+
 // ValidFolderName accepts one to thirty-two characters of letters, digits,
 // space, underscore and hyphen, not starting with a dot, and rejects a
-// system name in any case.
+// system or view name in any case.
 func ValidFolderName(name string) bool {
 	if !folderNameRe.MatchString(name) {
 		return false
 	}
-	return !IsSystemFolder(strings.ToLower(name))
+	lower := strings.ToLower(name)
+	return !IsSystemFolder(lower) && !viewNames[lower]
 }
 
 // filePath locates a message's file from its row.
@@ -72,9 +77,12 @@ func (ix *Index) Move(mid, to string) error {
 		return nil
 	}
 	dst := filepath.Join(ix.FolderDir(target), mid+mailbox.Ext)
+	if _, err := os.Stat(dst); err == nil {
+		return ErrDestinationExists
+	}
 	if err := os.Rename(src, dst); err != nil {
 		if os.IsNotExist(err) {
-			_ = ix.deleteRow(mid)
+			// The walk owns row deletion; a vanished file is settled there.
 			return ErrNotFound
 		}
 		return err
@@ -346,7 +354,12 @@ func (ix *Index) DeleteFolder(name string) error {
 			return ErrFolderNotEmpty
 		}
 	}
-	if err := os.RemoveAll(ix.FolderDir(cur)); err != nil {
+	// os.Remove only deletes an empty directory, so nothing the check above
+	// did not look at (a subdirectory, a stray file) is ever removed.
+	if err := os.Remove(ix.FolderDir(cur)); err != nil {
+		if _, statErr := os.Stat(ix.FolderDir(cur)); statErr == nil {
+			return ErrFolderNotEmpty
+		}
 		return err
 	}
 	_, err = ix.db.Exec(`DELETE FROM messages WHERE folder=?`, cur)

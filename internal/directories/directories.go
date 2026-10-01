@@ -155,6 +155,12 @@ func MigrateFromPat() error {
 		if _, err := os.Stat(src); err != nil {
 			continue
 		}
+		// A tree Phat already holds is Phat's: copying into it would bring
+		// back messages deleted in Phat.
+		if entries, err := os.ReadDir(filepath.Join(DataDir(), name)); err == nil && len(entries) > 0 {
+			log.Printf("Phat already has %s; not copying Pat's", name)
+			continue
+		}
 		if err := copyTree(src, filepath.Join(DataDir(), name)); err != nil {
 			return err
 		}
@@ -162,6 +168,8 @@ func MigrateFromPat() error {
 	return nil
 }
 
+// copyFile copies src to dst and never overwrites: a dst that already
+// exists is left as it is, the same rule migrateFile follows.
 func copyFile(src, dst string) error {
 	b, err := os.ReadFile(src)
 	if err != nil {
@@ -170,7 +178,18 @@ func copyFile(src, dst string) error {
 	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
 		return err
 	}
-	return os.WriteFile(dst, b, 0o644)
+	f, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+	if errors.Is(err, os.ErrExist) {
+		debug.Printf("%s already exists; not copying %s", dst, src)
+		return nil
+	} else if err != nil {
+		return err
+	}
+	if _, err := f.Write(b); err != nil {
+		f.Close()
+		return err
+	}
+	return f.Close()
 }
 
 func copyTree(src, dst string) error {

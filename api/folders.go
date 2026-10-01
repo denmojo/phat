@@ -24,7 +24,8 @@ func indexError(w http.ResponseWriter, err error) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 	case errors.Is(err, mailindex.ErrInvalidFolderName):
 		http.Error(w, err.Error(), http.StatusBadRequest)
-	case errors.Is(err, mailindex.ErrFolderExists), errors.Is(err, mailindex.ErrFolderNotEmpty):
+	case errors.Is(err, mailindex.ErrFolderExists), errors.Is(err, mailindex.ErrFolderNotEmpty),
+		errors.Is(err, mailindex.ErrDestinationExists):
 		http.Error(w, err.Error(), http.StatusConflict)
 	case errors.Is(err, mailindex.ErrSystemFolder):
 		http.Error(w, err.Error(), http.StatusForbidden)

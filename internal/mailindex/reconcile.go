@@ -2,6 +2,7 @@ package mailindex
 
 import (
 	"errors"
+	"fmt"
 	"io/fs"
 	"log"
 	"os"
@@ -83,9 +84,13 @@ func (ix *Index) Reconcile() (Stats, error) {
 		info   fs.FileInfo
 	}
 	newest := map[string]seen{}
+	unreadable := map[string]bool{}
 	for _, folder := range folders {
 		entries, err := os.ReadDir(ix.FolderDir(folder))
 		if err != nil {
+			// Its rows stay as they are until the folder can be read again.
+			log.Printf("mailindex: cannot read folder %s: %v", folder, err)
+			unreadable[folder] = true
 			continue
 		}
 		for _, e := range entries {
@@ -126,8 +131,8 @@ func (ix *Index) Reconcile() (Stats, error) {
 			st.Added++
 		}
 	}
-	for mid := range known {
-		if present[mid] {
+	for mid, k := range known {
+		if present[mid] || unreadable[k.folder] {
 			continue
 		}
 		if err := ix.deleteRow(mid); err != nil {
@@ -139,13 +144,21 @@ func (ix *Index) Reconcile() (Stats, error) {
 }
 
 // upsertFromFile parses one .b2f and writes its row and FTS entry.
+//
+// wl2k-go panics on some malformed headers (a negative Body: size), so the
+// parse is recovered and reported as an ordinary error the walk can skip.
+// A file whose name is not its MID (a hand copy such as "X copy.b2f") is
+// refused, since rows are keyed by MID and file paths are built from it.
 func (ix *Index) upsertFromFile(folder, path string, info fs.FileInfo) error {
-	msg, err := mailbox.OpenMessage(path)
+	msg, err := parseFile(path)
 	if err != nil {
 		return err
 	}
 	if msg.MID() == "" {
 		return errors.New("message has no MID")
+	}
+	if name := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path)); name != msg.MID() {
+		return fmt.Errorf("file name %q does not match its MID %q", name, msg.MID())
 	}
 	body, _ := msg.Body()
 	tx, err := ix.db.Begin()
@@ -176,6 +189,15 @@ func (ix *Index) upsertFromFile(folder, path string, info fs.FileInfo) error {
 		return err
 	}
 	return tx.Commit()
+}
+
+func parseFile(path string) (msg *fbb.Message, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			msg, err = nil, fmt.Errorf("unparseable message: %v", r)
+		}
+	}()
+	return mailbox.OpenMessage(path)
 }
 
 // deleteRow removes a message and everything hanging off it.

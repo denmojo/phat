@@ -116,11 +116,15 @@ func (ix *Index) Search(text string, limit int) ([]Row, error) {
 	if limit <= 0 {
 		limit = 100
 	}
+	match := matchExpr(text)
+	if match == "" {
+		return []Row{}, nil
+	}
 	rows, err := ix.db.Query(rowSelect+` JOIN (
 		SELECT mid, bm25(messages_fts) AS rank FROM messages_fts WHERE messages_fts MATCH ?
 		ORDER BY rank LIMIT ?) s ON s.mid = m.mid
 		ORDER BY s.rank`,
-		text, limit)
+		match, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -151,4 +155,37 @@ func (ix *Index) FolderCounts() (map[string]Count, error) {
 		out[f] = c
 	}
 	return out, rows.Err()
+}
+
+// matchExpr turns what a user typed into an FTS5 query: every word and every
+// "quoted phrase" becomes a quoted string, so hyphens, plus signs, at-signs
+// and bare operators like AND are searched as text. Terms are ANDed. An
+// unbalanced quote runs to the end of the input.
+func matchExpr(text string) string {
+	var terms []string
+	for len(text) > 0 {
+		text = strings.TrimLeft(text, " \t\r\n")
+		if text == "" {
+			break
+		}
+		var term string
+		if text[0] == '"' {
+			end := strings.IndexByte(text[1:], '"')
+			if end < 0 {
+				term, text = text[1:], ""
+			} else {
+				term, text = text[1:end+1], text[end+2:]
+			}
+		} else {
+			end := strings.IndexAny(text, " \t\r\n")
+			if end < 0 {
+				end = len(text)
+			}
+			term, text = text[:end], text[end:]
+		}
+		if strings.TrimSpace(term) != "" {
+			terms = append(terms, `"`+strings.ReplaceAll(term, `"`, `""`)+`"`)
+		}
+	}
+	return strings.Join(terms, " ")
 }
