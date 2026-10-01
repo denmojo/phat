@@ -50,4 +50,31 @@ CREATE TABLE IF NOT EXISTS meta (
 	value TEXT NOT NULL
 );
 INSERT OR IGNORE INTO meta(key, value) VALUES ('schema_version', '1');
+
+-- emails is the table for people querying index.db by hand: one row per
+-- message, with its body, star and labels, so plain SQL such as
+--   SELECT * FROM emails WHERE sender = 'W6EOC'
+-- works without knowing how the tables above divide the data. It holds
+-- nothing of its own and is recreated on every open, so it always matches
+-- the tables. Dates are UTC; bodies use plain newlines instead of Winlink's
+-- CRLF.
+DROP VIEW IF EXISTS emails;
+CREATE VIEW emails AS
+SELECT m.mid,
+       m.folder,
+       m.from_addr                       AS sender,
+       m.to_addrs                        AS recipients,
+       m.cc_addrs                        AS cc,
+       m.subject,
+       datetime(m.date, 'unixepoch')     AS sent_at,
+       replace(f.body, char(13) || char(10), char(10)) AS body,
+       m.unread,
+       coalesce(fl.starred, 0)           AS starred,
+       coalesce((SELECT group_concat(label, ', ')
+                 FROM (SELECT label FROM message_labels l WHERE l.mid = m.mid ORDER BY label)), '') AS labels,
+       m.attachments,
+       m.p2p_only
+FROM messages m
+JOIN messages_fts f ON f.mid = m.mid
+LEFT JOIN flags fl ON fl.mid = m.mid;
 `

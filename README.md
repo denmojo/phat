@@ -42,6 +42,30 @@ Waiting for remote node to close the connection...
 > _
 ```
 
+### Querying your mail with SQL
+
+Phat keeps a SQLite index of every message beside the mail, at `mailbox/<CALL>/index.db` in its data directory (`~/.local/share/phat` on Linux, `~/Library/Application Support/phat` on macOS). Any SQLite tool can read it. The `emails` view has one row per message:
+
+| column | meaning |
+|---|---|
+| `mid` | Winlink message ID, also the file name (`<folder>/<mid>.b2f`) |
+| `folder` | `in`, `out`, `sent`, `archive` or a folder you made |
+| `sender`, `recipients`, `cc` | addresses; several are comma-separated |
+| `subject`, `body` | the message text (attachments are not included) |
+| `sent_at` | `YYYY-MM-DD HH:MM:SS`, UTC |
+| `unread`, `starred`, `p2p_only` | 1 or 0 |
+| `labels` | comma-separated label names |
+| `attachments` | how many files are attached |
+
+```
+sqlite3 -readonly ~/.local/share/phat/mailbox/AD6DM/index.db
+sqlite> SELECT sent_at, subject FROM emails WHERE sender = 'W6EOC' ORDER BY sent_at DESC;
+sqlite> SELECT sender, subject FROM emails WHERE labels LIKE '%follow up%';
+sqlite> SELECT sender, subject FROM emails WHERE body LIKE '%generator%';
+```
+
+Open it read-only (`-readonly`) while Phat runs, and make changes in Phat. The `.b2f` files are the mail itself; the index is rebuilt from them if deleted, and only stars and labels live nowhere else.
+
 ### Gzip experiment
 
 Gzip message compression has been added as an experimental B2F extension. The extension is implemented as a backwards compatible alternative to the ancient LZHUF compression.
