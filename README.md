@@ -1,5 +1,7 @@
 # Phat
 
+*Polished Ham Airmail Tool*
+
 Phat is a Winlink client forked from [Pat](https://github.com/la5nta/pat) by LA5NTA. It keeps Pat's radio and protocol core and tracks upstream for it, and replaces the web client with a mail layout: folders on the left, a toolbar on top, stars, labels, drag and drop between folders, keyword search over a SQLite index, and light and dark themes.
 
 Phat reads a Pat installation on first run and copies its config, mailbox and forms into its own directories (`~/.config/phat`, `~/.local/share/phat`), leaving Pat's untouched.
