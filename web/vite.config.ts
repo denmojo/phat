@@ -20,9 +20,11 @@ export default defineConfig({
         templatehost: resolve(here, 'src/pages/template/index.html'),
       },
       output: {
-        entryFileNames: 'js/[name].js',
+        // Content hashes in every script and style name, so a browser
+        // holding an old build always fetches the new files.
+        entryFileNames: 'js/[name]-[hash].js',
         chunkFileNames: 'js/[name]-[hash].js',
-        assetFileNames: (a) => (a.name?.endsWith('.css') ? 'css/[name].css' : 'static/[name][extname]'),
+        assetFileNames: (a) => (a.name?.endsWith('.css') ? 'css/[name]-[hash].css' : 'static/[name][extname]'),
       },
     },
   },

@@ -51,6 +51,9 @@ func UIHandler(mycall string, appearance func() string) http.Handler {
 
 func templateHandler(templatePath string, mycall string, appearance func() string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Pages name content-hashed scripts; never cache the page itself, so
+		// a reload always picks up the newest names.
+		w.Header().Set("Cache-Control", "no-cache")
 		// Redirect to config if no callsign is set and we're not already on config page
 		if mycall == "" && r.URL.Path != "/ui/config" {
 			http.Redirect(w, r, "/ui/config", http.StatusFound)
