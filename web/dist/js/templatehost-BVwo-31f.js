@@ -1,1 +1,0 @@
-import"./modulepreload-polyfill-P2Xu9kJm.js";console.log(`template host`);

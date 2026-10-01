@@ -74,3 +74,13 @@ func TestUIConfigNextServesNewSettingsPage(t *testing.T) {
 		}
 	}
 }
+
+// The new forms host page is served at /ui/template-next during development.
+func TestUITemplateNextServesNewFormsHost(t *testing.T) {
+	h := UIHandler("N0CALL", func() string { return "dark" })
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest("GET", "/ui/template-next?template=x.txt", nil))
+	if rec.Code != 200 || !strings.Contains(rec.Body.String(), `data-appearance="dark"`) {
+		t.Fatalf("/ui/template-next: %d", rec.Code)
+	}
+}

@@ -47,6 +47,7 @@ func UIHandler(mycall string, appearance func() string) http.Handler {
 	r.HandleFunc("/ui/config", templateHandler("dist/config.html", mycall, appearance)).Methods("GET")
 	r.HandleFunc("/ui/config-next", templateHandler("dist/config-next.html", mycall, appearance)).Methods("GET")
 	r.HandleFunc("/ui/template", templateHandler("dist/template.html", mycall, appearance)).Methods("GET")
+	r.HandleFunc("/ui/template-next", templateHandler("dist/template-next.html", mycall, appearance)).Methods("GET")
 	return r
 }
 
