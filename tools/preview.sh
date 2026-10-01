@@ -10,12 +10,20 @@
 #   reset    stop, wipe .preview, reseed, start
 #   status   show whether it runs and where
 #
-# PREVIEW_ADDR overrides the listen address (default 127.0.0.1:8090).
+# PREVIEW_ADDR overrides the listen address (default 127.0.0.1:8090), for
+# example the tailnet address to review from another device.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 ROOT="$PWD/.preview"
-ADDR="${PREVIEW_ADDR:-127.0.0.1:8090}"
+# A PREVIEW_ADDR given once is remembered in .preview/addr for later runs.
+if [[ -n "${PREVIEW_ADDR:-}" ]]; then
+	ADDR="$PREVIEW_ADDR"
+elif [[ -f "$ROOT/addr" ]]; then
+	ADDR="$(cat "$ROOT/addr")"
+else
+	ADDR="127.0.0.1:8090"
+fi
 CALL="N0CALL"
 PIDFILE="$ROOT/phat.pid"
 
@@ -35,6 +43,7 @@ start() {
 		return
 	fi
 	mkdir -p "$ROOT/xdg" "$ROOT/mailbox"
+	echo "$ADDR" >"$ROOT/addr"
 	go build -o "$ROOT/phat" .
 	if [[ ! -f "$ROOT/config.json" ]]; then
 		printf '{"mycall":"%s","locator":"CM98","http_addr":"%s","version_reporting_disabled":true}\n' "$CALL" "$ADDR" >"$ROOT/config.json"
