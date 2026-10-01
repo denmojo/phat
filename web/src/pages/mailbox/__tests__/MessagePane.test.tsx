@@ -4,7 +4,7 @@ vi.mock('../../../lib/api', async (orig) => ({
   setLabels: vi.fn(async (mids: string[]) => ({ ok: mids, failed: {} })),
   star: vi.fn(async (mids: string[]) => ({ ok: mids, failed: {} })),
   setRead: vi.fn(async (mids: string[]) => ({ ok: mids, failed: {} })),
-  message: vi.fn(),
+  message: vi.fn(async () => null),
   list: vi.fn(async () => []),
   folders: vi.fn(async () => []),
   labels: vi.fn(async () => []),
