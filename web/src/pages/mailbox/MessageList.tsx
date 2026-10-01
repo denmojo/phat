@@ -5,7 +5,7 @@ import * as api from '../../lib/api';
 import type { Row } from '../../lib/types';
 import { toast } from '../../ui/Toast';
 import {
-  correspondent, labels, openMsg, refresh, refreshSidebar, selectRange, selected, sortedRows, toggleSelect, view,
+  applyBulkTo, correspondent, labels, openMsg, refresh, refreshSidebar, selectRange, selected, sortedRows, toggleSelect, view,
 } from './store';
 import { callColor, folderTitle, formatDate } from './format';
 import { dragging, endDrag, startDrag } from './dnd';
@@ -26,6 +26,8 @@ let swallowClick = false;
 
 function pressStart(mid: string, e: PointerEvent) {
   pressEnd();
+  // A press on a chip's x is a click on that button, never a long press.
+  if ((e.target as Element | null)?.closest?.('.ui-chip-x')) return;
   press = {
     mid, x: e.clientX, y: e.clientY,
     timer: setTimeout(() => {
@@ -101,7 +103,10 @@ function MessageRow({ r, showFolder, colors }: { r: Row; showFolder: boolean; co
       <span role="cell" class="subjline">
         <span class="subj">{r.Subject || '(no subject)'}</span>
         {r.P2POnly && <span class="p2p">P2P</span>}
-        {r.Labels.map((l) => <Chip key={l} color={colors.get(l) ?? '#6b7280'}>{l}</Chip>)}
+        {r.Labels.map((l) => (
+          <Chip key={l} color={colors.get(l) ?? '#6b7280'} removeLabel={`Remove label ${l}`}
+            onRemove={(e) => { e.stopPropagation(); void applyBulkTo([r.MID], 'labels', [], [l]); }}>{l}</Chip>
+        ))}
         {showFolder && <Chip>{folderTitle(r.Folder)}</Chip>}
       </span>
       <span role="cell" class="att">

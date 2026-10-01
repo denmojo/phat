@@ -6,6 +6,7 @@ vi.mock('../../../lib/api', async (orig) => ({
   star: vi.fn(async (mids: string[]) => ({ ok: mids, failed: {} })),
   message: vi.fn(async () => ({ MID: 'm1' })),
   setRead: vi.fn(async (mids: string[]) => ({ ok: mids, failed: {} })),
+  setLabels: vi.fn(async (mids: string[]) => ({ ok: mids, failed: {} })),
 }));
 import { render, screen, fireEvent } from '@testing-library/preact';
 import * as api from '../../../lib/api';
@@ -69,4 +70,14 @@ test('an empty view says so', () => {
   store.rows.value = [];
   render(<MessageList />);
   expect(screen.getByText('No messages')).toBeInTheDocument();
+});
+
+test('a label chip carries an x that removes that label from that row only, without opening it', async () => {
+  render(<MessageList />);
+  const x = screen.getByRole('button', { name: 'Remove label net' });
+  fireEvent.pointerDown(x);
+  fireEvent.click(x);
+  await vi.waitFor(() => expect(api.setLabels).toHaveBeenCalledWith(['m1'], [], ['net']));
+  expect(api.message).not.toHaveBeenCalled();
+  expect(store.selected.value.size).toBe(0);
 });

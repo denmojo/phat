@@ -6,7 +6,7 @@ type Props = {
   color?: string;
   // token draws an address chip in an editable field.
   token?: boolean;
-  onRemove?: () => void;
+  onRemove?: (e: MouseEvent) => void;
   removeLabel?: string;
   children: ComponentChildren;
 };

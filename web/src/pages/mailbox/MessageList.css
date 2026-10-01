@@ -34,3 +34,11 @@
   .mrow .avatar.checked { background: var(--accent); color: var(--accent-text); }
   .mrow .avatar svg.lucide { width: 18px; height: 18px; stroke-width: 3; }
 }
+
+/* A label chip's x stays folded away until the chip is hovered or the x
+   has keyboard focus. Phones have no hover, so their rows show no x; the
+   open message's label menu removes labels there. */
+.mrow .ui-chip-x { width: 0; margin-left: -4px; opacity: 0; overflow: hidden; }
+.mrow .ui-chip:hover .ui-chip-x, .mrow .ui-chip:focus-within .ui-chip-x { width: 14px; margin-left: 0; opacity: 1; }
+.mrow .ui-chip-x:hover { color: var(--c); }
+@media (hover: none) { .mrow .ui-chip-x { display: none; } }
