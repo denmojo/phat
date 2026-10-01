@@ -97,6 +97,14 @@ func NewHandler(app *app.App) *Handler {
 	r.HandleFunc("/api/mailbox/{box}/{mid}/read", h.readHandler).Methods("POST")
 	r.HandleFunc("/api/mailbox/{box}", h.postMessageHandler).Methods("POST")
 
+	r.HandleFunc("/api/folders", h.foldersHandler).Methods("GET")
+	r.HandleFunc("/api/folders", h.createFolderHandler).Methods("POST")
+	r.HandleFunc("/api/folders/{name}", h.renameFolderHandler).Methods("PATCH")
+	r.HandleFunc("/api/folders/{name}", h.deleteFolderHandler).Methods("DELETE")
+	r.HandleFunc("/api/labels", h.labelsHandler).Methods("GET")
+	r.HandleFunc("/api/labels", h.createLabelHandler).Methods("POST")
+	r.PathPrefix("/api/labels/").Handler(h.labelRouter())
+
 	r.HandleFunc("/api/posreport", h.postPositionHandler).Methods("POST")
 	r.HandleFunc("/api/status", h.statusHandler).Methods("GET")
 	r.HandleFunc("/api/current_gps_position", h.positionHandler).Methods("GET")

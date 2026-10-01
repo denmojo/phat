@@ -119,6 +119,16 @@ func New(opts Options) *App {
 	return &App{options: opts, websocketHub: noopWSSocket{}}
 }
 
+// NewForTest builds an App with a prepared mailbox handler and open index
+// and nothing else: no exchange loop, listeners, rigs or GPS. Handlers
+// that only touch the mailbox and index can be tested against it.
+func NewForTest(opts Options, mbox *mailbox.DirHandler, ix *mailindex.Index) *App {
+	a := New(opts)
+	a.mbox = mbox
+	a.index = ix
+	return a
+}
+
 func (a *App) Mailbox() *mailbox.DirHandler { return a.mbox }
 
 // Index is the SQLite index beside the mailbox.
