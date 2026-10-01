@@ -1,4 +1,4 @@
-import { Paperclip, Star } from 'lucide-preact';
+import { Check, Paperclip, Star } from 'lucide-preact';
 import { Checkbox } from '../../ui/Checkbox';
 import { Chip } from '../../ui/Chip';
 import * as api from '../../lib/api';
@@ -12,6 +12,51 @@ import './MessageList.css';
 
 // anchor is the last row checked without Shift, the start of a range.
 let anchor: string | null = null;
+
+const LONG_PRESS_MS = 500;
+const MOVE_SLOP_PX = 10;
+const narrow = () => window.matchMedia?.('(max-width: 640px)').matches ?? false;
+
+// Long press is how a phone selects, since its rows hide the checkboxes:
+// holding a row selects it, and while anything is selected a tap toggles
+// rows instead of opening them. A press that moves is a scroll.
+let press: { mid: string; x: number; y: number; timer: ReturnType<typeof setTimeout> } | null = null;
+let swallowClick = false;
+
+function pressStart(mid: string, e: PointerEvent) {
+  pressEnd();
+  press = {
+    mid, x: e.clientX, y: e.clientY,
+    timer: setTimeout(() => {
+      press = null;
+      swallowClick = true;
+      if (!selected.value.has(mid)) toggleSelect(mid);
+      anchor = mid;
+      navigator.vibrate?.(15);
+    }, LONG_PRESS_MS),
+  };
+}
+
+function pressMove(e: PointerEvent) {
+  if (press && Math.hypot(e.clientX - press.x, e.clientY - press.y) > MOVE_SLOP_PX) pressEnd();
+}
+
+function pressEnd() {
+  if (press) clearTimeout(press.timer);
+  press = null;
+}
+
+function rowClick(r: Row) {
+  if (swallowClick) {
+    swallowClick = false;
+    return;
+  }
+  if (selected.value.size > 0 && narrow()) {
+    toggleSelect(r.MID);
+    return;
+  }
+  void openMsg(r.Folder, r.MID);
+}
 
 async function toggleStar(r: Row) {
   try {
@@ -27,7 +72,9 @@ function MessageRow({ r, showFolder, colors }: { r: Row; showFolder: boolean; co
   const isSel = selected.value.has(r.MID);
   return (
     <div role="row" class={`mrow${r.Unread ? ' unread' : ''}${isSel ? ' selected' : ''}`} aria-selected={isSel}
-      onClick={() => void openMsg(r.Folder, r.MID)}>
+      onClick={() => rowClick(r)}
+      onPointerDown={(e) => pressStart(r.MID, e)} onPointerMove={pressMove} onPointerUp={pressEnd} onPointerCancel={pressEnd}
+      onContextMenu={(e) => { if (narrow()) e.preventDefault(); }}>
       <span role="cell" class="c-check">
         <Checkbox label={`Select ${r.Subject || 'message'}`} checked={isSel} onClick={(e) => {
           if (e.shiftKey && anchor) selectRange(anchor, r.MID);
@@ -43,7 +90,9 @@ function MessageRow({ r, showFolder, colors }: { r: Row; showFolder: boolean; co
           <Star />
         </button>
       </span>
-      <span role="cell" class="avatar" style={{ '--c': callColor(who) }} aria-hidden="true">{who.slice(0, 2)}</span>
+      <span role="cell" class={`avatar${isSel ? ' checked' : ''}`} style={{ '--c': callColor(who) }} aria-hidden="true">
+        {isSel ? <Check /> : who.slice(0, 2)}
+      </span>
       <span role="cell" class="who" title={who}>{who}</span>
       <span role="cell" class="subjline">
         <span class="subj">{r.Subject || '(no subject)'}</span>

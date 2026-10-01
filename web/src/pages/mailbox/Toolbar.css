@@ -19,6 +19,8 @@
 .toolbar .sel { font-weight: 600; color: var(--accent); margin: 0 var(--space-3) 0 var(--space-1); white-space: nowrap; }
 .toolbar .sep { width: 1px; height: 22px; background: var(--border); margin: 0 var(--space-1); }
 .toolbar .spacer { flex: 1; }
+.toolbar .narrow-only { display: none; }
+.toolbar .wide-only { display: contents; }
 .toolbar .meta { color: var(--text-faint); font-size: var(--text-sm); margin-right: var(--space-2); white-space: nowrap; }
 
 @media (max-width: 800px) {
@@ -27,4 +29,10 @@
   .search .kbd, .status .label, .conn .ui-btn .label { display: none; }
   .conn .ui-btn { padding: 0 10px; }
   .toolbar .meta { display: none; }
+}
+@media (max-width: 640px) {
+  .toolbar .wide-only { display: none; }
+  .toolbar .narrow-only { display: contents; }
+  .toolbar { padding: 0 var(--space-1); }
+  .toolbar .sel { margin: 0 var(--space-2) 0 0; }
 }

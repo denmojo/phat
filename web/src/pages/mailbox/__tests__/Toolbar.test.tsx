@@ -25,7 +25,7 @@ test('with nothing selected: select-all checkbox, title and refresh, no bulk act
 test('with two selected: count and Archive, which moves to archive', () => {
   store.selected.value = new Set(['a', 'b']);
   render(<Toolbar />);
-  expect(screen.getByText('2 selected')).toBeInTheDocument();
+  expect(document.querySelector('.toolbar .sel')).toHaveTextContent('2 selected');
   fireEvent.click(screen.getByRole('button', { name: 'Archive' }));
   expect(store.applyBulk).toHaveBeenCalledWith('move', 'archive');
 });

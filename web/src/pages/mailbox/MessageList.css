@@ -30,4 +30,7 @@
   .mrow .who { grid-column: 2; }
   .mrow .date { grid-column: 3; grid-row: 1; }
   .mrow .subjline { grid-column: 2 / span 2; grid-row: 2; }
+  .mrow { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+  .mrow .avatar.checked { background: var(--accent); color: var(--accent-text); }
+  .mrow .avatar svg.lucide { width: 18px; height: 18px; stroke-width: 3; }
 }

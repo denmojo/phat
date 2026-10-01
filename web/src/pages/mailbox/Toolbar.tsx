@@ -1,4 +1,4 @@
-import { Archive, ArrowDownWideNarrow, FolderInput, Mail, MailOpen, Menu as MenuIcon, RadioTower, RotateCw, Star, StarOff, Trash2, X } from 'lucide-preact';
+import { Archive, ArrowDownWideNarrow, Ellipsis, FolderInput, Mail, MailOpen, Menu as MenuIcon, RadioTower, RotateCw, Star, StarOff, Trash2, X } from 'lucide-preact';
 import { Checkbox } from '../../ui/Checkbox';
 import { IconButton } from '../../ui/IconButton';
 import { Menu } from '../../ui/Menu';
@@ -76,17 +76,23 @@ export function Toolbar() {
   return (
     <div class="toolbar">
       <Checkbox label="Select all" checked={all} indeterminate={!all} onClick={toggleAll} />
-      <span class="sel">{n} selected</span>
+      <span class="sel">{n}<span class="wide-only"> selected</span></span>
       {here !== 'archive' && <IconButton icon={Archive} label="Archive" onClick={() => void applyBulk('move', 'archive')} />}
       <IconButton icon={Trash2} label="Delete" onClick={() => void applyBulk('delete')} />
-      <span class="sep" />
+      <span class="sep wide-only" />
       <IconButton icon={MailOpen} label="Mark read" onClick={() => void applyBulk('read', true)} />
-      <IconButton icon={Mail} label="Mark unread" onClick={() => void applyBulk('read', false)} />
+      <span class="wide-only"><IconButton icon={Mail} label="Mark unread" onClick={() => void applyBulk('read', false)} /></span>
       <IconButton icon={Star} label="Star" onClick={() => void applyBulk('star', true)} />
-      <IconButton icon={StarOff} label="Unstar" onClick={() => void applyBulk('star', false)} />
+      <span class="wide-only"><IconButton icon={StarOff} label="Unstar" onClick={() => void applyBulk('star', false)} /></span>
       <LabelMenu />
       <Menu trigger={<IconButton icon={FolderInput} label="Move to" />}
         items={moveTargets.map((f) => ({ label: folderTitle(f.name), onSelect: () => void applyBulk('move', f.name) }))} />
+      <span class="narrow-only">
+        <Menu align="right" trigger={<IconButton icon={Ellipsis} label="More actions" />} items={[
+          { label: 'Mark unread', icon: Mail, onSelect: () => void applyBulk('read', false) },
+          { label: 'Unstar', icon: StarOff, onSelect: () => void applyBulk('star', false) },
+        ]} />
+      </span>
       <span class="spacer" />
       <IconButton icon={X} label="Clear selection" onClick={clearSelection} />
     </div>
