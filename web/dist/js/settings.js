@@ -1,0 +1,1 @@
+import"./modulepreload-polyfill-P2Xu9kJm.js";import{n as e,t}from"./jsxRuntime.module-DsHNuTtI.js";e(t(`h1`,{children:[document.documentElement.dataset.appname,` settings`]}),document.getElementById(`app`));

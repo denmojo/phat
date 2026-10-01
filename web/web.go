@@ -43,6 +43,7 @@ func DistHandler() http.Handler {
 func UIHandler(mycall string, appearance func() string) http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/ui", templateHandler("dist/index.html", mycall, appearance)).Methods("GET")
+	r.HandleFunc("/ui/next", templateHandler("dist/index-next.html", mycall, appearance)).Methods("GET")
 	r.HandleFunc("/ui/config", templateHandler("dist/config.html", mycall, appearance)).Methods("GET")
 	r.HandleFunc("/ui/template", templateHandler("dist/template.html", mycall, appearance)).Methods("GET")
 	return r
