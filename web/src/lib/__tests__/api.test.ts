@@ -63,3 +63,10 @@ test('attachmentUrl escapes each part', () => {
   expect(api.attachmentUrl('in', 'ABC', 'photo 1.jpg')).toBe('/api/mailbox/in/ABC/photo%201.jpg');
   expect(api.attachmentUrl('in', 'ABC', 'form.xml', true)).toBe('/api/mailbox/in/ABC/form.xml?rendertohtml=true');
 });
+
+test('message fills in the folder it was read from', async () => {
+  stub(200, { MID: 'A', Subject: 'x' });
+  const m = await api.message('Radio Club', 'A');
+  expect(calls[0]!.url).toBe('/api/mailbox/Radio%20Club/A');
+  expect(m.Folder).toBe('Radio Club');
+});

@@ -138,7 +138,7 @@ export function clearSelection(): void {
 
 export async function openMsg(folder: string, mid: string): Promise<void> {
   try {
-    openMessage.value = await api.message(folder, mid);
+    openMessage.value = { ...(await api.message(folder, mid)), Folder: folder };
   } catch (err) {
     report(err);
     return;
@@ -202,7 +202,9 @@ export async function applyBulkTo(mids: string[], ...args: Bulk): Promise<BulkRe
   if (res) {
     const ok = new Set(res.ok);
     const failed = Object.keys(res.failed);
-    selected.value = new Set([...selected.value].filter((m) => !ok.has(m)));
+    // Moved and deleted messages leave the list, so they leave the
+    // selection; read, star and label changes keep it for the next action.
+    if (args[0] === 'move' || args[0] === 'delete') selected.value = new Set([...selected.value].filter((m) => !ok.has(m)));
     if (res.ok.length) toast(done(args[0], res.ok.length, args[1]));
     if (failed.length) {
       const why = [...new Set(Object.values(res.failed))].join('; ');
@@ -210,13 +212,20 @@ export async function applyBulkTo(mids: string[], ...args: Bulk): Promise<BulkRe
     }
   }
   await Promise.all([refresh(), refreshSidebar()]);
+  // Unstarring in Starred or unlabeling in a label view drops rows from
+  // the list; drop them from the selection too.
+  const v = view.value;
+  if ((v.kind === 'starred' && args[0] === 'star') || (v.kind === 'label' && args[0] === 'labels')) {
+    const shown = new Set(rows.value.map((r) => r.MID));
+    selected.value = new Set([...selected.value].filter((m) => shown.has(m)));
+  }
   // Keep an open message in step with what just happened to it.
   const m = openMessage.value;
   if (m && res?.ok.includes(m.MID)) {
     if (args[0] === 'move' || args[0] === 'delete') openMessage.value = null;
     else {
       const fresh = await api.message(m.Folder, m.MID).catch(() => null);
-      if (fresh) openMessage.value = fresh;
+      if (fresh) openMessage.value = { ...fresh, Folder: m.Folder };
     }
   }
   return res;

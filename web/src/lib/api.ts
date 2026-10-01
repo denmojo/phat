@@ -55,7 +55,12 @@ export function list(view: View): Promise<Row[]> {
     case 'search': return json(`/api/search?q=${enc(view.q)}`);
   }
 }
-export const message = (folder: string, mid: string) => json<Message>(`/api/mailbox/${enc(folder)}/${enc(mid)}`);
+// message fetches one message. The server's JSON has no folder field, so
+// the folder it was read from is filled in here.
+export const message = async (folder: string, mid: string): Promise<Message> => ({
+  ...(await json<Message>(`/api/mailbox/${enc(folder)}/${enc(mid)}`)),
+  Folder: folder,
+});
 export const attachmentUrl = (folder: string, mid: string, name: string, renderToHtml?: boolean) =>
   `/api/mailbox/${enc(folder)}/${enc(mid)}/${enc(name)}${renderToHtml ? '?rendertohtml=true' : ''}`;
 export const move = (mids: string[], to: string) => json<BulkResult>('/api/messages/move', req('POST', { mids, to }));

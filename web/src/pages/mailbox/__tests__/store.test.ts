@@ -6,6 +6,10 @@ vi.mock('../../../lib/api', async (orig) => {
     folders: vi.fn(async () => []),
     labels: vi.fn(async () => []),
     move: vi.fn(async () => ({ ok: ['a'], failed: { b: 'not found' } })),
+    setLabels: vi.fn(async (mids: string[]) => ({ ok: mids, failed: {} })),
+    setRead: vi.fn(async (mids: string[]) => ({ ok: mids, failed: {} })),
+    star: vi.fn(async (mids: string[]) => ({ ok: mids, failed: {} })),
+    message: vi.fn(),
   };
 });
 import * as api from '../../../lib/api';
@@ -50,4 +54,33 @@ test('toggleSelect, selectAll and clearSelection', () => {
   expect([...store.selected.value]).toEqual(['x', 'y']);
   store.clearSelection();
   expect(store.selected.value.size).toBe(0);
+});
+
+test('an open message knows its folder and picks up a label change', async () => {
+  // The server's message JSON carries no Folder field.
+  vi.mocked(api.message).mockResolvedValueOnce({ MID: 'm1', Labels: [] } as never);
+  await store.openMsg('Club', 'm1');
+  expect(store.openMessage.value?.Folder).toBe('Club');
+  vi.mocked(api.message).mockResolvedValueOnce({ MID: 'm1', Labels: ['follow up'] } as never);
+  await store.applyBulkTo(['m1'], 'labels', ['follow up'], []);
+  expect(api.message).toHaveBeenLastCalledWith('Club', 'm1');
+  expect(store.openMessage.value?.Labels).toEqual(['follow up']);
+  expect(store.openMessage.value?.Folder).toBe('Club');
+});
+
+test('read, star and label changes keep the selection; the rows stay in view', async () => {
+  store.openMessage.value = null;
+  for (const args of [['read', true], ['star', true], ['labels', ['x'], []]] as const) {
+    store.selected.value = new Set(['a', 'b']);
+    await store.applyBulk(...(args as unknown as Parameters<typeof store.applyBulk>));
+    expect([...store.selected.value].sort()).toEqual(['a', 'b']);
+  }
+});
+
+test('unstarring in the Starred view drops the rows from the selection', async () => {
+  store.view.value = { kind: 'starred' };
+  store.selected.value = new Set(['a', 'b']);
+  await store.applyBulk('star', false);
+  expect(store.selected.value.size).toBe(0);
+  store.view.value = { kind: 'folder', name: 'in' };
 });
