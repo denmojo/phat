@@ -1,7 +1,7 @@
 Source: phat
 Section: ham
 Priority: extra
-Maintainer: Martin Hebnes Pedersen <martin.h.pedersen@gmail.com>
+Maintainer: Dennis Mojado <denmojo@users.noreply.github.com>
 Homepage: https://github.com/denmojo/phat
 Build-Depends: debhelper (>= 7.0.50~), golang (>= 2:1.26), libax25, libax25-dev
 Standards-Version: 3.9.1
