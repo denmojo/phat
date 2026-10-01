@@ -7,13 +7,15 @@ type Props = {
   type?: 'button' | 'submit';
   disabled?: boolean;
   title?: string;
+  // label names the button when its visible text may be hidden.
+  label?: string;
   onClick?: (e: JSX.TargetedMouseEvent<HTMLButtonElement>) => void;
   children: ComponentChildren;
 };
 
-export function Button({ variant = 'default', size = 'md', type = 'button', disabled, title, onClick, children }: Props) {
+export function Button({ variant = 'default', size = 'md', type = 'button', disabled, title, label, onClick, children }: Props) {
   return (
-    <button type={type} class={`ui-btn ui-btn-${variant} ui-btn-${size}`} disabled={disabled} title={title} onClick={onClick}>
+    <button type={type} class={`ui-btn ui-btn-${variant} ui-btn-${size}`} disabled={disabled} title={title} aria-label={label} onClick={onClick}>
       {children}
     </button>
   );

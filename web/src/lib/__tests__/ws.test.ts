@@ -15,7 +15,7 @@ class FakeWs {
 function handlers() {
   return {
     onOpen: vi.fn(), onClose: vi.fn(), onStatus: vi.fn(), onProgress: vi.fn(), onNotification: vi.fn(),
-    onPrompt: vi.fn(), onPromptAbort: vi.fn(), onUpdateMailbox: vi.fn(), onMyCall: vi.fn(),
+    onPrompt: vi.fn(), onPromptAbort: vi.fn(), onUpdateMailbox: vi.fn(), onMyCall: vi.fn(), onLogLine: vi.fn(),
   };
 }
 
@@ -67,4 +67,11 @@ test('close stops reconnecting', () => {
   vi.advanceTimersByTime(60000);
   expect(FakeWs.all.length).toBe(1);
   vi.useRealTimers();
+});
+
+test('routes server log lines', () => {
+  const h = handlers();
+  connectWs(h);
+  FakeWs.all[0]!.emit({ LogLine: 'Connecting to W6EOC (telnet)...' });
+  expect(h.onLogLine).toHaveBeenCalledWith('Connecting to W6EOC (telnet)...');
 });

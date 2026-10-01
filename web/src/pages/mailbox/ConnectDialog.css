@@ -1,0 +1,32 @@
+.connect { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); }
+.cf-alias { display: flex; gap: var(--space-1); align-items: center; max-width: 320px; }
+.cf-alias select { flex: 1; min-width: 0; }
+.cf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); align-items: end; }
+.cf-field { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); color: var(--text-muted); min-width: 0; }
+.cf-field.wide { grid-column: 1 / -1; }
+.connect select, .connect input:not([type=checkbox]), .cf-alias-name input {
+  height: 36px; min-width: 0; padding: 0 var(--space-3); border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); color: var(--text); font: inherit; font-size: var(--text-md); }
+.connect select:focus, .connect input:focus, .cf-alias-name input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.cf-suffix { display: flex; }
+.cf-suffix input { flex: 1; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+.cf-suffix .unit { display: flex; align-items: center; padding: 0 var(--space-3); border: 1px solid var(--border); border-left: 0;
+  border-radius: 0 var(--radius) var(--radius) 0; background: var(--surface-2); color: var(--text-muted); font-size: var(--text-sm); }
+.cf-suffix.qsy-ok input { border-color: var(--ok); }
+.cf-suffix.qsy-failed input { border-color: var(--danger); }
+.cf-suffix.qsy-busy input { border-color: var(--accent); }
+.connect input.struck { text-decoration: line-through; color: var(--text-muted); }
+.cf-check { display: flex; align-items: center; gap: var(--space-2); height: 36px; font-size: var(--text-sm); color: var(--text); cursor: pointer; }
+.cf-note { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-sm); color: var(--text-muted); }
+.cf-note.warn { color: var(--danger); font-weight: 600; }
+.cf-note svg.lucide { width: 16px; height: 16px; }
+.cf-url input { width: 100%; border-style: dashed !important; color: var(--text-muted) !important; font: var(--text-sm) var(--font-mono) !important; }
+.cf-rms { padding: 0 var(--space-4) var(--space-4); }
+.ui-dialog-foot .flip { transform: rotate(180deg); }
+.cf-alias-name { display: flex; flex-direction: column; gap: var(--space-2); }
+.cf-alias-name .hint { font-size: var(--text-xs); color: var(--text-faint); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 640px) {
+  .cf-grid { grid-template-columns: 1fr; }
+  .cf-alias { max-width: none; }
+}

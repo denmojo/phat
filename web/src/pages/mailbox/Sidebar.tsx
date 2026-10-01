@@ -1,7 +1,7 @@
 import { useRef, useState } from 'preact/hooks';
 import type { LucideIcon } from 'lucide-preact';
 import {
-  Archive, EllipsisVertical, Folder, Inbox, MailCheck, MailPlus, Pencil, Plus, RadioTower, Send, Settings, Star, Trash2,
+  Archive, EllipsisVertical, Folder, Inbox, MailCheck, MailPlus, MapPin, Pencil, Plus, RadioTower, ScrollText, Send, Settings, Star, Trash2,
 } from 'lucide-preact';
 import * as api from '../../lib/api';
 import type { Label, View } from '../../lib/types';
@@ -12,7 +12,7 @@ import { Menu, type MenuItem } from '../../ui/Menu';
 import { toast } from '../../ui/Toast';
 import { FolderEditor, deleteFolderMessage } from './FolderEditor';
 import { LabelEditor } from './LabelEditor';
-import { drawerOpen, folders, labels, mycall, refresh, refreshSidebar, setView, view } from './store';
+import { drawerOpen, logOpen, positionOpen, folders, labels, mycall, refresh, refreshSidebar, setView, view } from './store';
 import { folderTitle } from './format';
 import { dropTarget, type DropKind } from './dnd';
 import { compose } from './Composer';
@@ -173,7 +173,14 @@ export function Sidebar() {
             ] }} />
         ))}
       </nav>
-      <nav aria-label="Settings" class="side-nav foot">
+      <nav aria-label="Tools" class="side-nav foot">
+        <button type="button" class="side-item" onClick={() => { drawerOpen.value = false; positionOpen.value = true; }}>
+          <MapPin /><span>Position report</span>
+        </button>
+        <button type="button" class={`side-item${logOpen.value ? ' active' : ''}`} aria-pressed={logOpen.value}
+          onClick={() => { drawerOpen.value = false; logOpen.value = !logOpen.value; }}>
+          <ScrollText /><span>Session log</span>
+        </button>
         <a href="/ui/config" class="side-item"><Settings /><span>Settings</span></a>
       </nav>
 

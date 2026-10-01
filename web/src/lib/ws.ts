@@ -12,6 +12,7 @@ export type Handlers = {
   onPromptAbort: () => void;
   onUpdateMailbox: () => void;
   onMyCall: (call: string) => void;
+  onLogLine: (line: string) => void;
 };
 
 export function connectWs(h: Handlers) {
@@ -31,6 +32,7 @@ export function connectWs(h: Handlers) {
       if (m.Progress) h.onProgress(m.Progress);
       if (m.Prompt) h.onPrompt(m.Prompt);
       if (m.PromptAbort) h.onPromptAbort();
+      if (m.LogLine) h.onLogLine(m.LogLine);
       if (m.Ping) ws?.send(JSON.stringify({ Pong: true }));
     };
     ws.onclose = () => {

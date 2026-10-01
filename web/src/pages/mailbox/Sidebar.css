@@ -34,3 +34,4 @@
 .side-row:has(.ui-menu-wrap.open) { z-index: 5; }
 .side-row:hover .side-item .count, .side-row:has(.ui-menu-wrap.open) .side-item .count { visibility: hidden; }
 @media (hover: none) { .side-kebab .ui-iconbtn { opacity: 1; } .side-item .count { margin-right: 28px; } }
+button.side-item { width: 100%; border: 0; background: none; font: inherit; text-align: left; cursor: pointer; }

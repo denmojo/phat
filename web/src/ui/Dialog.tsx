@@ -14,6 +14,9 @@ type Props = {
   // closeOnBackdrop false keeps a click outside from closing the dialog,
   // for dialogs holding work a stray click would lose.
   closeOnBackdrop?: boolean;
+  // dismissable false drops the Close button, Escape and the backdrop, for
+  // dialogs that must be answered with one of their own buttons.
+  dismissable?: boolean;
   children: ComponentChildren;
 };
 
@@ -26,7 +29,7 @@ const focusable = 'button:not([disabled]), [href], input:not([disabled]), select
 // Dialog renders a modal into document.body. Escape, the close button and
 // a click on the backdrop close it; Tab stays inside while it is open, and
 // focus returns to where it was when it closes.
-export function Dialog({ open, title, onClose, footer, wide, closeOnBackdrop = true, children }: Props) {
+export function Dialog({ open, title, onClose, footer, wide, closeOnBackdrop = true, dismissable = true, children }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
@@ -41,6 +44,7 @@ export function Dialog({ open, title, onClose, footer, wide, closeOnBackdrop = t
       if (stack[stack.length - 1] !== me) return;
       if (e.key === 'Escape') {
         e.stopPropagation();
+        if (!dismissable) return;
         onClose();
         return;
       }
@@ -63,15 +67,15 @@ export function Dialog({ open, title, onClose, footer, wide, closeOnBackdrop = t
       stack.splice(stack.indexOf(me), 1);
       before?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open, onClose, dismissable]);
 
   if (!open) return null;
   return createPortal(
-    <div class="ui-scrim" onClick={(e) => { if (closeOnBackdrop && e.target === e.currentTarget) onClose(); }}>
+    <div class="ui-scrim" onClick={(e) => { if (dismissable && closeOnBackdrop && e.target === e.currentTarget) onClose(); }}>
       <div ref={box} class={`ui-dialog${wide ? ' wide' : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <div class="ui-dialog-head">
           <h2 id={titleId}>{title}</h2>
-          <IconButton icon={X} label="Close" onClick={onClose} />
+          {dismissable && <IconButton icon={X} label="Close" onClick={onClose} />}
         </div>
         <div class="ui-dialog-body">{children}</div>
         {footer && <div class="ui-dialog-foot">{footer}</div>}

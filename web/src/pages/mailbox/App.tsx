@@ -4,6 +4,12 @@ import { Toolbar, Topbar } from './Toolbar';
 import { MessageList } from './MessageList';
 import { MessagePane } from './MessagePane';
 import { Composer } from './Composer';
+import { ConnectDialog } from './ConnectDialog';
+import { PositionDialog } from './PositionDialog';
+import { ProgressBar } from './ProgressBar';
+import { PromptDialog } from './PromptDialog';
+import { SessionLog } from './SessionLog';
+import { VersionDialog } from './VersionDialog';
 import { configChanged, drawerOpen, openMessage } from './store';
 import './App.css';
 
@@ -20,11 +26,18 @@ export function App() {
           </div>
         )}
         <Topbar />
+        <ProgressBar />
         <section class="panel">
           {openMessage.value ? <MessagePane /> : <><Toolbar /><MessageList /></>}
         </section>
+        <SessionLog />
       </main>
       <Composer />
+      <ConnectDialog />
+      <PositionDialog />
+      <VersionDialog />
+      {/* Last, so a prompt opens above any other dialog. */}
+      <PromptDialog />
       <Toasts />
     </div>
   );

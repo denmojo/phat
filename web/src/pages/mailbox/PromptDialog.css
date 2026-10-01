@@ -1,0 +1,16 @@
+.prompt { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); }
+.prompt-form { display: flex; flex-direction: column; gap: var(--space-3); }
+.prompt-field { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); color: var(--text-muted); }
+.prompt-field input { height: 36px; padding: 0 var(--space-3); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
+  color: var(--text); font: inherit; font-size: var(--text-md); }
+.prompt-field input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.prompt-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.prompt-actions .spacer { flex: 1; }
+.prompt-text p { margin: 0 0 var(--space-2); line-height: 1.5; }
+.prompt-text .warn { color: var(--warn); }
+.prompt-list { list-style: none; margin: 0; padding: 0; max-height: 50vh; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+.prompt-list li + li { border-top: 1px solid var(--border); }
+.prompt-list label { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); cursor: pointer; font-size: var(--text-sm); }
+.prompt-busy { display: flex; justify-content: center; padding: var(--space-3) 0; color: var(--text-muted); }
+.prompt-busy svg.lucide { width: 36px; height: 36px; animation: prompt-spin 1s linear infinite; }
+@keyframes prompt-spin { to { transform: rotate(360deg); } }

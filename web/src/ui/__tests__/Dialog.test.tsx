@@ -45,3 +45,12 @@ test('Escape closes only the dialog on top', () => {
   expect(inner).toHaveBeenCalledTimes(1);
   expect(outer).not.toHaveBeenCalled();
 });
+
+test('dismissable false has no Close button and ignores Escape and the backdrop', () => {
+  const onClose = vi.fn();
+  render(<Dialog open title="Prompt" onClose={onClose} dismissable={false}><p>x</p></Dialog>);
+  expect(screen.queryByRole('button', { name: 'Close' })).toBeNull();
+  fireEvent.keyDown(document, { key: 'Escape' });
+  fireEvent.click(document.querySelector('.ui-scrim')!);
+  expect(onClose).not.toHaveBeenCalled();
+});

@@ -1,0 +1,7 @@
+.sessionlog { display: flex; flex-direction: column; flex: none; height: 220px; margin-top: var(--space-2); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); background: var(--surface); overflow: hidden; }
+.sl-head { display: flex; align-items: center; gap: 2px; padding: 2px var(--space-2) 2px var(--space-4); border-bottom: 1px solid var(--border); background: var(--surface-2); }
+.sl-head h2 { flex: 1; font-size: var(--text-sm); font-weight: 600; }
+.sl-body { flex: 1; margin: 0; padding: var(--space-2) var(--space-4); overflow: auto; font: var(--text-xs)/1.5 var(--font-mono); color: var(--text); white-space: pre-wrap; }
+.sl-empty { color: var(--text-faint); }
+@media (max-width: 640px) { .sessionlog { height: 40vh; } }

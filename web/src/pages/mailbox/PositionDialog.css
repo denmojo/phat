@@ -1,0 +1,7 @@
+.position { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); }
+.position label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-sm); color: var(--text-muted); }
+.position input { height: 36px; padding: 0 var(--space-3); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
+  color: var(--text); font: inherit; font-size: var(--text-md); }
+.position input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.pos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.pos-note { font-size: var(--text-sm); color: var(--text-muted); }

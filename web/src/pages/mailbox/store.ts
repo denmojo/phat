@@ -5,6 +5,8 @@ import { computed, signal } from '@preact/signals';
 import * as api from '../../lib/api';
 import { ApiError } from '../../lib/api';
 import { connectWs } from '../../lib/ws';
+import * as notify from '../../lib/notify';
+import { checkRecovery } from '../../lib/recovery';
 import type { BulkResult, Config, Folder, Label, Message, Progress, Prompt, Row, Status, View } from '../../lib/types';
 import { toast } from '../../ui/Toast';
 
@@ -40,6 +42,55 @@ export const emptyDraft = (): Draft => ({ to: [], cc: [], subject: '', body: '',
 export const draft = signal<Draft>(emptyDraft());
 // drawerOpen shows the sidebar as a drawer on narrow screens.
 export const drawerOpen = signal(false);
+export const connectOpen = signal(false);
+export const positionOpen = signal(false);
+export const logOpen = signal(false);
+
+// logLines is the server's session log as the websocket streams it.
+export const logLines = signal<string[]>([]);
+const LOG_MAX = 1000;
+export function addLogLine(line: string): void {
+  const next = [...logLines.value, line];
+  logLines.value = next.length > LOG_MAX ? next.slice(next.length - LOG_MAX) : next;
+}
+
+// Issues the status popover lists besides the connection itself.
+export const notifyState = signal<notify.NotifyState | 'pending'>('pending');
+export const geoError = signal<string | null>(null);
+export const recoveryWarning = signal(false);
+
+// socket is the open websocket's sender; startWs fills it in.
+export const socket: { send: (o: unknown) => void } = { send: () => {} };
+// promptNotice is the desktop notification raised for the open prompt.
+export const promptNotice: { current: Notification | null } = { current: null };
+
+// answerPrompt sends the user's answer to the open prompt and closes it.
+export function answerPrompt(value: string): void {
+  const p = prompt.value;
+  if (!p) return;
+  socket.send({ prompt_response: { id: p.id, value } });
+  closePrompt();
+}
+
+function closePrompt(): void {
+  prompt.value = null;
+  promptNotice.current?.close();
+  promptNotice.current = null;
+}
+
+// Progress stays up for 3 s after a transfer finishes, unless another starts.
+let progressTimer: ReturnType<typeof setTimeout> | null = null;
+export function handleProgress(p: Progress): void {
+  if (progressTimer) clearTimeout(progressTimer);
+  progressTimer = null;
+  if (p.done) {
+    if (!progress.value) return;
+    progress.value = { ...progress.value, done: true };
+    progressTimer = setTimeout(() => { progress.value = null; }, 3000);
+    return;
+  }
+  if (p.receiving || p.sending) progress.value = p;
+}
 
 export type SortKey = 'date' | 'from' | 'subject';
 export type Sort = { key: SortKey; asc: boolean };
@@ -271,26 +322,39 @@ export function handleStatus(s: Status): void {
 
 // startWs connects the websocket and routes its messages into the store.
 export function startWs() {
-  return connectWs({
+  const ws = connectWs({
     onOpen: () => {
       wsUp.value = true;
       // Anything may have changed while the socket was down.
       void refreshSidebar();
       void refresh();
+      // The old client checked the recovery email 3 s after connecting.
+      setTimeout(() => {
+        void checkRecovery(mycall.value).then((r) => {
+          if (r === 'warn') recoveryWarning.value = true;
+          if (r === 'ok') recoveryWarning.value = false;
+        });
+      }, 3000);
     },
     onClose: () => { wsUp.value = false; },
     onStatus: handleStatus,
-    onProgress: (p) => { progress.value = p.done ? null : p; },
+    onProgress: handleProgress,
     onNotification: (n) => {
-      if ('Notification' in window && Notification.permission === 'granted') new Notification(n.title, { body: n.body });
-      else toast(`${n.title}: ${n.body}`);
+      if (!notify.show(n.title, n.body)) toast(`${n.title}: ${n.body}`);
     },
-    onPrompt: (p) => { prompt.value = p; },
-    onPromptAbort: () => { prompt.value = null; },
+    onPrompt: (p) => {
+      promptNotice.current?.close();
+      prompt.value = p;
+      promptNotice.current = notify.show(p.message);
+    },
+    onPromptAbort: closePrompt,
+    onLogLine: addLogLine,
     onUpdateMailbox: () => {
       void refresh();
       void refreshSidebar();
     },
     onMyCall: (c) => { mycall.value = c; },
   });
+  socket.send = ws.send;
+  return ws;
 }

@@ -1,0 +1,33 @@
+.sp { position: relative; }
+.sp .status { display: inline-flex; align-items: center; gap: var(--space-2); height: 36px; padding: 0 var(--space-3); border: 1px solid var(--border);
+  border-radius: var(--radius-md); background: var(--surface); color: var(--text-muted); font: inherit; font-size: var(--text-sm); cursor: pointer; }
+.sp .status:hover { background: var(--surface-2); }
+.sp .status.busy { color: var(--text); font-weight: 600; }
+.sp .light { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--ok); }
+.sp .light.info { background: var(--accent); }
+.sp .light.warning { background: var(--warn); }
+.sp .light.danger { background: var(--danger); }
+.sp .status.busy .light { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+.sp-panel { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; width: min(340px, calc(100vw - 32px)); max-height: 70vh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-2); background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
+.sp-section { padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); border-left: 3px solid var(--border); background: var(--surface-2);
+  font-size: var(--text-sm); color: var(--text); }
+.sp-section h3 { font-size: var(--text-sm); font-weight: 700; margin: 0 0 var(--space-1); }
+.sp-section p { margin: 0 0 var(--space-1); color: var(--text-muted); line-height: 1.45; }
+.sp-section a { color: var(--accent); }
+.sp-section.danger { border-left-color: var(--danger); }
+.sp-section.warning { border-left-color: var(--warn); }
+.sp-section.info { border-left-color: var(--accent); }
+.sp-section.ok { border-left-color: var(--ok); }
+.sp-actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+.sp-recovery input { width: 100%; height: 36px; padding: 0 var(--space-3); border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); color: var(--text); font: inherit; }
+.sp-recovery .hint { font-size: var(--text-xs); }
+.sp-recovery a { color: var(--accent); }
+@media (max-width: 640px) {
+  .sp .status .label { display: none; }
+  .sp .status { padding: 0 var(--space-3); }
+  /* The pill sits mid-bar, so a panel hung from it runs off the left edge. */
+  .sp-panel { position: fixed; left: 16px; right: 16px; top: 64px; width: auto; }
+}

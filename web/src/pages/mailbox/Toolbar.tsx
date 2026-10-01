@@ -1,30 +1,49 @@
-import { Archive, ArrowDownWideNarrow, Ellipsis, FolderInput, Mail, MailOpen, Menu as MenuIcon, RadioTower, RotateCw, Star, StarOff, Trash2, X } from 'lucide-preact';
+import { Archive, ArrowDownWideNarrow, Ellipsis, FolderInput, Mail, MailOpen, Menu as MenuIcon, RadioTower, RotateCw, Star, StarOff, Trash2, Unplug, X } from 'lucide-preact';
+import { useEffect, useState } from 'preact/hooks';
+import * as api from '../../lib/api';
 import { Checkbox } from '../../ui/Checkbox';
+import { toast } from '../../ui/Toast';
+import { StatusPopover } from './StatusPopover';
 import { IconButton } from '../../ui/IconButton';
 import { Menu } from '../../ui/Menu';
 import { Button } from '../../ui/Button';
 import { SearchBox } from './SearchBox';
 import { LabelMenu } from './LabelMenu';
 import {
-  applyBulk, clearSelection, drawerOpen, folders, refresh, rows, selectAll, selected, setSort, sort, status, view, wsUp,
+  applyBulk, clearSelection, connectOpen, drawerOpen, folders, refresh, rows, selectAll, selected, setSort, sort, status, view,
   type SortKey,
 } from './store';
 import { folderTitle } from './format';
 import './Toolbar.css';
 
 // Topbar sits above the message panel: the drawer button on narrow
-// screens, search, and the connection status with Connect at the right.
+// screens, search, the status pill, and Connect, which becomes Abort or
+// Disconnect during a session and Force disconnect on a second press.
 export function Topbar() {
   const s = status.value;
-  const text = !wsUp.value ? 'Offline' : s?.connected ? `Connected ${s.remote_addr}` : s?.dialing ? 'Dialing' : 'Disconnected';
-  const light = !wsUp.value ? 'off' : s?.connected ? 'on' : s?.dialing ? 'busy' : 'idle';
+  const [stopping, setStopping] = useState(false);
+  const live = !!(s?.dialing || s?.connected);
+  useEffect(() => { if (!live) setStopping(false); }, [live]);
+  const stop = (dirty: boolean) => {
+    setStopping(true);
+    api.disconnect(dirty).catch((err) => toast(err instanceof Error ? err.message : String(err), { kind: 'error' }));
+  };
+  let button;
+  if (!live) {
+    button = <Button variant="primary" label="Connect" onClick={() => { connectOpen.value = true; }}><RadioTower /><span class="label">Connect</span></Button>;
+  } else if (stopping) {
+    button = <Button variant="danger" label="Force disconnect" onClick={() => stop(true)}><Unplug /><span class="label">Force disconnect</span></Button>;
+  } else {
+    const name = s?.dialing ? 'Abort' : 'Disconnect';
+    button = <Button label={name} onClick={() => stop(false)}><Unplug /><span class="label">{name}</span></Button>;
+  }
   return (
     <div class="topbar">
       <span class="menu-btn"><IconButton icon={MenuIcon} label="Folders" onClick={() => { drawerOpen.value = true; }} /></span>
       <SearchBox />
       <div class="conn">
-        <span class="status" role="status"><span class={`light ${light}`} /><span class="label">{text}</span></span>
-        <Button variant="primary"><RadioTower /><span class="label">Connect</span></Button>
+        <StatusPopover />
+        {button}
       </div>
     </div>
   );
