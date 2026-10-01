@@ -1,0 +1,5 @@
+.ui-iconbtn { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border: 0;
+  background: none; border-radius: 50%; color: var(--text-muted); cursor: pointer; flex: none; padding: 0; }
+.ui-iconbtn:hover:not(:disabled) { background: var(--surface-3); color: var(--text); }
+.ui-iconbtn:disabled { opacity: .4; cursor: default; }
+.ui-iconbtn.on { color: var(--star); }

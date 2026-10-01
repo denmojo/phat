@@ -1,0 +1,4 @@
+.ui-tokenfield { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-2) var(--space-4);
+  min-height: 44px; border-bottom: 1px solid var(--border); }
+.ui-tokenfield label { color: var(--text-faint); width: 52px; font-size: var(--text-sm); }
+.ui-tokenfield input { flex: 1; min-width: 80px; border: 0; background: none; color: var(--text); outline: none; }

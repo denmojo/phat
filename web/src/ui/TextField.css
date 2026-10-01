@@ -1,0 +1,7 @@
+.ui-field { display: flex; flex-direction: column; gap: var(--space-1); }
+.ui-field label { font-size: var(--text-sm); color: var(--text-muted); font-weight: 600; }
+.ui-field input { height: 36px; padding: 0 var(--space-3); border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); color: var(--text); outline: none; }
+.ui-field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-weak); }
+.ui-field.invalid input { border-color: var(--danger); }
+.ui-field-error { font-size: var(--text-sm); color: var(--danger); }

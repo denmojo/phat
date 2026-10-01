@@ -1,0 +1,36 @@
+/* Design tokens. Values come from the approved mockup,
+   docs/mockups/phat-ui.html; change them there first. */
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+  --text-xs: 11px; --text-sm: 12.5px; --text-md: 14px; --text-lg: 16px; --text-xl: 20px;
+  --radius: 6px; --radius-md: 10px; --radius-lg: 14px; --radius-pill: 999px;
+  --row-h: 44px;
+  --sidebar-w: 236px;
+}
+:root, [data-theme="light"] {
+  --bg: #f4f5f7;
+  --surface: #ffffff; --surface-2: #f0f2f5; --surface-3: #e6e9ee;
+  --border: #e1e4e8;
+  --text: #1a1d21; --text-muted: #565e68; --text-faint: #8a919b;
+  --accent: #2563eb; --accent-hover: #1d4fd8; --accent-weak: #e7eefc; --accent-text: #ffffff;
+  --danger: #d92d20; --warn: #b26a00; --star: #e8a317; --ok: #16a34a;
+  --shadow: 0 1px 2px rgba(16,24,40,.06), 0 4px 12px rgba(16,24,40,.08);
+  --shadow-lg: 0 12px 32px rgba(16,24,40,.18);
+  --scrim: rgba(10,12,16,.38);
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  --bg: #0e1013;
+  --surface: #16191d; --surface-2: #1d2126; --surface-3: #262b31;
+  --border: #2a2f36;
+  --text: #e7e9ec; --text-muted: #a5adb7; --text-faint: #6e7681;
+  --accent: #6b9bff; --accent-hover: #86afff; --accent-weak: #1b2741; --accent-text: #0e1013;
+  --danger: #f2615a; --warn: #f0b34a; --star: #f0b429; --ok: #3ccf6e;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 12px rgba(0,0,0,.35);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,.55);
+  --scrim: rgba(0,0,0,.5);
+  color-scheme: dark;
+}

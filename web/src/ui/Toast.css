@@ -1,0 +1,5 @@
+.ui-toasts { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 200; display: flex; flex-direction: column;
+  align-items: center; gap: var(--space-2); pointer-events: none; }
+.ui-toast { display: flex; align-items: center; gap: var(--space-3); padding: 10px 16px; border-radius: var(--radius-md);
+  background: #23262b; color: #f3f4f6; font-size: var(--text-sm); box-shadow: var(--shadow-lg); pointer-events: auto; max-width: min(560px, 92vw); }
+.ui-toast.error { box-shadow: inset 3px 0 0 var(--danger), var(--shadow-lg); }

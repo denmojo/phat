@@ -1,0 +1,12 @@
+.ui-scrim { position: fixed; inset: 0; background: var(--scrim); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.ui-dialog { width: min(480px, 94vw); max-height: 92vh; background: var(--surface); color: var(--text); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden; }
+.ui-dialog.wide { width: min(720px, 94vw); }
+.ui-dialog-head { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  background: var(--surface-2); }
+.ui-dialog-head h2 { flex: 1; font-size: var(--text-md); font-weight: 600; }
+.ui-dialog-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+.ui-dialog-foot { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); }
+@media (max-width: 640px) {
+  .ui-dialog, .ui-dialog.wide { width: 100vw; height: 100%; max-height: none; border-radius: 0; }
+}
