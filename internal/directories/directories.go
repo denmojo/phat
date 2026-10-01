@@ -2,6 +2,7 @@ package directories
 
 import (
 	"errors"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -130,6 +131,60 @@ func MigrateLegacyDataDir() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+// MigrateFromPat copies config.json, the mailbox tree and the forms
+// directory from Pat's XDG directories into Phat's on first run. It runs
+// only when Phat has no config.json yet, copies rather than moves so Pat
+// keeps working beside Phat, and is a no-op on every later start.
+func MigrateFromPat() error {
+	if _, err := os.Stat(filepath.Join(ConfigDir(), "config.json")); err == nil {
+		return nil
+	}
+	patCfg := filepath.Join(xdg.ConfigHome, "pat")
+	patData := filepath.Join(xdg.DataHome, "pat")
+	if _, err := os.Stat(filepath.Join(patCfg, "config.json")); err != nil {
+		return nil // no Pat install to migrate from
+	}
+	log.Printf("First run: copying Pat's files from %s and %s", patCfg, patData)
+	if err := copyFile(filepath.Join(patCfg, "config.json"), filepath.Join(ConfigDir(), "config.json")); err != nil {
+		return err
+	}
+	for _, name := range []string{"mailbox", "Standard_Forms"} {
+		src := filepath.Join(patData, name)
+		if _, err := os.Stat(src); err != nil {
+			continue
+		}
+		if err := copyTree(src, filepath.Join(DataDir(), name)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func copyFile(src, dst string) error {
+	b, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(dst, b, 0o644)
+}
+
+func copyTree(src, dst string) error {
+	return filepath.WalkDir(src, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, _ := filepath.Rel(src, p)
+		target := filepath.Join(dst, rel)
+		if d.IsDir() {
+			return os.MkdirAll(target, 0o755)
+		}
+		return copyFile(p, target)
+	})
 }
 
 func migrateFile(fileName string, fromDir string, toDir string) error {

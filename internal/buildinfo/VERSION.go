@@ -8,12 +8,12 @@ const (
 	// AppName is the friendly name of the app.
 	//
 	// Forks should consider using a different name.
-	AppName = "Pat"
+	AppName = "Phat"
 
 	// Version is the app's SemVer.
 	//
 	// Forks should NOT bump this unless they use a unique AppName. The Winlink
 	// system uses this to derive the "these users should upgrade" wall of shame
 	// from CMS connects.
-	Version = "1.0.0"
+	Version = "0.1.0"
 )

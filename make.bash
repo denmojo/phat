@@ -70,15 +70,15 @@ else
 fi
 echo
 
-echo "Building Pat v$VERSION..."
-go build -tags "$TAGS"
+echo "Building Phat v$VERSION..."
+go build -tags "$TAGS" -o phat
 
 # Build macOS pkg
 if [[ "$OS" == "darwin"* ]] && command -v packagesbuild >/dev/null 2>&1; then
 	ARCH=$(go env GOARCH)
 	echo "Generating macOS installer package..."
-	packagesbuild osx/pat.pkgproj
-	mv 'Pat :: A Modern Winlink Client.pkg' "pat_${VERSION}_darwin_${ARCH}_unsigned.pkg"
+	packagesbuild osx/phat.pkgproj
+	mv 'Phat :: A Winlink Client.pkg' "phat_${VERSION}_darwin_${ARCH}_unsigned.pkg"
 fi
 
 echo -e "Enjoy!"

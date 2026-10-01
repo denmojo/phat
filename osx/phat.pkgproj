@@ -414,7 +414,7 @@
 													<key>GID</key>
 													<integer>0</integer>
 													<key>PATH</key>
-													<string>../pat</string>
+													<string>../phat</string>
 													<key>PATH_TYPE</key>
 													<integer>1</integer>
 													<key>PERMISSIONS</key>
@@ -453,7 +453,7 @@
 																	<key>GID</key>
 																	<integer>0</integer>
 																	<key>PATH</key>
-																	<string>../man/pat.1</string>
+																	<string>../man/phat.1</string>
 																	<key>PATH_TYPE</key>
 																	<integer>1</integer>
 																	<key>PERMISSIONS</key>
@@ -469,7 +469,7 @@
 																	<key>GID</key>
 																	<integer>0</integer>
 																	<key>PATH</key>
-																	<string>../man/pat-configure.1</string>
+																	<string>../man/phat-configure.1</string>
 																	<key>PATH_TYPE</key>
 																	<integer>1</integer>
 																	<key>PERMISSIONS</key>
@@ -580,9 +580,9 @@
 				<key>CONCLUSION_ACTION</key>
 				<integer>0</integer>
 				<key>IDENTIFIER</key>
-				<string>io.getpat.pat</string>
+				<string>io.github.denmojo.phat</string>
 				<key>NAME</key>
-				<string>pat</string>
+				<string>phat</string>
 				<key>OVERWRITE_PERMISSIONS</key>
 				<false/>
 				<key>USE_HFS+_COMPRESSION</key>
@@ -794,7 +794,7 @@
 						<key>LANGUAGE</key>
 						<string>English</string>
 						<key>VALUE</key>
-						<string>Pat</string>
+						<string>Phat</string>
 					</dict>
 				</array>
 			</dict>
@@ -1003,7 +1003,7 @@
 				</dict>
 			</array>
 			<key>NAME</key>
-			<string>Pat :: A Modern Winlink Client</string>
+			<string>Phat :: A Winlink Client</string>
 		</dict>
 	</dict>
 	<key>TYPE</key>

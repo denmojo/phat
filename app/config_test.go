@@ -6,10 +6,11 @@ import (
 	"testing"
 
 	"github.com/la5nta/pat/cfg"
+	"github.com/la5nta/pat/internal/buildinfo"
 )
 
 func TestReadRigsFromEnv(t *testing.T) {
-	const prefix = "PAT_HAMLIB_RIGS"
+	prefix := strings.ToUpper(buildinfo.AppName) + "_HAMLIB_RIGS"
 	unset := func() {
 		for _, env := range os.Environ() {
 			key, _, _ := strings.Cut(env, "=")

@@ -1,16 +1,8 @@
-<a href="http://getpat.io"><img src="https://raw.githubusercontent.com/la5nta/pat-website/gh-pages/img/logo.png" width="128" ></a>
+# Phat
 
-[![Build status](https://github.com/la5nta/pat/actions/workflows/go.yaml/badge.svg)](https://github.com/la5nta/pat/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/la5nta/pat)](https://goreportcard.com/report/github.com/la5nta/pat)
-[![Liberapay Patreons](http://img.shields.io/liberapay/patrons/la5nta.svg?logo=liberapay)](https://liberapay.com/la5nta)
+Phat is a Winlink client forked from [Pat](https://github.com/la5nta/pat) by LA5NTA. It keeps Pat's radio and protocol core and tracks upstream for it, and replaces the web client with a mail layout: folders on the left, a toolbar on top, stars, labels, drag and drop between folders, keyword search over a SQLite index, and light and dark themes.
 
-## Overview
-
-Pat is a cross platform Winlink client with basic messaging capabilities.
-
-It is the primary sandbox/prototype application for the [wl2k-go](https://github.com/la5nta/wl2k-go) project, and provides both a command line interface and a responsive (mobile-friendly) web interface.
-
-It is mainly developed for Linux, but is also known to run on OS X, Windows and Android.
+Phat reads a Pat installation on first run and copies its config, mailbox and forms into its own directories (`~/.config/phat`, `~/.local/share/phat`), leaving Pat's untouched.
 
 #### Features
 * Message composer/reader (basic mailbox functionality).
@@ -59,6 +51,8 @@ For more information, see <https://github.com/la5nta/wl2k-go#gzip-experiment>.
 ## Copyright/License
 
 Copyright (c) 2020 Martin Hebnes Pedersen LA5NTA
+
+Phat's changes are copyright Dennis M (denmojo) and released under the same MIT license.
 
 ### Contributors (alphabetical)
 

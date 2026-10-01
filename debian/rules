@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-PKGDIR=debian/pat
+PKGDIR=debian/phat
 
 %:
 	dh $@
@@ -18,12 +18,12 @@ binary-arch: clean build
 	dh_installdirs
 
 	mkdir -p $(PKGDIR)/usr/bin
-	mkdir -p $(PKGDIR)/usr/share/pat
+	mkdir -p $(PKGDIR)/usr/share/phat
 	mkdir -p $(PKGDIR)/lib/systemd/system
 
-	mv ./pat $(PKGDIR)/usr/bin/
-	cp -r share/* $(PKGDIR)/usr/share/pat/
-	cp debian/pat@.service $(PKGDIR)/lib/systemd/system/
+	mv ./phat $(PKGDIR)/usr/bin/
+	cp -r share/* $(PKGDIR)/usr/share/phat/
+	cp debian/phat@.service $(PKGDIR)/lib/systemd/system/
 
 	dh_installman
 	dh_strip

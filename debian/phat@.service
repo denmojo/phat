@@ -1,11 +1,11 @@
 [Unit]
-Description=pat - Winlink client for %I
-Documentation=https://github.com/la5nta/pat/wiki
+Description=phat - Winlink client for %I
+Documentation=https://github.com/denmojo/phat
 After=ax25.service network.target
 
 [Service]
 User=%i
-ExecStart=/usr/bin/pat http
+ExecStart=/usr/bin/phat http
 Restart=on-failure
 
 [Install]

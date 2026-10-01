@@ -1,12 +1,12 @@
-Source: pat
+Source: phat
 Section: ham
 Priority: extra
 Maintainer: Martin Hebnes Pedersen <martin.h.pedersen@gmail.com>
-Homepage: http://getpat.io
+Homepage: https://github.com/denmojo/phat
 Build-Depends: debhelper (>= 7.0.50~), golang (>= 2:1.26), libax25, libax25-dev
 Standards-Version: 3.9.1
 
-Package: pat
+Package: phat
 Architecture: amd64 i386 armhf arm64
 Conflicts: wl2k-go, dist
 Replaces: wl2k-go
