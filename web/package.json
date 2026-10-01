@@ -1,8 +1,7 @@
 {
   "name": "phat-web",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "0.1.0",
+  "description": "Phat web client",
   "scripts": {
     "test": "vitest run",
     "dev": "vite",
@@ -11,7 +10,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "module",
   "private": "true",
   "dependencies": {

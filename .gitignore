@@ -7,3 +7,5 @@ docker-data/
 .aider*
 *.swp
 .preview/
+.DS_Store
+.superpowers/
