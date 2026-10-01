@@ -114,6 +114,37 @@ test('picked files accumulate across picks and each can be removed', async () =>
   expect(store.draft.value.files.map((f) => f.name)).toEqual(['b.txt']);
 });
 
+test('Escape on a typed draft asks before discarding, and Keep editing keeps it', async () => {
+  compose();
+  render(<Composer />);
+  store.draft.value = { ...store.draft.value, subject: 'Net check-in' };
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(await screen.findByText('Discard this message?')).toBeInTheDocument();
+  expect(store.composerOpen.value).toBe(true);
+  fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+  await waitFor(() => expect(screen.queryByText('Discard this message?')).not.toBeInTheDocument());
+  expect(store.composerOpen.value).toBe(true);
+  expect(store.draft.value.subject).toBe('Net check-in');
+});
+
+test('Cancel on a typed draft discards only after Discard is pressed', async () => {
+  compose();
+  render(<Composer />);
+  store.draft.value = { ...store.draft.value, body: 'Two cots left.' };
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Discard' }));
+  expect(store.composerOpen.value).toBe(false);
+  expect(store.draft.value.body).toBe('');
+});
+
+test('an untouched reply closes on Escape without asking', async () => {
+  reply(msg, false);
+  render(<Composer />);
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(store.composerOpen.value).toBe(false);
+  expect(screen.queryByText('Discard this message?')).not.toBeInTheDocument();
+});
+
 test('a refused send keeps the composer open and shows the server error', async () => {
   (api.send as unknown as { mockRejectedValueOnce: (e: unknown) => void })
     .mockRejectedValueOnce(new api.ApiError(400, 'Validation error: no recipients'));

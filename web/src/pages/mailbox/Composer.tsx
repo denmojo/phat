@@ -30,9 +30,20 @@ function replyCc(m: Message): string[] {
   return out;
 }
 
+// opened is the draft as the composer first showed it, so closing an
+// untouched reply doesn't ask about the quote it started with.
+let opened: Draft = emptyDraft();
+
 function open(d: Draft) {
+  opened = d;
   draft.value = d;
   composerOpen.value = true;
+}
+
+function edited(d: Draft): boolean {
+  return d.subject !== opened.subject || d.body !== opened.body || d.p2pOnly !== opened.p2pOnly
+    || d.to.join() !== opened.to.join() || d.cc.join() !== opened.cc.join()
+    || d.files.length !== opened.files.length;
 }
 
 // reattach fetches the message's files and adds them to the draft, the
@@ -42,7 +53,10 @@ function reattach(m: Message) {
     void fetch(api.attachmentUrl(m.Folder, m.MID, f.Name))
       .then((res) => (res.ok ? res.blob() : Promise.reject(new Error(`${f.Name}: HTTP ${res.status}`))))
       .then((blob) => {
-        draft.value = { ...draft.value, files: [...draft.value.files, new File([blob], f.Name, { type: blob.type })] };
+        const file = new File([blob], f.Name, { type: blob.type });
+        // A carried-along file counts as part of the opened draft.
+        opened = { ...opened, files: [...opened.files, file] };
+        draft.value = { ...draft.value, files: [...draft.value.files, file] };
       })
       .catch((err) => toast(`Could not attach ${f.Name}: ${err instanceof Error ? err.message : String(err)}`, { kind: 'error' }));
   }
@@ -75,8 +89,8 @@ export function editAsNew(m: Message) {
   reattach(m);
 }
 
-// closeComposer discards the draft. It is one stable function so the
-// dialog's focus handling doesn't rerun on every keystroke.
+// closeComposer discards the draft without asking: Send calls it after a
+// post, and Discard after the user has confirmed.
 export function closeComposer() {
   stopFormPolling();
   composerOpen.value = false;
@@ -92,8 +106,16 @@ export function Composer() {
   const body = useRef<HTMLTextAreaElement>(null);
   const closeCatalog = useCallback(() => setCatalog(false), []);
   const subjectId = useId();
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   const isOpen = composerOpen.value;
   const d = draft.value;
+  // Escape, the X and Cancel ask first when anything was typed.
+  const tryClose = useCallback(() => {
+    if (edited(draft.value)) setConfirmDiscard(true);
+    else closeComposer();
+  }, []);
+  const keepEditing = useCallback(() => setConfirmDiscard(false), []);
+  const discard = () => { setConfirmDiscard(false); closeComposer(); };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -139,7 +161,7 @@ export function Composer() {
   const title = d.inReplyTo ? 'Reply' : 'New message';
   return (
     <>
-      <Dialog open={isOpen} title={title} onClose={closeComposer} wide closeOnBackdrop={false}
+      <Dialog open={isOpen} title={title} onClose={tryClose} wide closeOnBackdrop={false}
         footer={(
           <>
             <label class="ui-btn ui-btn-default ui-btn-md attach">
@@ -152,7 +174,7 @@ export function Composer() {
               P2P only
             </label>
             <span class="spacer" />
-            <Button onClick={closeComposer}>Cancel</Button>
+            <Button onClick={tryClose}>Cancel</Button>
             <Button variant="primary" disabled={sending} onClick={() => void send()}><Send /><span>Send</span></Button>
           </>
         )}>
@@ -170,6 +192,15 @@ export function Composer() {
         </div>
       </Dialog>
       <FormCatalog open={isOpen && catalog} onClose={closeCatalog} />
+      <Dialog open={isOpen && confirmDiscard} title="Discard this message?" onClose={keepEditing}
+        footer={(
+          <>
+            <Button onClick={keepEditing}>Keep editing</Button>
+            <Button variant="danger" onClick={discard}>Discard</Button>
+          </>
+        )}>
+        <p>What you've written will be lost.</p>
+      </Dialog>
     </>
   );
 }
