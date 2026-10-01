@@ -77,6 +77,12 @@ type Config struct {
 	// Use ":8080" to listen on any device, port 8080.
 	HTTPAddr string `json:"http_addr"`
 
+	// Address of a running Pat to hand web connects to, sharing this
+	// mailbox. Empty means Phat connects itself.
+	//
+	// Example: "http://localhost:8080"
+	ConnectVia string `json:"connect_via,omitempty"`
+
 	// Web UI preferences.
 	UI UIConfig `json:"ui"`
 
@@ -385,7 +391,7 @@ type GPSdConfig struct {
 }
 
 var DefaultConfig = Config{
-	UI: UIConfig{Appearance: "system"},
+	UI:                    UIConfig{Appearance: "system"},
 	MOTD:                  []string{"Open source Winlink client - getpat.io"},
 	AuxAddrs:              []AuxAddr{},
 	ServiceCodes:          []string{"PUBLIC"},

@@ -10,6 +10,7 @@ const full = (): Config => ({
   auto_download_size_limit: 50000,
   service_codes: ['PUBLIC'],
   http_addr: '127.0.0.1:8080',
+  connect_via: 'http://localhost:8090',
   ui: { appearance: 'dark' },
   motd: ['hello'],
   connect_aliases: { telnet: 'telnet://{mycall}:CMSTelnet@cms.winlink.org:8772/wl2k', eoc: 'ardop:///EOC-1?freq=7102.2' },
@@ -94,4 +95,12 @@ test('the GPSd HTTP proxy setting is never written from the page', () => {
   const s = fromConfig(full());
   expect('enableHttp' in s.gpsd).toBe(false);
   expect((toConfig(full(), s) as any).gpsd.enable_http).toBe(true);
+});
+
+test('connect_via is trimmed, and cleared when emptied', () => {
+  const s = fromConfig(full());
+  expect(s.connectVia).toBe('http://localhost:8090');
+  expect((toConfig(full(), { ...s, connectVia: ' http://localhost:8080 ' }) as any).connect_via).toBe('http://localhost:8080');
+  expect('connect_via' in toConfig(full(), { ...s, connectVia: '  ' })).toBe(false);
+  expect('connect_via' in toConfig(bare(), fromConfig(bare()))).toBe(false);
 });

@@ -43,6 +43,8 @@ type WSHub struct {
 
 	mu   sync.Mutex
 	pool map[*WSConn]struct{}
+
+	relay *patRelay // set when connect_via hands sessions to Pat
 }
 
 func NewWSHub(app *app.App) *WSHub {
@@ -50,7 +52,17 @@ func NewWSHub(app *app.App) *WSHub {
 }
 
 func (w *WSHub) UpdateStatus() {
-	w.WriteJSON(struct{ Status types.Status }{w.GetStatus()})
+	w.WriteJSON(struct{ Status types.Status }{w.status()})
+}
+
+// status is the app's status, with Pat's session in it when connects go
+// through Pat.
+func (w *WSHub) status() types.Status {
+	s := w.GetStatus()
+	if w.relay != nil {
+		w.relay.overlay(&s)
+	}
+	return s
 }
 
 func (w *WSHub) WriteProgress(p types.Progress) { w.WriteJSON(struct{ Progress types.Progress }{p}) }
@@ -303,6 +315,9 @@ func tailFile(path string) (<-chan []byte, chan<- struct{}, error) {
 func (w *WSHub) handleWSMessage(v map[string]json.RawMessage) {
 	raw, ok := v["prompt_response"]
 	if !ok {
+		return
+	}
+	if w.relay != nil && w.relay.respond(raw) {
 		return
 	}
 	var resp app.PromptResponse

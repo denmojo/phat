@@ -49,6 +49,17 @@ func ListenAndServe(ctx context.Context, a *app.App, addr string) error {
 	}
 
 	handler := NewHandler(a)
+	if via := a.Config().ConnectVia; via != "" {
+		// A bad address leaves the page up and connecting directly, so
+		// Settings stays reachable to fix it.
+		if relay, err := newPatRelay(via, handler.wsHub); err != nil {
+			log.Printf("Ignoring %v", err)
+		} else {
+			log.Printf("Connects go through Pat at %s", relay.base)
+			handler.wsHub.relay = relay
+			go relay.run(ctx)
+		}
+	}
 	go handler.wsHub.WatchMBox(ctx, a.Mailbox())
 	if err := a.EnableWebSocket(ctx, handler.wsHub); err != nil {
 		return err
@@ -233,7 +244,7 @@ func (h Handler) wsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) statusHandler(w http.ResponseWriter, _ *http.Request) {
-	_ = json.NewEncoder(w).Encode(h.GetStatus())
+	_ = json.NewEncoder(w).Encode(h.wsHub.status())
 }
 
 func (h Handler) bandwidthsHandler(w http.ResponseWriter, req *http.Request) {
@@ -373,6 +384,10 @@ func (h Handler) positionHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h Handler) DisconnectHandler(w http.ResponseWriter, req *http.Request) {
+	if h.wsHub.relay != nil {
+		h.wsHub.relay.disconnect(w, req)
+		return
+	}
 	dirty, _ := strconv.ParseBool(req.FormValue("dirty"))
 	if ok := h.AbortActiveConnection(dirty); !ok {
 		w.WriteHeader(http.StatusBadRequest)
@@ -381,6 +396,10 @@ func (h Handler) DisconnectHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h Handler) ConnectHandler(w http.ResponseWriter, req *http.Request) {
+	if h.wsHub.relay != nil {
+		h.wsHub.relay.connect(w, req)
+		return
+	}
 	connectStr := req.FormValue("url")
 
 	nMsgs := h.Mailbox().InboxCount()

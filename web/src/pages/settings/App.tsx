@@ -24,6 +24,8 @@ function validate(s: FormState): Record<string, string> {
   const e: Record<string, string> = {};
   if (!s.mycall.trim()) e.mycall = 'Enter your callsign.';
   if (!s.locator.trim()) e.locator = 'Enter your grid locator.';
+  const via = s.connectVia.trim();
+  if (via && !/^https?:\/\/[^/\s]+/.test(via)) e.connectVia = 'Use an address like http://localhost:8080.';
   return e;
 }
 

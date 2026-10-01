@@ -126,6 +126,8 @@ func NewForTest(opts Options, mbox *mailbox.DirHandler, ix *mailindex.Index) *Ap
 	a := New(opts)
 	a.mbox = mbox
 	a.index = ix
+	a.listenHub = NewListenerHub(a)
+	a.promptHub = NewPromptHub()
 	return a
 }
 
