@@ -2,15 +2,18 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { Plus, Tag } from 'lucide-preact';
 import { IconButton } from '../../ui/IconButton';
 import { LabelEditor } from './LabelEditor';
-import { applyBulk, labels, rows, selected } from './store';
+import { applyBulkTo, labels, rows, selected } from './store';
 import '../../ui/Menu.css';
 import './LabelMenu.css';
 
 type State = 'true' | 'false' | 'mixed';
 
-// LabelMenu toggles labels on the selected rows. A label all of them carry
-// shows checked and comes off; one some or none carry goes on all.
-export function LabelMenu() {
+type Target = { mids: string[]; labels: string[][] };
+
+// LabelMenu toggles labels on the selected rows, or on target when given
+// (the open message). A label all of them carry shows checked and comes
+// off; one some or none carry goes on all.
+export function LabelMenu({ target }: { target?: Target }) {
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const wrap = useRef<HTMLSpanElement>(null);
@@ -26,9 +29,11 @@ export function LabelMenu() {
   }, [open]);
 
   const chosen = rows.value.filter((r) => selected.value.has(r.MID));
+  const mids = target?.mids ?? chosen.map((r) => r.MID);
+  const sets = target?.labels ?? chosen.map((r) => r.Labels);
   const state = (name: string): State => {
-    const n = chosen.filter((r) => r.Labels.includes(name)).length;
-    return n === 0 ? 'false' : n === chosen.length ? 'true' : 'mixed';
+    const n = sets.filter((ls) => ls.includes(name)).length;
+    return n === 0 ? 'false' : n === sets.length ? 'true' : 'mixed';
   };
 
   const onKey = (e: KeyboardEvent) => {
@@ -48,7 +53,7 @@ export function LabelMenu() {
             const s = state(l.name);
             return (
               <button key={l.name} type="button" role="menuitemcheckbox" aria-checked={s} class="ui-menu-item"
-                onClick={() => void (s === 'true' ? applyBulk('labels', [], [l.name]) : applyBulk('labels', [l.name], []))}>
+                onClick={() => void (s === 'true' ? applyBulkTo(mids, 'labels', [], [l.name]) : applyBulkTo(mids, 'labels', [l.name], []))}>
                 <span class={`lm-box ${s}`} aria-hidden="true" />
                 <span class="dot" style={{ background: l.color }} />
                 {l.name}
@@ -64,7 +69,7 @@ export function LabelMenu() {
       {creating && (
         <LabelEditor open onClose={(created) => {
           setCreating(false);
-          if (created) void applyBulk('labels', [created], []);
+          if (created) void applyBulkTo(mids, 'labels', [created], []);
         }} />
       )}
     </span>

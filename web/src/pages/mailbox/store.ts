@@ -210,6 +210,15 @@ export async function applyBulkTo(mids: string[], ...args: Bulk): Promise<BulkRe
     }
   }
   await Promise.all([refresh(), refreshSidebar()]);
+  // Keep an open message in step with what just happened to it.
+  const m = openMessage.value;
+  if (m && res?.ok.includes(m.MID)) {
+    if (args[0] === 'move' || args[0] === 'delete') openMessage.value = null;
+    else {
+      const fresh = await api.message(m.Folder, m.MID).catch(() => null);
+      if (fresh) openMessage.value = fresh;
+    }
+  }
   return res;
 }
 

@@ -3,9 +3,6 @@
 .panel { flex: 1; min-height: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
   display: flex; flex-direction: column; overflow: hidden; }
 .drawer-scrim { display: none; }
-.msg-stub { overflow-y: auto; padding: var(--space-5) var(--space-6); }
-.msg-stub h1 { font-size: var(--text-xl); font-weight: 600; margin-bottom: var(--space-2); }
-.msg-stub pre { white-space: pre-wrap; font: var(--text-md)/1.6 var(--font-sans); max-width: 72ch; }
 
 @media (max-width: 800px) {
   .app { grid-template-columns: 1fr; }

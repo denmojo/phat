@@ -3,3 +3,4 @@
 .ui-iconbtn:hover:not(:disabled) { background: var(--surface-3); color: var(--text); }
 .ui-iconbtn:disabled { opacity: .4; cursor: default; }
 .ui-iconbtn.on { color: var(--star); }
+.ui-iconbtn.on svg.lucide { fill: currentColor; }
