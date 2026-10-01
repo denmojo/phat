@@ -11,7 +11,7 @@ import (
 // ReleasesBaseURL is the GitHub API root that Phat's releases are read from.
 var ReleasesBaseURL = "https://api.github.com"
 
-const releasesRepo = "denmojo/pat"
+const releasesRepo = "denmojo/phat"
 
 type LatestRelease struct {
 	Version    string `json:"version"`

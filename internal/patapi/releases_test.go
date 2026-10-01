@@ -10,7 +10,7 @@ import (
 func serve(t *testing.T, status int, body string) {
 	t.Helper()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/repos/denmojo/pat/releases/latest" {
+		if r.URL.Path != "/repos/denmojo/phat/releases/latest" {
 			t.Errorf("path = %q", r.URL.Path)
 		}
 		w.WriteHeader(status)
@@ -23,12 +23,12 @@ func serve(t *testing.T, status int, body string) {
 }
 
 func TestGetLatestVersionReadsGitHubRelease(t *testing.T) {
-	serve(t, http.StatusOK, `{"tag_name":"v0.2.0","html_url":"https://github.com/denmojo/pat/releases/tag/v0.2.0"}`)
+	serve(t, http.StatusOK, `{"tag_name":"v0.2.0","html_url":"https://github.com/denmojo/phat/releases/tag/v0.2.0"}`)
 	r, err := GetLatestVersion(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if r == nil || r.Version != "0.2.0" || r.ReleaseURL != "https://github.com/denmojo/pat/releases/tag/v0.2.0" {
+	if r == nil || r.Version != "0.2.0" || r.ReleaseURL != "https://github.com/denmojo/phat/releases/tag/v0.2.0" {
 		t.Fatalf("got %+v", r)
 	}
 }
