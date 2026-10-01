@@ -44,6 +44,13 @@ func writeMsg(t *testing.T, mboxPath, folder, subject, body string, unread bool)
 	return msg.MID()
 }
 
+// removeIndexFiles deletes index.db and its WAL companions from disk.
+func removeIndexFiles(ix *Index) {
+	os.Remove(ix.Path())
+	os.Remove(ix.Path() + "-wal")
+	os.Remove(ix.Path() + "-shm")
+}
+
 func countRows(t *testing.T, ix *Index, where string, args ...any) int {
 	t.Helper()
 	var n int

@@ -24,6 +24,17 @@ type Index struct {
 	mboxPath string
 	db       *sql.DB
 	mu       sync.Mutex // serializes reconcile and mutations
+
+	// dbMu guards the db handle itself. ensureSchema replaces the handle
+	// when index.db was deleted; readers that do not hold mu take dbMu.RLock
+	// so they never use a handle that is being closed.
+	dbMu sync.RWMutex
+}
+
+// rlock holds the handle steady for a read that does not take mu.
+func (ix *Index) rlock() func() {
+	ix.dbMu.RLock()
+	return ix.dbMu.RUnlock
 }
 
 // Open opens or creates <mboxPath>/index.db and applies the schema.
@@ -48,7 +59,11 @@ func openDB(path string) (*sql.DB, error) {
 	return db, nil
 }
 
-func (ix *Index) Close() error { return ix.db.Close() }
+func (ix *Index) Close() error {
+	ix.dbMu.Lock()
+	defer ix.dbMu.Unlock()
+	return ix.db.Close()
+}
 
 // Path is the index file's location.
 func (ix *Index) Path() string { return filepath.Join(ix.mboxPath, FileName) }
@@ -60,12 +75,15 @@ func (ix *Index) Path() string { return filepath.Join(ix.mboxPath, FileName) }
 // the handle is reopened first to create a fresh one on disk.
 func (ix *Index) ensureSchema() error {
 	if _, err := os.Stat(ix.Path()); errors.Is(err, os.ErrNotExist) {
+		ix.dbMu.Lock()
 		ix.db.Close()
 		db, err := openDB(ix.Path())
 		if err != nil {
+			ix.dbMu.Unlock()
 			return err
 		}
 		ix.db = db
+		ix.dbMu.Unlock()
 	}
 	_, err := ix.db.Exec(schema)
 	return err
