@@ -12,7 +12,7 @@ export default defineConfig({
   base: '/dist/',
   build: {
     outDir: 'dist',
-    emptyOutDir: false, // the old webpack output stays until the swap
+    emptyOutDir: true,
     rollupOptions: {
       input: {
         mailbox: resolve(here, 'src/pages/mailbox/index.html'),

@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -131,22 +132,28 @@ func TestSearchEndpoint(t *testing.T) {
 	}
 }
 
-func TestLegacyEndpointsKeepIndexLevel(t *testing.T) {
+// The per-message read, delete and move endpoints are gone; the bulk
+// endpoints under /api/messages replace them.
+func TestLegacyPerMessageEndpointsAreGone(t *testing.T) {
 	h, dir := newTestHandler(t)
 	a := seedMsg(t, h, dir, "in", "legacy")
-	rec, _ := do(t, h, "POST", "/api/mailbox/in/"+a+"/read", map[string]bool{"read": true})
-	if rec.Code != 200 {
-		t.Fatalf("legacy read: %d", rec.Code)
+	for _, c := range []struct{ method, path string }{
+		{"POST", "/api/mailbox/in/" + a + "/read"},
+		{"DELETE", "/api/mailbox/in/" + a},
+	} {
+		if rec, _ := do(t, h, c.method, c.path, map[string]bool{"read": true}); rec.Code < 400 {
+			t.Errorf("%s %s: %d", c.method, c.path, rec.Code)
+		}
 	}
-	if r, _ := h.Index().Get(a); r.Unread {
-		t.Fatal("legacy read did not update the index")
+	req := httptest.NewRequest("POST", "/api/mailbox/archive", nil)
+	req.Header.Set("X-Pat-SourcePath", "/api/mailbox/in/"+a)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code < 400 {
+		t.Errorf("move by X-Pat-SourcePath: %d", rec.Code)
 	}
-	rec, _ = do(t, h, "DELETE", "/api/mailbox/in/"+a, nil)
-	if rec.Code != 200 {
-		t.Fatalf("legacy delete: %d", rec.Code)
-	}
-	if _, err := h.Index().Get(a); err == nil {
-		t.Fatal("legacy delete did not remove the row")
+	if _, err := os.Stat(filepath.Join(dir, "in", a+".b2f")); err != nil {
+		t.Errorf("message left the inbox: %v", err)
 	}
 }
 

@@ -100,9 +100,7 @@ func NewHandler(app *app.App) *Handler {
 
 	r.HandleFunc("/api/mailbox/{box}", h.mailboxHandler).Methods("GET")
 	r.HandleFunc("/api/mailbox/{box}/{mid}", h.messageHandler).Methods("GET")
-	r.HandleFunc("/api/mailbox/{box}/{mid}", h.messageDeleteHandler).Methods("DELETE")
 	r.HandleFunc("/api/mailbox/{box}/{mid}/{attachment}", h.attachmentHandler).Methods("GET")
-	r.HandleFunc("/api/mailbox/{box}/{mid}/read", h.readHandler).Methods("POST")
 	r.HandleFunc("/api/mailbox/{box}", h.postMessageHandler).Methods("POST")
 
 	r.HandleFunc("/api/folders", h.foldersHandler).Methods("GET")

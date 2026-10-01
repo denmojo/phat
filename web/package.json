@@ -6,7 +6,7 @@
   "scripts": {
     "test": "vitest run",
     "dev": "vite",
-    "build": "node scripts/clean-dist.mjs && vite build && node scripts/rename-dist.mjs",
+    "build": "vite build && node scripts/rename-dist.mjs",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],

@@ -43,11 +43,8 @@ func DistHandler() http.Handler {
 func UIHandler(mycall string, appearance func() string) http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/ui", templateHandler("dist/index.html", mycall, appearance)).Methods("GET")
-	r.HandleFunc("/ui/next", templateHandler("dist/index-next.html", mycall, appearance)).Methods("GET")
 	r.HandleFunc("/ui/config", templateHandler("dist/config.html", mycall, appearance)).Methods("GET")
-	r.HandleFunc("/ui/config-next", templateHandler("dist/config-next.html", mycall, appearance)).Methods("GET")
 	r.HandleFunc("/ui/template", templateHandler("dist/template.html", mycall, appearance)).Methods("GET")
-	r.HandleFunc("/ui/template-next", templateHandler("dist/template-next.html", mycall, appearance)).Methods("GET")
 	return r
 }
 
@@ -57,7 +54,7 @@ func templateHandler(templatePath string, mycall string, appearance func() strin
 		// a reload always picks up the newest names.
 		w.Header().Set("Cache-Control", "no-cache")
 		// Redirect to config if no callsign is set and we're not already on config page
-		if mycall == "" && r.URL.Path != "/ui/config" && r.URL.Path != "/ui/config-next" {
+		if mycall == "" && r.URL.Path != "/ui/config" {
 			http.Redirect(w, r, "/ui/config", http.StatusFound)
 			return
 		}

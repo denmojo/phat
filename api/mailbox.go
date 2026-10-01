@@ -9,17 +9,14 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
-	"net/url"
 	"os"
 	"path"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/la5nta/pat/app"
 	"github.com/la5nta/pat/internal/debug"
-	"github.com/la5nta/pat/internal/directories"
 	"github.com/la5nta/pat/internal/mailindex"
 	"github.com/la5nta/wl2k-go/fbb"
 	"github.com/la5nta/wl2k-go/mailbox"
@@ -122,31 +119,6 @@ func (m JSONMessage) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg)
 }
 
-func (h Handler) messageDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	box, mid := mux.Vars(r)["box"], mux.Vars(r)["mid"]
-
-	file := filepath.Clean(filepath.Join(h.Mailbox().MBoxPath, box, mid+mailbox.Ext))
-	if !directories.IsInPath(h.Mailbox().MBoxPath, file) {
-		log.Println("Malicious source path in move:", file)
-		http.Error(w, "malicious source path", http.StatusBadRequest)
-		return
-	}
-
-	err := os.Remove(file)
-	if os.IsNotExist(err) {
-		http.NotFound(w, r)
-		return
-	} else if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if _, err := h.Index().Reconcile(); err != nil {
-		log.Println("index reconcile after delete:", err)
-	}
-
-	_ = json.NewEncoder(w).Encode("OK")
-}
-
 func (h Handler) messageHandler(w http.ResponseWriter, r *http.Request) {
 	box, mid := mux.Vars(r)["box"], mux.Vars(r)["mid"]
 
@@ -236,67 +208,12 @@ func (h Handler) attachmentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h Handler) readHandler(w http.ResponseWriter, r *http.Request) {
-	var data struct{ Read bool }
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("%s %s: %s", r.Method, r.URL.Path, err)
-		return
-	}
-
-	box, mid := mux.Vars(r)["box"], mux.Vars(r)["mid"]
-
-	msg, err := mailbox.OpenMessage(path.Join(h.Mailbox().MBoxPath, box, mid+mailbox.Ext))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if err := mailbox.SetUnread(msg, !data.Read); err != nil {
-		log.Printf("%s %s: %s", r.Method, r.URL.Path, err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if _, err := h.Index().Reconcile(); err != nil {
-		log.Println("index reconcile after read:", err)
-	}
-}
-
 func (h Handler) postMessageHandler(w http.ResponseWriter, r *http.Request) {
-	box := mux.Vars(r)["box"]
-	if box == "out" {
-		h.postOutboundMessageHandler(w, r)
-		return
-	}
-
-	srcPath := r.Header.Get("X-Pat-SourcePath")
-	if srcPath == "" {
+	if mux.Vars(r)["box"] != "out" {
 		http.Error(w, "Not implemented", http.StatusNotImplemented)
 		return
 	}
-
-	srcPath, _ = url.PathUnescape(strings.TrimPrefix(srcPath, "/api/mailbox/"))
-	srcPath = filepath.Join(h.Mailbox().MBoxPath, srcPath+mailbox.Ext)
-
-	// Check that we don't escape our mailbox path
-	srcPath = filepath.Clean(srcPath)
-	if !directories.IsInPath(h.Mailbox().MBoxPath, srcPath) {
-		log.Println("Malicious source path in move:", srcPath)
-		http.Error(w, "malicious source path", http.StatusBadRequest)
-		return
-	}
-
-	targetPath := filepath.Join(h.Mailbox().MBoxPath, box, filepath.Base(srcPath))
-
-	if err := os.Rename(srcPath, targetPath); err != nil {
-		log.Println("Could not move message:", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if _, err := h.Index().Reconcile(); err != nil {
-		log.Println("index reconcile after move:", err)
-	}
-	_ = json.NewEncoder(w).Encode("OK")
+	h.postOutboundMessageHandler(w, r)
 }
 
 func (h Handler) postOutboundMessageHandler(w http.ResponseWriter, r *http.Request) {

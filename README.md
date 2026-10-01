@@ -42,6 +42,17 @@ Waiting for remote node to close the connection...
 > _
 ```
 
+### Building
+
+The web client in `web/` is built with Node 24 and Vite, and the Go binary embeds the result from `web/dist`, so build the client first:
+
+```
+cd web && npm ci && npm run build && cd ..
+go build
+```
+
+Without Node on the machine, `bash web/make.bash` runs the same client build in Docker. In `web/`, `npm test` runs the client's tests; `go test ./...` at the top covers the rest.
+
 ### Querying your mail with SQL
 
 Phat keeps a SQLite index of every message beside the mail, at `mailbox/<CALL>/index.db` in its data directory (`~/.local/share/phat` on Linux, `~/Library/Application Support/phat` on macOS). Any SQLite tool can read it. The `emails` view has one row per message:
