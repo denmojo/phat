@@ -90,6 +90,14 @@ func NewHandler(app *app.App) *Handler {
 	r.HandleFunc("/api/connect", h.ConnectHandler)
 	r.HandleFunc("/api/disconnect", h.DisconnectHandler)
 
+	r.HandleFunc("/api/starred", h.starredHandler).Methods("GET")
+	r.HandleFunc("/api/search", h.searchHandler).Methods("GET")
+	r.HandleFunc("/api/messages/move", h.bulkMoveHandler).Methods("POST")
+	r.HandleFunc("/api/messages/read", h.bulkReadHandler).Methods("POST")
+	r.HandleFunc("/api/messages/star", h.bulkStarHandler).Methods("POST")
+	r.HandleFunc("/api/messages/labels", h.bulkLabelsHandler).Methods("POST")
+	r.HandleFunc("/api/messages/delete", h.bulkDeleteHandler).Methods("POST")
+
 	r.HandleFunc("/api/mailbox/{box}", h.mailboxHandler).Methods("GET")
 	r.HandleFunc("/api/mailbox/{box}/{mid}", h.messageHandler).Methods("GET")
 	r.HandleFunc("/api/mailbox/{box}/{mid}", h.messageDeleteHandler).Methods("DELETE")

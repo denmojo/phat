@@ -99,14 +99,12 @@ export class Mailbox {
 
       data.forEach((msg) => {
         let to_from_html = '';
+        // The index serves addresses as strings; To is comma-separated.
         if (!is_from && msg.To) {
-          if (msg.To.length === 1) {
-            to_from_html = msg.To[0].Addr;
-          } else if (msg.To.length > 1) {
-            to_from_html = `${msg.To[0].Addr}...`;
-          }
+          const to = msg.To.split(', ');
+          to_from_html = htmlEscape(to.length > 1 ? `${to[0]}...` : to[0]);
         } else if (is_from) {
-          to_from_html = msg.From.Addr;
+          to_from_html = htmlEscape(msg.From);
         }
 
         const p2p_html = is_from
@@ -116,7 +114,7 @@ export class Mailbox {
         const elem = $(`
           <tr id="${msg.MID}" class="active${msg.Unread ? ' strong' : ''}">
             <td class="select-col"><input type="checkbox"${this.selected.has(msg.MID) ? ' checked' : ''} /></td>
-            <td>${msg.Files.length > 0 ? '<span class="glyphicon glyphicon-paperclip"></span>' : ''}</td>
+            <td>${msg.Attachments > 0 ? '<span class="glyphicon glyphicon-paperclip"></span>' : ''}</td>
             <td>${htmlEscape(msg.Subject)}</td>
             <td>${to_from_html}</td>
             ${p2p_html}

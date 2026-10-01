@@ -13,7 +13,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -21,6 +20,7 @@ import (
 	"github.com/la5nta/pat/app"
 	"github.com/la5nta/pat/internal/debug"
 	"github.com/la5nta/pat/internal/directories"
+	"github.com/la5nta/pat/internal/mailindex"
 	"github.com/la5nta/wl2k-go/fbb"
 	"github.com/la5nta/wl2k-go/mailbox"
 
@@ -28,43 +28,58 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 )
 
+// mailboxHandler lists a folder from the index. box may be any folder
+// name or "all"; ?label=X narrows to messages carrying that label.
 func (h Handler) mailboxHandler(w http.ResponseWriter, r *http.Request) {
 	box := mux.Vars(r)["box"]
-
-	var messages []*fbb.Message
-	var err error
-
-	switch box {
-	case "in":
-		messages, err = h.Mailbox().Inbox()
-	case "out":
-		messages, err = h.Mailbox().Outbox()
-	case "sent":
-		messages, err = h.Mailbox().Sent()
-	case "archive":
-		messages, err = h.Mailbox().Archive()
-	default:
-		http.NotFound(w, r)
-		return
+	if box != "all" {
+		if !mailindex.IsSystemFolder(box) && !mailindex.ValidFolderName(box) {
+			http.NotFound(w, r)
+			return
+		}
+		if _, err := os.Stat(h.Index().FolderDir(box)); err != nil {
+			http.NotFound(w, r)
+			return
+		}
 	}
-
+	rows, err := h.Index().List(mailindex.Query{Folder: box, Label: r.URL.Query().Get("label")})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Println(err)
+		return
 	}
+	_ = json.NewEncoder(w).Encode(rows)
+}
 
-	sort.Sort(sort.Reverse(fbb.ByDate(messages)))
-
-	jsonSlice := make([]JSONMessage, len(messages))
-	for i, msg := range messages {
-		jsonSlice[i] = JSONMessage{Message: msg}
+func (h Handler) starredHandler(w http.ResponseWriter, r *http.Request) {
+	rows, err := h.Index().List(mailindex.Query{Folder: "all", Starred: true})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	_ = json.NewEncoder(w).Encode(jsonSlice)
+	_ = json.NewEncoder(w).Encode(rows)
+}
+
+func (h Handler) searchHandler(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	if q == "" {
+		http.Error(w, "q required", http.StatusBadRequest)
+		return
+	}
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	rows, err := h.Index().Search(q, limit)
+	if err != nil {
+		// FTS5 reports a malformed query as an error; that is the caller's fault.
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	_ = json.NewEncoder(w).Encode(rows)
 }
 
 type JSONMessage struct {
 	*fbb.Message
 	inclBody bool
+	starred  bool
+	labels   []string
 }
 
 func (m JSONMessage) MarshalJSON() ([]byte, error) {
@@ -80,6 +95,8 @@ func (m JSONMessage) MarshalJSON() ([]byte, error) {
 		Files    []*fbb.File
 		P2POnly  bool
 		Unread   bool
+		Starred  bool
+		Labels   []string
 	}{
 		MID:     m.MID(),
 		Date:    m.Date(),
@@ -90,6 +107,11 @@ func (m JSONMessage) MarshalJSON() ([]byte, error) {
 		Files:   m.Files(),
 		P2POnly: m.Header.Get("X-P2POnly") == "true",
 		Unread:  mailbox.IsUnread(m.Message),
+		Starred: m.starred,
+		Labels:  m.labels,
+	}
+	if msg.Labels == nil {
+		msg.Labels = []string{}
 	}
 
 	if m.inclBody {
@@ -116,6 +138,10 @@ func (h Handler) messageDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if _, err := h.Index().Reconcile(); err != nil {
+		log.Println("index reconcile after delete:", err)
 	}
 
 	_ = json.NewEncoder(w).Encode("OK")
@@ -134,7 +160,11 @@ func (h Handler) messageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = json.NewEncoder(w).Encode(JSONMessage{msg, true})
+	jm := JSONMessage{Message: msg, inclBody: true}
+	if row, err := h.Index().Get(mid); err == nil {
+		jm.starred, jm.labels = row.Starred, row.Labels
+	}
+	_ = json.NewEncoder(w).Encode(jm)
 }
 
 func (h Handler) attachmentHandler(w http.ResponseWriter, r *http.Request) {
@@ -225,6 +255,10 @@ func (h Handler) readHandler(w http.ResponseWriter, r *http.Request) {
 	if err := mailbox.SetUnread(msg, !data.Read); err != nil {
 		log.Printf("%s %s: %s", r.Method, r.URL.Path, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if _, err := h.Index().Reconcile(); err != nil {
+		log.Println("index reconcile after read:", err)
 	}
 }
 
@@ -257,9 +291,12 @@ func (h Handler) postMessageHandler(w http.ResponseWriter, r *http.Request) {
 	if err := os.Rename(srcPath, targetPath); err != nil {
 		log.Println("Could not move message:", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else {
-		_ = json.NewEncoder(w).Encode("OK")
+		return
 	}
+	if _, err := h.Index().Reconcile(); err != nil {
+		log.Println("index reconcile after move:", err)
+	}
+	_ = json.NewEncoder(w).Encode("OK")
 }
 
 func (h Handler) postOutboundMessageHandler(w http.ResponseWriter, r *http.Request) {
