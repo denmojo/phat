@@ -6,7 +6,7 @@ if [ -d $CGO_ENABLED ]; then CGO_ENABLED=$(go env CGO_ENABLED); else OS=$CGO_ENA
 
 VERSION=$(grep "Version =" internal/buildinfo/VERSION.go|cut -d '"' -f2)
 
-# Go 1.25 or later is required
+# Go 1.26 or later is required
 GO_POINT_VERSION=$(go version| perl -ne 'm/go1\.(\d+)/; print $1;')
 [ "$GO_POINT_VERSION" -lt "26" ] && echo "Go 1.26 or later required" && exit 1;
 
