@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phat UI Mockup</title>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+/* Design tokens: these values become web/src/styles/tokens.css once approved. */
+:root, [data-theme="light"] {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface-2: #f0f2f5;
+  --surface-3: #e6e9ee;
+  --border: #e1e4e8;
+  --text: #1a1d21;
+  --text-2: #565e68;
+  --text-3: #8a919b;
+  --accent: #2563eb;
+  --accent-hover: #1d4fd8;
+  --accent-weak: #e7eefc;
+  --accent-text: #ffffff;
+  --danger: #d92d20;
+  --star: #e8a317;
+  --ok: #16a34a;
+  --shadow: 0 1px 2px rgba(16,24,40,.06), 0 4px 12px rgba(16,24,40,.08);
+  --shadow-lg: 0 12px 32px rgba(16,24,40,.18);
+}
+[data-theme="dark"] {
+  --bg: #0e1013;
+  --surface: #16191d;
+  --surface-2: #1d2126;
+  --surface-3: #262b31;
+  --border: #2a2f36;
+  --text: #e7e9ec;
+  --text-2: #a5adb7;
+  --text-3: #6e7681;
+  --accent: #6b9bff;
+  --accent-hover: #86afff;
+  --accent-weak: #1b2741;
+  --accent-text: #0e1013;
+  --danger: #f2615a;
+  --star: #f0b429;
+  --ok: #3ccf6e;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 12px rgba(0,0,0,.35);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,.55);
+}
+:root {
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+  --fs-xs: 11px; --fs-sm: 12.5px; --fs-md: 14px; --fs-lg: 16px; --fs-xl: 20px;
+  --r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-pill: 999px;
+  --row-h: 44px;
+  --sidebar-w: 236px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { font-family: var(--font); font-size: var(--fs-md); color: var(--text); background: #8a909a; }
+svg.lucide { width: 18px; height: 18px; stroke-width: 1.9; flex: none; }
+
+/* Mockup controls: not part of the design. */
+.controls { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center;
+  padding: 8px 14px; background: #23262b; color: #d6d9de; font: 12px var(--font); }
+.controls b { color: #fff; margin-right: 4px; }
+.controls .grp { display: flex; gap: 4px; align-items: center; }
+.controls button { font: inherit; border: 1px solid #3b4048; background: #2d3137; color: #d6d9de; border-radius: 6px; padding: 4px 9px; cursor: pointer; }
+.controls button.on { background: #6b9bff; border-color: #6b9bff; color: #0e1013; }
+.stage { display: flex; justify-content: center; padding: 18px; min-height: calc(100% - 44px); }
+.frame { width: 100%; max-width: 1280px; height: 780px; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.35); position: relative; }
+.frame.narrow { max-width: 390px; height: 800px; }
+.note { max-width: 1280px; margin: 0 auto 30px; padding: 0 18px; color: #f3f4f6; font-size: 13px; line-height: 1.5; }
+
+/* App shell */
+.app { display: grid; grid-template-columns: var(--sidebar-w) 1fr; height: 100%; background: var(--bg); color: var(--text); }
+.narrow .app { grid-template-columns: 1fr; }
+.sidebar { background: var(--bg); padding: var(--s3) var(--s2) var(--s3) var(--s3); display: flex; flex-direction: column; gap: var(--s1); overflow-y: auto; }
+.narrow .sidebar { display: none; }
+.brand { display: flex; align-items: baseline; gap: var(--s2); padding: var(--s1) var(--s2) var(--s3); }
+.brand .name { font-weight: 700; font-size: var(--fs-lg); letter-spacing: -.01em; }
+.brand .call { font: 600 var(--fs-xs) var(--mono); color: var(--text-3); }
+.compose { display: inline-flex; align-items: center; gap: var(--s2); align-self: flex-start; margin: 0 0 var(--s3) var(--s1);
+  background: var(--accent); color: var(--accent-text); border: 0; border-radius: var(--r-lg); padding: 12px 18px 12px 14px;
+  font: 600 var(--fs-md) var(--font); box-shadow: var(--shadow); cursor: pointer; }
+.nav { display: flex; flex-direction: column; gap: 1px; }
+.nav a { display: flex; align-items: center; gap: var(--s3); height: 34px; padding: 0 var(--s3); border-radius: var(--r-pill);
+  color: var(--text-2); text-decoration: none; font-size: var(--fs-md); cursor: pointer; }
+.nav a:hover { background: var(--surface-3); }
+.nav a.active { background: var(--accent-weak); color: var(--accent); font-weight: 600; }
+.nav a .count { margin-left: auto; font-size: var(--fs-sm); font-weight: 600; color: var(--text); }
+.nav a.active .count { color: var(--accent); }
+.nav a.drop { outline: 2px dashed var(--accent); outline-offset: -2px; background: var(--accent-weak); color: var(--accent); }
+.group { display: flex; align-items: center; justify-content: space-between; margin: var(--s4) var(--s3) var(--s1);
+  font-size: var(--fs-xs); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+.group button { border: 0; background: none; color: var(--text-3); padding: 2px; border-radius: 6px; cursor: pointer; display: flex; }
+.group button:hover { background: var(--surface-3); color: var(--text); }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; margin: 0 4px; }
+.sidebar .foot { margin-top: auto; padding-top: var(--s3); }
+
+.main { display: flex; flex-direction: column; min-width: 0; padding: var(--s3) var(--s3) var(--s3) 0; }
+.narrow .main { padding: 0; }
+.topbar { display: flex; align-items: center; gap: var(--s3); height: 52px; padding: 0 var(--s1) var(--s2); }
+.narrow .topbar { padding: var(--s2) var(--s3); height: 56px; }
+.iconbtn { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none;
+  border-radius: 50%; color: var(--text-2); cursor: pointer; flex: none; }
+.iconbtn:hover { background: var(--surface-3); color: var(--text); }
+.iconbtn.on { color: var(--star); }
+.menu-btn { display: none; }
+.narrow .menu-btn { display: inline-flex; }
+.search { flex: 1; max-width: 720px; display: flex; align-items: center; gap: var(--s2); height: 44px; padding: 0 var(--s4);
+  background: var(--surface-3); border-radius: var(--r-pill); color: var(--text-3); }
+.search input { flex: 1; border: 0; background: none; font: inherit; color: var(--text); outline: none; min-width: 0; }
+.search .kbd { font: 600 var(--fs-xs) var(--mono); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; color: var(--text-3); }
+.narrow .search .kbd { display: none; }
+.conn { margin-left: auto; display: flex; align-items: center; gap: var(--s2); }
+.status { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 var(--s3); border-radius: var(--r-pill);
+  background: var(--surface); border: 1px solid var(--border); font-size: var(--fs-sm); color: var(--text-2); }
+.status .light { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); }
+.narrow .status .label { display: none; }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 var(--s4); border-radius: var(--r-pill);
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); font: 600 var(--fs-sm) var(--font); cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.narrow .conn .btn .label { display: none; }
+.narrow .conn .btn { padding: 0 10px; }
+
+.panel { flex: 1; min-height: 0; background: var(--surface); border-radius: var(--r-lg); display: flex; flex-direction: column; overflow: hidden; }
+.narrow .panel { border-radius: 0; }
+.toolbar { display: flex; align-items: center; gap: 2px; height: 48px; padding: 0 var(--s2); border-bottom: 1px solid var(--border); flex: none; }
+.toolbar .title { font-weight: 600; margin: 0 var(--s2); }
+.toolbar .sel { font-weight: 600; color: var(--accent); margin: 0 var(--s3) 0 var(--s1); white-space: nowrap; }
+.toolbar .sep { width: 1px; height: 22px; background: var(--border); margin: 0 var(--s1); }
+.toolbar .spacer { flex: 1; }
+.toolbar .meta { color: var(--text-3); font-size: var(--fs-sm); margin-right: var(--s2); white-space: nowrap; }
+.narrow .toolbar .hide-narrow { display: none; }
+.check { width: 18px; height: 18px; border: 2px solid var(--text-3); border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.check.on { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.check.on svg { width: 13px; height: 13px; stroke-width: 3; }
+.check.some { background: var(--accent); border-color: var(--accent); }
+.check.some::after { content: ""; width: 8px; height: 2px; background: var(--accent-text); }
+.cbwrap { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; }
+
+.list { overflow-y: auto; flex: 1; }
+.row { display: grid; grid-template-columns: 36px 32px minmax(110px, 190px) 1fr auto 72px; align-items: center; gap: var(--s1);
+  height: var(--row-h); padding: 0 var(--s3) 0 var(--s2); border-bottom: 1px solid var(--border); cursor: pointer; color: var(--text-2); }
+.row:hover { background: var(--surface-2); box-shadow: inset 0 -1px 0 var(--border); }
+.row.unread { color: var(--text); background: var(--surface); }
+.row.unread .who, .row.unread .subj, .row.unread .date { font-weight: 700; }
+.row:not(.unread) { background: color-mix(in srgb, var(--surface) 70%, var(--bg)); }
+.row.selected { background: var(--accent-weak); }
+.row.dragging { opacity: .45; }
+.row .star { color: var(--text-3); }
+.row .star.on { color: var(--star); }
+.row .star.on svg { fill: var(--star); }
+.who { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: var(--fs-md); }
+.subjline { display: flex; align-items: center; gap: var(--s2); min-width: 0; }
+.subj { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 8px; border-radius: var(--r-pill);
+  font-size: var(--fs-xs); font-weight: 600; white-space: nowrap; flex: none;
+  color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); }
+[data-theme="dark"] .chip { color: color-mix(in srgb, var(--c) 70%, white); background: color-mix(in srgb, var(--c) 24%, transparent); }
+.chip.folder { --c: var(--text-2); }
+.row .att { color: var(--text-3); display: flex; }
+.row .att svg { width: 16px; height: 16px; }
+.date { text-align: right; font-size: var(--fs-sm); white-space: nowrap; }
+.p2p { font: 700 10px var(--mono); color: var(--text-3); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; }
+
+/* Narrow list rows: two lines, no checkbox until long-press. */
+.narrow .row { grid-template-columns: 40px 1fr auto; grid-template-rows: auto auto; height: auto; padding: 10px var(--s3); row-gap: 2px; }
+.narrow .row .cbwrap, .narrow .row .star { display: none; }
+.narrow .row .avatar { display: flex; grid-row: 1 / span 2; }
+.narrow .row .who { grid-column: 2; }
+.narrow .row .date { grid-column: 3; grid-row: 1; }
+.narrow .row .subjline { grid-column: 2 / span 2; grid-row: 2; }
+.narrow .row .att { display: none; }
+.avatar { display: none; width: 32px; height: 32px; border-radius: 50%; align-items: center; justify-content: center;
+  font: 700 12px var(--font); color: #fff; background: var(--c); }
+
+/* Message view */
+.msg { overflow-y: auto; flex: 1; padding: var(--s5) var(--s6); }
+.narrow .msg { padding: var(--s4); }
+.msg h1 { font-size: var(--fs-xl); font-weight: 600; margin: 0 0 var(--s3); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); letter-spacing: -.01em; }
+.hdr { display: flex; gap: var(--s3); align-items: flex-start; padding: var(--s3) 0 var(--s4); border-bottom: 1px solid var(--border); }
+.hdr .avatar { display: flex; width: 40px; height: 40px; font-size: 14px; }
+.hdr .from { font-weight: 600; }
+.hdr .to { color: var(--text-2); font-size: var(--fs-sm); margin-top: 2px; }
+.hdr .when { margin-left: auto; color: var(--text-3); font-size: var(--fs-sm); white-space: nowrap; }
+.body { white-space: pre-wrap; line-height: 1.6; padding: var(--s4) 0; max-width: 72ch; }
+.atts { display: flex; flex-wrap: wrap; gap: var(--s3); padding: var(--s2) 0 var(--s4); }
+.attcard { width: 200px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; background: var(--surface); }
+.attcard .thumb { height: 110px; background: #2563eb; }
+.attcard .thumb.file { background: var(--surface-2); display: flex; align-items: center; justify-content: center; color: var(--text-3); }
+.attcard .meta { padding: 8px 10px; font-size: var(--fs-sm); display: flex; justify-content: space-between; gap: var(--s2); }
+.attcard .meta span:last-child { color: var(--text-3); }
+.replybar { display: flex; gap: var(--s2); padding-top: var(--s2); }
+
+/* Composer */
+.scrim { position: absolute; inset: 0; background: rgba(10,12,16,.38); display: flex; align-items: center; justify-content: center; z-index: 10; }
+.dialog { width: min(720px, 94%); max-height: 92%; background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column; overflow: hidden; }
+.narrow .dialog { width: 100%; height: 100%; max-height: none; border-radius: 0; }
+.dialog .dh { display: flex; align-items: center; gap: var(--s2); padding: var(--s2) var(--s2) var(--s2) var(--s4); background: var(--surface-2); font-weight: 600; }
+.dialog .dh .spacer { flex: 1; }
+.field { display: flex; align-items: center; gap: var(--s2); padding: 0 var(--s4); min-height: 44px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.field label { color: var(--text-3); width: 52px; font-size: var(--fs-sm); }
+.field input { flex: 1; border: 0; background: none; font: inherit; color: var(--text); outline: none; min-width: 80px; }
+.token { display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 6px 0 10px; border-radius: var(--r-pill);
+  background: var(--surface-3); font: 600 var(--fs-sm) var(--mono); }
+.token svg { width: 14px; height: 14px; color: var(--text-3); }
+.dialog textarea { flex: 1; min-height: 220px; border: 0; resize: none; padding: var(--s4); font: var(--fs-md)/1.6 var(--font); background: none; color: var(--text); outline: none; }
+.df { display: flex; align-items: center; gap: var(--s2); padding: var(--s3) var(--s4); border-top: 1px solid var(--border); }
+.df .spacer { flex: 1; }
+.df .opt { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); font-size: var(--fs-sm); }
+.pending { display: flex; gap: var(--s2); padding: var(--s2) var(--s4) 0; flex-wrap: wrap; }
+.pending .token { font-family: var(--font); background: var(--surface-2); border: 1px solid var(--border); }
+
+/* Drag ghost */
+.ghost { position: absolute; z-index: 20; display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--r-md);
+  background: var(--accent); color: var(--accent-text); font: 600 var(--fs-sm) var(--font); box-shadow: var(--shadow-lg); pointer-events: none; }
+.toast { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 20; display: flex; align-items: center; gap: var(--s3);
+  padding: 10px 16px; border-radius: var(--r-md); background: #23262b; color: #f3f4f6; font-size: var(--fs-sm); box-shadow: var(--shadow-lg); }
+.toast a { color: #8fb4ff; font-weight: 600; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="controls">
+  <span><b>Phat mockup</b></span>
+  <span class="grp" data-ctl="state">State:
+    <button data-v="list">Inbox</button><button data-v="select">Selection</button><button data-v="message">Open message</button>
+    <button data-v="compose">Composer</button><button data-v="drag">Drag to folder</button><button data-v="search">Search</button></span>
+  <span class="grp" data-ctl="theme">Theme: <button data-v="light">Light</button><button data-v="dark">Dark</button></span>
+  <span class="grp" data-ctl="width">Width: <button data-v="wide">Desktop</button><button data-v="narrow">Phone</button></span>
+</div>
+<div class="stage"><div class="frame" id="frame"></div></div>
+<p class="note" id="note"></p>
+
+<script>
+const LABELS = { "net-control": "#2563eb", "urgent": "#dc2626", "logistics": "#16a34a", "follow up": "#d97706", "personal": "#7c3aed" };
+const CALL_COLORS = ["#2563eb", "#0891b2", "#7c3aed", "#db2777", "#ea580c", "#16a34a", "#4f46e5", "#b45309"];
+const MSGS = [
+  { from: "W6EOC", subj: "ICS-213: Shelter status at Rio Linda High", date: "3:31 PM", unread: true, star: true, labels: ["urgent", "net-control"] },
+  { from: "KJ6ABC", subj: "Re: Sunday net checklist", date: "12:31 PM", unread: true, labels: ["net-control"] },
+  { from: "SERVICE", subj: "Winlink system notice: CMS maintenance window", date: "8:31 AM", unread: true },
+  { from: "AG6QX", subj: "Antenna photos from the field day site", date: "Sep 29", att: true, labels: ["personal"] },
+  { from: "K6RCX", subj: "Club meeting moved to Thursday", date: "Sep 29", star: true, labels: ["follow up"] },
+  { from: "W6EOC", subj: "Resource request: 4x 5-gallon water", date: "Sep 28", labels: ["logistics"] },
+  { from: "N6TVN", subj: "VARA HF settings that worked", date: "Sep 27" },
+  { from: "KM6ZZO", subj: "P2P test from the hilltop", date: "Sep 26", p2p: true },
+  { from: "SERVICE", subj: "Your Winlink password was changed", date: "Sep 24" },
+  { from: "W6EOC", subj: "Damage assessment form, Garden Highway", date: "Sep 23", att: true, labels: ["urgent"] },
+  { from: "KJ6ABC", subj: "Lunch Saturday?", date: "Sep 22", labels: ["personal"] },
+  { from: "AA6XS", subj: "Grid square for the contest log", date: "Sep 19" },
+];
+const NOTES = {
+  list: "Inbox at rest. Unread rows carry bold type on the brightest surface; read rows sit slightly recessed. Label chips follow the subject in the label's color. The toolbar shows the view name, refresh, and the message count. Connect and the status light stay at the right in every state.",
+  select: "Two messages selected. The toolbar switches to bulk actions: archive, delete, mark read, star, label, move. The checkbox in the header shows the partial state. The count is spelled out next to it.",
+  message: "An open message replaces the list (a reading pane beside the list is deferred). Back arrow, then the same actions as the bulk toolbar plus reply, reply all and forward. Image attachments preview inline; other files show as cards.",
+  compose: "The composer is a dialog over the mailbox. To and Cc take callsigns as tokens. Attachments queue under the fields. P2P only is a checkbox in the footer, beside Send.",
+  drag: "Dragging two selected rows onto the ARES folder. The ghost shows the count, the target folder highlights with a dashed outline, and the dragged rows dim. Dropping shows an undo toast. Labels and Starred are drop targets too.",
+  search: "A search across every folder. Results keep the same row layout and add a folder chip, since hits come from anywhere. Matches rank by relevance, best first.",
+};
+let state = { view: "list", theme: "light", width: "wide" };
+
+const ic = (n, cls = "") => `<i data-lucide="${n}" class="${cls}"></i>`;
+const color = (s) => CALL_COLORS[[...s].reduce((a, c) => a + c.charCodeAt(0), 0) % CALL_COLORS.length];
+const chip = (l) => `<span class="chip" style="--c:${LABELS[l]}">${l}</span>`;
+
+function sidebar() {
+  const drop = state.view === "drag";
+  const n = (icon, name, count, active, extra = "") =>
+    `<a class="${active ? "active" : ""} ${extra}">${icon}<span>${name}</span>${count ? `<span class="count">${count}</span>` : ""}</a>`;
+  return `<aside class="sidebar">
+    <div class="brand"><span class="name">Phat</span><span class="call">N0CALL</span></div>
+    <button class="compose">${ic("pencil")} Compose</button>
+    <nav class="nav">
+      ${n(ic("inbox"), "Inbox", 3, state.view !== "search")}
+      ${n(ic("send"), "Outbox", 2)}
+      ${n(ic("mail-check"), "Sent")}
+      ${n(ic("archive"), "Archive")}
+      ${n(ic("star"), "Starred", 4)}
+    </nav>
+    <div class="group">Folders <button title="New folder">${ic("plus")}</button></div>
+    <nav class="nav">
+      ${n(ic("folder"), "ARES", 1, false, drop ? "drop" : "")}
+      ${n(ic("folder"), "Radio Club")}
+      ${n(ic("folder"), "Training")}
+    </nav>
+    <div class="group">Labels <button title="New label">${ic("plus")}</button></div>
+    <nav class="nav">
+      ${Object.entries(LABELS).map(([l, c]) => `<a><span class="dot" style="background:${c}"></span><span>${l}</span></a>`).join("")}
+    </nav>
+    <nav class="nav foot">${n(ic("settings"), "Settings")}</nav>
+  </aside>`;
+}
+
+function topbar() {
+  const q = state.view === "search" ? "generator" : "";
+  return `<div class="topbar">
+    <button class="iconbtn menu-btn">${ic("menu")}</button>
+    <label class="search">${ic("search")}<input placeholder="Search mail" value="${q}"><span class="kbd">/</span></label>
+    <div class="conn">
+      <span class="status"><span class="light"></span><span class="label">Disconnected</span></span>
+      <button class="btn primary">${ic("radio-tower")}<span class="label">Connect</span></button>
+    </div>
+  </div>`;
+}
+
+function rows(list, opts = {}) {
+  return list.map((m, i) => {
+    const sel = opts.selected && opts.selected.includes(i);
+    const cls = ["row", m.unread ? "unread" : "", sel ? "selected" : "", sel && opts.dragging ? "dragging" : ""].join(" ");
+    return `<div class="${cls}">
+      <span class="cbwrap"><span class="check ${sel ? "on" : ""}">${sel ? ic("check") : ""}</span></span>
+      <span class="iconbtn star ${m.star ? "on" : ""}">${ic("star")}</span>
+      <span class="avatar" style="--c:${color(m.from)}">${m.from.slice(0, 2)}</span>
+      <span class="who">${m.from}</span>
+      <span class="subjline"><span class="subj">${m.subj}</span>${m.p2p ? '<span class="p2p">P2P</span>' : ""}${(m.labels || []).map(chip).join("")}${m.folder ? `<span class="chip folder">${m.folder}</span>` : ""}</span>
+      <span class="att">${m.att ? ic("paperclip") : ""}</span>
+      <span class="date">${m.date}</span>
+    </div>`;
+  }).join("");
+}
+
+function listPanel() {
+  const selecting = state.view === "select" || state.view === "drag";
+  const selected = selecting ? [0, 5] : [];
+  const tb = selecting
+    ? `<span class="cbwrap"><span class="check some"></span></span><span class="sel">2 selected</span>
+       <button class="iconbtn" title="Archive">${ic("archive")}</button>
+       <button class="iconbtn" title="Delete">${ic("trash-2")}</button>
+       <span class="sep hide-narrow"></span>
+       <button class="iconbtn" title="Mark read">${ic("mail-open")}</button>
+       <button class="iconbtn" title="Star">${ic("star")}</button>
+       <button class="iconbtn" title="Label">${ic("tag")}</button>
+       <button class="iconbtn" title="Move to">${ic("folder-input")}</button>
+       <span class="spacer"></span><button class="iconbtn" title="Clear selection">${ic("x")}</button>`
+    : state.view === "search"
+    ? `<span class="cbwrap"><span class="check"></span></span><span class="title">Results for "generator"</span>
+       <span class="spacer"></span><span class="meta">2 messages, all folders</span>`
+    : `<span class="cbwrap"><span class="check"></span></span><span class="title">Inbox</span>
+       <button class="iconbtn" title="Refresh">${ic("rotate-cw")}</button>
+       <span class="spacer"></span><span class="meta hide-narrow">1-12 of 12</span>
+       <button class="iconbtn" title="Sort">${ic("arrow-down-wide-narrow")}</button>`;
+  const list = state.view === "search"
+    ? [{ ...MSGS[0], subj: "Generator status", labels: [], folder: "Inbox", unread: false, date: "Sep 30" },
+       { from: "W6EOC", subj: "ICS-213: Shelter status at Rio Linda High", date: "3:31 PM", folder: "Inbox", labels: ["urgent"] }]
+    : MSGS;
+  return `<div class="panel"><div class="toolbar">${tb}</div>
+    <div class="list">${rows(list, { selected, dragging: state.view === "drag" })}</div></div>`;
+}
+
+function messagePanel() {
+  const narrow = state.width === "narrow";
+  return `<div class="panel"><div class="toolbar">
+      <button class="iconbtn" title="Back">${ic("arrow-left")}</button>
+      <span class="sep"></span>
+      <button class="iconbtn" title="Archive">${ic("archive")}</button>
+      <button class="iconbtn" title="Delete">${ic("trash-2")}</button>
+      <button class="iconbtn" title="Mark unread">${ic("mail")}</button>
+      <button class="iconbtn on" title="Starred">${ic("star")}</button>
+      <button class="iconbtn" title="Label">${ic("tag")}</button>
+      <button class="iconbtn hide-narrow" title="Move to">${ic("folder-input")}</button>
+      <span class="spacer"></span>
+      <span class="meta hide-narrow">1 of 12</span>
+    </div>
+    <div class="msg">
+      <h1>Antenna photos from the field day site ${chip("personal")}</h1>
+      <div class="hdr"><span class="avatar" style="--c:${color("AG6QX")}">AG</span>
+        <div><div class="from">AG6QX</div><div class="to">to N0CALL, cc K6RCX</div></div>
+        <span class="when">Sep 29, 9:31 PM</span></div>
+      <div class="body">Photos of the end-fed setup attached. The tuner sat at 1.4:1 across 40m.
+
+73, AG6QX</div>
+      <div class="atts">
+        <div class="attcard"><div class="thumb"></div><div class="meta"><span>efhw-mast.png</span><span>1 KB</span></div></div>
+        <div class="attcard"><div class="thumb file">${ic("file-text")}</div><div class="meta"><span>tuner-readings.txt</span><span>30 B</span></div></div>
+      </div>
+      <div class="replybar">
+        <button class="btn">${ic("reply")} Reply</button>
+        <button class="btn">${ic("reply-all")} ${narrow ? "" : "Reply all"}</button>
+        <button class="btn">${ic("forward")} ${narrow ? "" : "Forward"}</button>
+      </div>
+    </div></div>`;
+}
+
+function composer() {
+  return `<div class="scrim"><div class="dialog">
+    <div class="dh">New message<span class="spacer"></span>
+      <button class="iconbtn" title="Winlink form">${ic("clipboard-list")}</button>
+      <button class="iconbtn" title="Close">${ic("x")}</button></div>
+    <div class="field"><label>To</label><span class="token">W6EOC ${ic("x")}</span><span class="token">KJ6ABC ${ic("x")}</span><input></div>
+    <div class="field"><label>Cc</label><input placeholder="Callsign or email"></div>
+    <div class="field"><label>Subject</label><input value="Fuel run complete"></div>
+    <div class="pending"><span class="token">${ic("paperclip")} fuel-receipt.jpg · 48 KB ${ic("x")}</span></div>
+    <textarea>Generator topped off at 1520. 18 gallons on hand at the shelter.
+
+N0CALL</textarea>
+    <div class="df"><button class="btn primary">${ic("send")} Send</button>
+      <button class="iconbtn" title="Attach">${ic("paperclip")}</button>
+      <span class="spacer"></span>
+      <label class="opt"><span class="check"></span> P2P only</label>
+      <button class="iconbtn" title="Discard">${ic("trash-2")}</button></div>
+  </div></div>`;
+}
+
+function render() {
+  document.documentElement.dataset.theme = state.theme;
+  const f = document.getElementById("frame");
+  f.className = "frame " + state.width;
+  const main = state.view === "message" ? messagePanel() : listPanel();
+  let overlay = "";
+  if (state.view === "compose") overlay = composer();
+  if (state.view === "drag" && state.width === "wide") overlay = `<div class="ghost" style="left:150px; top:322px">${ic("mail")} Move 2 messages</div>`;
+  if (state.view === "drag" && state.width === "narrow") overlay = `<div class="toast">Drag needs a mouse. On a phone, use Move in the toolbar.</div>`;
+  f.innerHTML = `<div class="app">${sidebar()}<div class="main">${topbar()}${main}</div></div>${overlay}`;
+  document.getElementById("note").textContent = NOTES[state.view === "compose" ? "compose" : state.view];
+  document.querySelectorAll(".controls [data-ctl]").forEach((g) => {
+    const key = { state: "view", theme: "theme", width: "width" }[g.dataset.ctl];
+    g.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.v === state[key]));
+  });
+  lucide.createIcons();
+}
+
+document.querySelectorAll(".controls [data-ctl]").forEach((g) => {
+  const key = { state: "view", theme: "theme", width: "width" }[g.dataset.ctl];
+  g.addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    state[key] = b.dataset.v;
+    render();
+  });
+});
+render();
+</script>
+</body>
+</html>
