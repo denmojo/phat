@@ -63,7 +63,7 @@ func TestUIHandler(t *testing.T) {
 			wantStatus: http.StatusNotFound,
 		},
 	}
-	handler := UIHandler("N0CALL")
+	handler := UIHandler("N0CALL", func() string { return "system" })
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, tt.path, nil)

@@ -141,11 +141,21 @@ func NewHandler(app *app.App) *Handler {
 	r.HandleFunc("/api/winlink-account/registration", h.winlinkAccountRegistrationHandler).Methods("GET", "POST")
 
 	r.HandleFunc("/ws", h.wsHandler)
-	r.PathPrefix("/ui").Handler(web.UIHandler(h.Options().MyCall))
+	r.PathPrefix("/ui").Handler(web.UIHandler(h.Options().MyCall, h.appearance))
 	r.PathPrefix("/dist").Handler(web.DistHandler())
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, "/ui", http.StatusFound) })
 
 	return h
+}
+
+// appearance reads ui.appearance from the config file on disk, so a change
+// saved on the settings page applies on the next page load.
+func (h Handler) appearance() string {
+	c, err := app.LoadConfig(h.Options().ConfigPath, cfg.DefaultConfig)
+	if err != nil || c.UI.Appearance == "" {
+		return "system"
+	}
+	return c.UI.Appearance
 }
 
 func (h Handler) connectAliasesHandler(w http.ResponseWriter, _ *http.Request) {

@@ -77,6 +77,9 @@ type Config struct {
 	// Use ":8080" to listen on any device, port 8080.
 	HTTPAddr string `json:"http_addr"`
 
+	// Web UI preferences.
+	UI UIConfig `json:"ui"`
+
 	// Handshake comment lines sent to remote node on incoming connections.
 	//
 	// Example: ["QTH: Hagavik, Norway. Operator: Martin", "Rig: FT-897 with Signalink USB"]
@@ -382,6 +385,7 @@ type GPSdConfig struct {
 }
 
 var DefaultConfig = Config{
+	UI: UIConfig{Appearance: "system"},
 	MOTD:                  []string{"Open source Winlink client - getpat.io"},
 	AuxAddrs:              []AuxAddr{},
 	ServiceCodes:          []string{"PUBLIC"},
@@ -442,4 +446,10 @@ var DefaultConfig = Config{
 	},
 	Schedule:   map[string]string{},
 	HamlibRigs: map[string]HamlibConfig{},
+}
+
+// UIConfig holds web UI preferences.
+type UIConfig struct {
+	// Appearance is "system", "light" or "dark". System follows the OS.
+	Appearance string `json:"appearance"`
 }

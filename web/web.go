@@ -38,15 +38,17 @@ func DistHandler() http.Handler {
 }
 
 // UIHandler returns an HTTP handler that serves the UI pages with the given callsign.
-func UIHandler(mycall string) http.Handler {
+// UIHandler serves the page templates. appearance is called on every page
+// load so a changed setting applies without a restart.
+func UIHandler(mycall string, appearance func() string) http.Handler {
 	r := mux.NewRouter()
-	r.HandleFunc("/ui", templateHandler("dist/index.html", mycall)).Methods("GET")
-	r.HandleFunc("/ui/config", templateHandler("dist/config.html", mycall)).Methods("GET")
-	r.HandleFunc("/ui/template", templateHandler("dist/template.html", mycall)).Methods("GET")
+	r.HandleFunc("/ui", templateHandler("dist/index.html", mycall, appearance)).Methods("GET")
+	r.HandleFunc("/ui/config", templateHandler("dist/config.html", mycall, appearance)).Methods("GET")
+	r.HandleFunc("/ui/template", templateHandler("dist/template.html", mycall, appearance)).Methods("GET")
 	return r
 }
 
-func templateHandler(templatePath string, mycall string) http.HandlerFunc {
+func templateHandler(templatePath string, mycall string, appearance func() string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Redirect to config if no callsign is set and we're not already on config page
 		if mycall == "" && r.URL.Path != "/ui/config" {
@@ -58,7 +60,7 @@ func templateHandler(templatePath string, mycall string) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		tmplData := struct{ AppName, Version, Mycall string }{buildinfo.AppName, buildinfo.VersionString(), mycall}
+		tmplData := struct{ AppName, Version, Mycall, Appearance string }{buildinfo.AppName, buildinfo.VersionString(), mycall, appearance()}
 		if err := t.Execute(w, tmplData); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
