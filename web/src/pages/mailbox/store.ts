@@ -21,9 +21,23 @@ export const config = signal<Config | null>(null);
 export const mycall = signal<string>(document.documentElement.dataset.mycall ?? '');
 export const wsUp = signal(false);
 export const configChanged = signal(false);
-// composerOpen is set by the composer (web Task 7); a config change while it
-// is open waits for the user instead of reloading the page under them.
+// composerOpen is set by the composer; a config change while it is open
+// waits for the user instead of reloading the page under them.
 export const composerOpen = signal(false);
+
+// Draft is the message being written in the composer.
+export interface Draft {
+  to: string[];
+  cc: string[];
+  subject: string;
+  body: string;
+  files: File[];
+  // inReplyTo is "<folder>/<mid>" of the message being answered.
+  inReplyTo: string | null;
+  p2pOnly: boolean;
+}
+export const emptyDraft = (): Draft => ({ to: [], cc: [], subject: '', body: '', files: [], inReplyTo: null, p2pOnly: false });
+export const draft = signal<Draft>(emptyDraft());
 // drawerOpen shows the sidebar as a drawer on narrow screens.
 export const drawerOpen = signal(false);
 
@@ -244,6 +258,17 @@ export async function applyBulkTo(mids: string[], ...args: Bulk): Promise<BulkRe
 
 let lastHash: string | null = null;
 
+// handleStatus records a status push. A changed config hash reloads the
+// page, unless the composer is open; then a banner asks first.
+export function handleStatus(s: Status): void {
+  status.value = s;
+  if (lastHash !== null && s.config_hash !== lastHash) {
+    if (composerOpen.value) configChanged.value = true;
+    else location.reload();
+  }
+  lastHash = s.config_hash;
+}
+
 // startWs connects the websocket and routes its messages into the store.
 export function startWs() {
   return connectWs({
@@ -254,14 +279,7 @@ export function startWs() {
       void refresh();
     },
     onClose: () => { wsUp.value = false; },
-    onStatus: (s) => {
-      status.value = s;
-      if (lastHash !== null && s.config_hash !== lastHash) {
-        if (composerOpen.value) configChanged.value = true;
-        else location.reload();
-      }
-      lastHash = s.config_hash;
-    },
+    onStatus: handleStatus,
     onProgress: (p) => { progress.value = p.done ? null : p; },
     onNotification: (n) => {
       if ('Notification' in window && Notification.permission === 'granted') new Notification(n.title, { body: n.body });

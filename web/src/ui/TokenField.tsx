@@ -8,12 +8,13 @@ type Props = {
   onChange: (tokens: string[]) => void;
   delimiters?: string[];
   placeholder?: string;
+  autofocus?: boolean;
 };
 
 // TokenField edits a list of addresses as chips. Typing a delimiter,
 // pressing Enter or leaving the field turns the pending text into tokens;
 // Backspace in an empty field removes the last one.
-export function TokenField({ label, tokens, onChange, delimiters = [',', ';', ' '], placeholder }: Props) {
+export function TokenField({ label, tokens, onChange, delimiters = [',', ';', ' '], placeholder, autofocus }: Props) {
   const id = useId();
   const [pending, setPending] = useState('');
 
@@ -44,7 +45,7 @@ export function TokenField({ label, tokens, onChange, delimiters = [',', ';', ' 
           {t}
         </Chip>
       ))}
-      <input id={id} value={pending} placeholder={tokens.length ? undefined : placeholder} autocomplete="off" spellcheck={false}
+      <input id={id} value={pending} autofocus={autofocus} placeholder={tokens.length ? undefined : placeholder} autocomplete="off" spellcheck={false}
         onInput={(e) => onInput(e.currentTarget.value)}
         onBlur={() => commit(pending)}
         onKeyDown={(e) => {

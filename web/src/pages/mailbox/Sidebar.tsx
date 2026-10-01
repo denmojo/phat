@@ -12,9 +12,10 @@ import { Menu, type MenuItem } from '../../ui/Menu';
 import { toast } from '../../ui/Toast';
 import { FolderEditor, deleteFolderMessage } from './FolderEditor';
 import { LabelEditor } from './LabelEditor';
-import { composerOpen, drawerOpen, folders, labels, mycall, refresh, refreshSidebar, setView, view } from './store';
+import { drawerOpen, folders, labels, mycall, refresh, refreshSidebar, setView, view } from './store';
 import { folderTitle } from './format';
 import { dropTarget, type DropKind } from './dnd';
+import { compose } from './Composer';
 import './Sidebar.css';
 
 const SYSTEM: [string, LucideIcon][] = [['in', Inbox], ['out', Send], ['sent', MailCheck], ['archive', Archive]];
@@ -131,7 +132,7 @@ export function Sidebar() {
         <span class="appname">Phat</span>
         <span class="call">{mycall.value}</span>
       </div>
-      <button type="button" class="compose" onClick={() => { composerOpen.value = true; }}>
+      <button type="button" class="compose" onClick={() => { drawerOpen.value = false; compose(); }}>
         <MailPlus /> New message
       </button>
       <nav aria-label="Mailbox" class="side-nav">

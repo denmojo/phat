@@ -1,17 +1,29 @@
-import { Archive, ArrowLeft, FolderInput, Mail, Paperclip, Star, Trash2 } from 'lucide-preact';
-import * as api from '../../lib/api';
+import { useCallback, useState } from 'preact/hooks';
+import {
+  Archive, ArrowLeft, Ellipsis, FilePen, FolderInput, Forward, Inbox, Mail, Reply, ReplyAll, Star, Trash2,
+} from 'lucide-preact';
+import { Button } from '../../ui/Button';
 import { Chip } from '../../ui/Chip';
+import { Dialog } from '../../ui/Dialog';
 import { IconButton } from '../../ui/IconButton';
 import { Menu } from '../../ui/Menu';
+import { MessageAttachments } from './Attachments';
+import { editAsNew, forward, reply } from './Composer';
 import { LabelMenu } from './LabelMenu';
 import { applyBulkTo, closeMsg, folders, labels, openMessage } from './store';
-import { callColor, folderTitle, formatDate } from './format';
+import { callColor, folderTitle } from './format';
 import './MessagePane.css';
 
-// MessagePane shows the open message with the same actions the selection
-// toolbar offers, applied to this one message. Web Task 7 adds reply,
-// forward, Winlink form rendering and image previews.
+const fullDate = (iso: string) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+};
+
+// MessagePane shows the open message with reply and forward, and the same
+// actions the selection toolbar offers, applied to this one message.
 export function MessagePane() {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const cancelDelete = useCallback(() => setConfirmDelete(false), []);
   const m = openMessage.value;
   if (!m) return null;
   const mids = [m.MID];
@@ -20,22 +32,44 @@ export function MessagePane() {
   const from = m.From?.Addr ?? '';
   const to = (m.To ?? []).map((a) => a.Addr).join(', ');
   const cc = (m.Cc ?? []).map((a) => a.Addr).join(', ');
+  const archived = m.Folder === 'archive';
+  const moveTo = () => targets.map((f) => ({ label: folderTitle(f.name), onSelect: () => void applyBulkTo(mids, 'move', f.name) }));
   return (
     <>
       <div class="toolbar">
         <IconButton icon={ArrowLeft} label="Back" onClick={closeMsg} />
         <span class="sep" />
-        {m.Folder !== 'archive' && <IconButton icon={Archive} label="Archive" onClick={() => void applyBulkTo(mids, 'move', 'archive')} />}
-        <IconButton icon={Trash2} label="Delete" onClick={() => void applyBulkTo(mids, 'delete')} />
+        <IconButton icon={Reply} label="Reply" onClick={() => reply(m, false)} />
+        <span class="wide-only">
+          <IconButton icon={ReplyAll} label="Reply all" onClick={() => reply(m, true)} />
+          <IconButton icon={Forward} label="Forward" onClick={() => forward(m)} />
+        </span>
         <span class="sep" />
-        <IconButton icon={Mail} label="Mark unread" onClick={() => { void applyBulkTo(mids, 'read', false); closeMsg(); }} />
+        {archived
+          ? <IconButton icon={Inbox} label="Move to Inbox" onClick={() => void applyBulkTo(mids, 'move', 'in')} />
+          : <IconButton icon={Archive} label="Archive" onClick={() => void applyBulkTo(mids, 'move', 'archive')} />}
+        <IconButton icon={Trash2} label="Delete" onClick={() => setConfirmDelete(true)} />
+        <span class="sep" />
+        <span class="wide-only">
+          <IconButton icon={Mail} label="Mark unread" onClick={() => { void applyBulkTo(mids, 'read', false); closeMsg(); }} />
+        </span>
         <IconButton icon={Star} label={m.Starred ? 'Unstar' : 'Star'} pressed={m.Starred}
           onClick={() => void applyBulkTo(mids, 'star', !m.Starred)} />
         <LabelMenu target={{ mids, labels: [m.Labels ?? []] }} />
-        <Menu trigger={<IconButton icon={FolderInput} label="Move to" />}
-          items={targets.map((f) => ({ label: folderTitle(f.name), onSelect: () => void applyBulkTo(mids, 'move', f.name) }))} />
+        <span class="wide-only">
+          <Menu trigger={<IconButton icon={FolderInput} label="Move to" />} items={moveTo()} />
+        </span>
+        <Menu align="right" trigger={<IconButton icon={Ellipsis} label="More actions" />} items={[
+          ...(window.matchMedia?.('(max-width: 640px)').matches ? [
+            { label: 'Reply all', icon: ReplyAll, onSelect: () => reply(m, true) },
+            { label: 'Forward', icon: Forward, onSelect: () => forward(m) },
+            { label: 'Mark unread', icon: Mail, onSelect: () => { void applyBulkTo(mids, 'read', false); closeMsg(); } },
+            ...moveTo().map((x) => ({ ...x, label: `Move to ${x.label}` })),
+          ] : []),
+          { label: 'Edit as new', icon: FilePen, onSelect: () => editAsNew(m) },
+        ]} />
         <span class="spacer" />
-        <span class="meta">{folderTitle(m.Folder)}</span>
+        <span class="meta wide-only">{folderTitle(m.Folder)}</span>
       </div>
       <article class="msg">
         <h1>
@@ -44,23 +78,28 @@ export function MessagePane() {
         </h1>
         <div class="hdr">
           <span class="avatar" style={{ '--c': callColor(from) }} aria-hidden="true">{from.slice(0, 2)}</span>
-          <div>
-            <div class="from">{from}</div>
+          <div class="who">
+            <div class="from">{from}{m.P2POnly && <span class="p2p">P2P only</span>}</div>
             <div class="to">To {to}{cc && `, Cc ${cc}`}</div>
           </div>
-          <span class="when">{formatDate(m.Date)}</span>
+          <time class="when" dateTime={m.Date}>{fullDate(m.Date)}</time>
         </div>
-        <div class="body">{m.Body}</div>
-        {m.Files && m.Files.length > 0 && (
-          <div class="atts">
-            {m.Files.map((f) => (
-              <a key={f.Name} class="attcard" href={api.attachmentUrl(m.Folder, m.MID, f.Name)} target="_blank" rel="noopener">
-                <Paperclip /><span>{f.Name}</span>
-              </a>
-            ))}
-          </div>
-        )}
+        {m.BodyHTML
+          // BodyHTML is the server's rendering, sanitized there with bluemonday's UGC policy.
+          ? <div class="body" dangerouslySetInnerHTML={{ __html: m.BodyHTML }} />
+          : <div class="body">{m.Body}</div>}
+        <MessageAttachments m={m} />
       </article>
+      <Dialog open={confirmDelete} title="Delete message?" onClose={cancelDelete}
+        footer={(
+          <>
+            <span class="spacer" />
+            <Button onClick={cancelDelete}>Cancel</Button>
+            <Button variant="danger" onClick={() => { setConfirmDelete(false); void applyBulkTo(mids, 'delete'); }}>Delete</Button>
+          </>
+        )}>
+        <div class="dialog-pad"><p>“{m.Subject || '(no subject)'}” will be deleted for good. Phat keeps no trash.</p></div>
+      </Dialog>
     </>
   );
 }

@@ -1,0 +1,18 @@
+.atts { display: flex; flex-wrap: wrap; gap: var(--space-3); padding: var(--space-2) 0 var(--space-4); }
+.attcard { position: relative; display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text); text-decoration: none; font-size: var(--text-sm);
+  max-width: 260px; background: var(--surface); }
+a.attcard:hover { background: var(--surface-2); }
+.attcard .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.attcard .size { color: var(--text-faint); font-size: var(--text-xs); white-space: nowrap; }
+.attcard svg.lucide { width: 16px; height: 16px; flex: none; color: var(--text-muted); }
+.attcard.image { flex-direction: column; align-items: stretch; padding: 0; overflow: hidden; width: 180px; }
+.attcard.image img { display: block; width: 100%; height: 120px; object-fit: cover; background: var(--surface-2); }
+.attcard.image .cap { display: flex; gap: var(--space-2); align-items: baseline; padding: var(--space-1) var(--space-2); }
+.attcard .cap { display: flex; gap: var(--space-2); align-items: baseline; min-width: 0; }
+.attcard .attx { position: absolute; top: 4px; right: 4px; display: inline-flex; border: 0; border-radius: 50%; padding: 2px; cursor: pointer;
+  background: color-mix(in srgb, var(--surface) 85%, transparent); color: var(--text-muted); }
+.attcard:not(.image) .attx { position: static; background: none; }
+.attcard .attx:hover { color: var(--danger); }
+.attform { text-decoration: none; }
+.attform svg.lucide { width: 16px; height: 16px; }

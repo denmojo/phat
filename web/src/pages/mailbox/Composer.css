@@ -1,0 +1,18 @@
+.composer { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.composer .err { margin: var(--space-3) var(--space-4) 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius); color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent); font-size: var(--text-sm); }
+.composer textarea.body { flex: 1; min-height: 280px; resize: none; padding: var(--space-3) var(--space-4); border: 0; outline: none;
+  background: var(--surface); color: var(--text); font: var(--text-sm)/1.55 var(--font-mono); }
+.composer .atts { padding: var(--space-2) var(--space-4) var(--space-3); border-top: 1px solid var(--border); }
+.ui-dialog-foot .attach { position: relative; cursor: pointer; }
+.ui-dialog-foot .attach input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.ui-dialog-foot .attach:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ui-dialog-foot .p2p { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-sm); color: var(--text-muted); cursor: pointer; }
+.ui-dialog-foot .ui-btn svg.lucide { width: 16px; height: 16px; }
+@media (max-width: 640px) {
+  .ui-dialog-foot { flex-wrap: wrap; }
+  /* Cancel and Send take their own line, on the right. */
+  .ui-dialog-foot .spacer { flex-basis: 100%; height: 0; }
+  .ui-dialog-foot .spacer + .ui-btn { margin-left: auto; }
+  .composer textarea.body { min-height: 180px; }
+}

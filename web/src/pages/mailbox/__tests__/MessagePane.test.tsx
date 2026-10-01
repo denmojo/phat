@@ -5,11 +5,12 @@ vi.mock('../../../lib/api', async (orig) => ({
   star: vi.fn(async (mids: string[]) => ({ ok: mids, failed: {} })),
   setRead: vi.fn(async (mids: string[]) => ({ ok: mids, failed: {} })),
   message: vi.fn(async () => null),
+  remove: vi.fn(async (mids: string[]) => ({ ok: mids, failed: {} })),
   list: vi.fn(async () => []),
   folders: vi.fn(async () => []),
   labels: vi.fn(async () => []),
 }));
-import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/preact';
 import * as api from '../../../lib/api';
 import * as store from '../store';
 import { MessagePane } from '../MessagePane';
@@ -56,4 +57,57 @@ test('Back closes the message', () => {
   render(<MessagePane />);
   fireEvent.click(screen.getByRole('button', { name: 'Back' }));
   expect(store.openMessage.value).toBeNull();
+});
+
+test('the body renders the server-sanitized HTML, with P2P only and Cc in the headers', () => {
+  store.openMessage.value = { ...msg, P2POnly: true, Cc: [{ Addr: 'K6ABC' }], BodyHTML: '<p>All <blockquote>quoted</blockquote></p>' } as never;
+  render(<MessagePane />);
+  expect(document.querySelector('.msg .body blockquote')).toHaveTextContent('quoted');
+  expect(screen.getByText('P2P only')).toBeInTheDocument();
+  expect(screen.getByText(/Cc K6ABC/)).toBeInTheDocument();
+});
+
+test('opening an unread message marks it read', async () => {
+  (api.message as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ ...msg, Unread: true });
+  store.rows.value = [{ MID: 'm1', Unread: true } as never];
+  await store.openMsg('in', 'm1');
+  expect(api.setRead).toHaveBeenCalledWith(['m1'], true);
+});
+
+test('a form attachment is a button that opens the rendered form; images preview inline', () => {
+  store.openMessage.value = { ...msg, Files: [
+    { Name: 'RMS_Express_Form_ICS213_Initial_Viewer.xml', Size: 900 },
+    { Name: 'map.jpg', Size: 2048 },
+    { Name: 'log.txt', Size: 10 },
+  ] } as never;
+  render(<MessagePane />);
+  const form = screen.getByRole('button', { name: /ICS213 Initial Viewer/ });
+  expect(form.getAttribute('href')).toMatch(/rendertohtml=true$/);
+  expect(document.querySelector('img[alt="map.jpg"]')?.getAttribute('src')).toBe('/api/mailbox/in/m1/map.jpg');
+  expect(screen.getByRole('link', { name: /log\.txt/ }).getAttribute('href')).toBe('/api/mailbox/in/m1/log.txt');
+});
+
+test('Reply opens the composer addressed to the sender', () => {
+  render(<MessagePane />);
+  fireEvent.click(screen.getByRole('button', { name: 'Reply' }));
+  expect(store.composerOpen.value).toBe(true);
+  expect(store.draft.value.to).toEqual(['W6EOC']);
+  store.composerOpen.value = false;
+});
+
+test('Delete asks first, and only Delete in the dialog deletes', async () => {
+  render(<MessagePane />);
+  fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+  const dialog = screen.getByRole('dialog');
+  expect(api.remove).not.toHaveBeenCalled();
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
+  await waitFor(() => expect(api.remove).toHaveBeenCalledWith(['m1']));
+});
+
+test('in the archive, Archive becomes Move to Inbox', async () => {
+  store.openMessage.value = { ...msg, Folder: 'archive' } as never;
+  render(<MessagePane />);
+  expect(screen.queryByRole('button', { name: 'Archive' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Move to Inbox' }));
+  await waitFor(() => expect(api.move).toHaveBeenCalledWith(['m1'], 'in'));
 });

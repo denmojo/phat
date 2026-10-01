@@ -26,3 +26,22 @@ test('a backdrop click closes, a click inside does not', () => {
   fireEvent.click(document.querySelector('.ui-scrim')!);
   expect(onClose).toHaveBeenCalledTimes(1);
 });
+
+test('closeOnBackdrop false ignores a click outside', () => {
+  const onClose = vi.fn();
+  render(<Dialog open title="Draft" onClose={onClose} closeOnBackdrop={false}><p>x</p></Dialog>);
+  fireEvent.click(document.querySelector('.ui-scrim')!);
+  expect(onClose).not.toHaveBeenCalled();
+});
+
+test('Escape closes only the dialog on top', () => {
+  const outer = vi.fn();
+  const inner = vi.fn();
+  render(<>
+    <Dialog open title="Outer" onClose={outer}><p>a</p></Dialog>
+    <Dialog open title="Inner" onClose={inner}><p>b</p></Dialog>
+  </>);
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(inner).toHaveBeenCalledTimes(1);
+  expect(outer).not.toHaveBeenCalled();
+});
