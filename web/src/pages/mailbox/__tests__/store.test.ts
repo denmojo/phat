@@ -70,6 +70,7 @@ test('an open message knows its folder and picks up a label change', async () =>
 
 test('read, star and label changes keep the selection; the rows stay in view', async () => {
   store.openMessage.value = null;
+  store.view.value = { kind: 'folder', name: 'in' };
   for (const args of [['read', true], ['star', true], ['labels', ['x'], []]] as const) {
     store.selected.value = new Set(['a', 'b']);
     await store.applyBulk(...(args as unknown as Parameters<typeof store.applyBulk>));
