@@ -1,0 +1,7 @@
+.label-menu { max-height: 360px; overflow-y: auto; }
+.label-menu .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.lm-box { width: 16px; height: 16px; border: 2px solid var(--text-faint); border-radius: 4px; flex: none; display: inline-grid; place-content: center; }
+.lm-box.true, .lm-box.mixed { background: var(--accent); border-color: var(--accent); }
+.lm-box.true::after { content: ""; width: 8px; height: 4px; border: solid var(--accent-text); border-width: 0 0 2px 2px; transform: translateY(-1px) rotate(-45deg); }
+.lm-box.mixed::after { content: ""; width: 8px; height: 2px; background: var(--accent-text); }
+.lm-sep { height: 1px; background: var(--border); margin: var(--space-1) 0; }

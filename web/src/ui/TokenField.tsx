@@ -40,7 +40,7 @@ export function TokenField({ label, tokens, onChange, delimiters = [',', ';', ' 
     <div class="ui-tokenfield">
       <label for={id}>{label}</label>
       {tokens.map((t, i) => (
-        <Chip key={`${t}-${i}`} removeLabel={`Remove ${t}`} onRemove={() => onChange(tokens.filter((_, j) => j !== i))}>
+        <Chip key={`${t}-${i}`} token removeLabel={`Remove ${t}`} onRemove={() => onChange(tokens.filter((_, j) => j !== i))}>
           {t}
         </Chip>
       ))}

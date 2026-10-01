@@ -75,7 +75,9 @@ export async function refresh(): Promise<void> {
     const got = await api.list(v);
     if (view.value === v) rows.value = got;
   } catch (err) {
-    report(err);
+    // A query the index can't parse leaves the last results on screen.
+    if (v.kind === 'search' && err instanceof ApiError && err.status === 400) toast('Search syntax error', { kind: 'error' });
+    else report(err);
   }
 }
 
@@ -89,13 +91,24 @@ export async function refreshSidebar(): Promise<void> {
   }
 }
 
+// browseView is the last view that wasn't a search, where clearing the
+// search box returns to.
+export const browseView = signal<View>(view.value);
+
 export async function setView(v: View): Promise<void> {
+  const wasSearch = view.value.kind === 'search';
   view.value = v;
+  if (v.kind !== 'search') browseView.value = v;
   drawerOpen.value = false;
   selected.value = new Set();
   openMessage.value = null;
-  rows.value = [];
+  // Refining a search keeps the old results up until the new ones arrive.
+  if (!(wasSearch && v.kind === 'search')) rows.value = [];
   await refresh();
+}
+
+export function endSearch(): Promise<void> {
+  return setView(browseView.value);
 }
 
 export function toggleSelect(mid: string): void {
@@ -193,7 +206,7 @@ export async function applyBulkTo(mids: string[], ...args: Bulk): Promise<BulkRe
     if (res.ok.length) toast(done(args[0], res.ok.length, args[1]));
     if (failed.length) {
       const why = [...new Set(Object.values(res.failed))].join('; ');
-      toast(`${plural(failed.length)} could not be changed: ${why}`, { kind: 'error' });
+      toast(`${failed.length} of ${mids.length} failed: ${why}`, { kind: 'error' });
     }
   }
   await Promise.all([refresh(), refreshSidebar()]);

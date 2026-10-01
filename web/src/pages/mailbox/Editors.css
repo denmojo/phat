@@ -1,0 +1,14 @@
+.inline-editor { padding: 2px 0; }
+.inline-row { display: flex; align-items: center; gap: var(--space-3); height: 32px; padding: 0 var(--space-2) 0 var(--space-3);
+  border-radius: var(--radius); background: var(--surface); box-shadow: inset 0 0 0 1px var(--accent); color: var(--text-muted); }
+.inline-row input { flex: 1; min-width: 0; border: 0; background: none; outline: none; color: var(--text); }
+.inline-error { margin: 4px var(--space-3) 0; font-size: var(--text-sm); color: var(--danger); }
+.dialog-pad { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); }
+.dialog-pad p { color: var(--text-muted); }
+.swatches { display: flex; flex-wrap: wrap; gap: var(--space-2); border: 0; padding: 0; margin: 0; }
+.swatches legend { font-size: var(--text-sm); color: var(--text-muted); font-weight: 600; margin-bottom: var(--space-1); padding: 0; }
+.swatch { width: 28px; height: 28px; border-radius: 50%; border: 0; background: var(--c); cursor: pointer; display: inline-flex;
+  align-items: center; justify-content: center; color: #fff; padding: 0; }
+.swatch[aria-checked="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--c); }
+.swatch svg.lucide { width: 16px; height: 16px; stroke-width: 3; }
+.form-error { font-size: var(--text-sm); color: var(--danger); }

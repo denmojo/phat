@@ -4,6 +4,7 @@ import { IconButton } from '../../ui/IconButton';
 import { Menu } from '../../ui/Menu';
 import { Button } from '../../ui/Button';
 import { SearchBox } from './SearchBox';
+import { LabelMenu } from './LabelMenu';
 import {
   applyBulk, clearSelection, drawerOpen, folders, refresh, rows, selectAll, selected, setSort, sort, status, view, wsUp,
   type SortKey,
@@ -83,6 +84,7 @@ export function Toolbar() {
       <IconButton icon={Mail} label="Mark unread" onClick={() => void applyBulk('read', false)} />
       <IconButton icon={Star} label="Star" onClick={() => void applyBulk('star', true)} />
       <IconButton icon={StarOff} label="Unstar" onClick={() => void applyBulk('star', false)} />
+      <LabelMenu />
       <Menu trigger={<IconButton icon={FolderInput} label="Move to" />}
         items={moveTargets.map((f) => ({ label: folderTitle(f.name), onSelect: () => void applyBulk('move', f.name) }))} />
       <span class="spacer" />
