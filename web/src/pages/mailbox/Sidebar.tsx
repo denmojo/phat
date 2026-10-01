@@ -14,6 +14,7 @@ import { FolderEditor, deleteFolderMessage } from './FolderEditor';
 import { LabelEditor } from './LabelEditor';
 import { composerOpen, drawerOpen, folders, labels, mycall, refresh, refreshSidebar, setView, view } from './store';
 import { folderTitle } from './format';
+import { dropTarget, type DropKind } from './dnd';
 import './Sidebar.css';
 
 const SYSTEM: [string, LucideIcon][] = [['in', Inbox], ['out', Send], ['sent', MailCheck], ['archive', Archive]];
@@ -28,17 +29,21 @@ function same(a: View, b: View): boolean {
 type EntryProps = {
   to: View; icon?: LucideIcon; dot?: string; name: string; count?: number;
   actions?: { label: string; items: MenuItem[] };
+  drop?: [DropKind, string?];
 };
 
 // Entry is one sidebar link. Custom folders and labels carry a kebab menu,
 // which a right-click on the link also opens.
-function Entry({ to, icon: Icon, dot, name, count, actions }: EntryProps) {
+function Entry({ to, icon: Icon, dot, name, count, actions, drop }: EntryProps) {
   const current = same(view.value, to);
+  // A view never accepts its own messages back.
+  const target = drop && !current ? dropTarget(drop[0], drop[1]) : undefined;
   const row = useRef<HTMLDivElement>(null);
   return (
     <div ref={row} class={`side-row${current ? ' active' : ''}`}>
       <a href="#" class={`side-item${current ? ' active' : ''}`} aria-current={current ? 'page' : undefined}
         onClick={(e) => { e.preventDefault(); void setView(to); }}
+        {...(target ?? {})}
         onContextMenu={actions && ((e) => {
           e.preventDefault();
           row.current?.querySelector<HTMLButtonElement>('.side-kebab button')?.click();
@@ -134,9 +139,11 @@ export function Sidebar() {
           const f = byName.get(name);
           // Inbox counts unread mail; Outbox counts what waits to be sent.
           const count = name === 'out' ? f?.count : name === 'in' ? f?.unread : undefined;
-          return <Entry key={name} to={{ kind: 'folder', name }} icon={icon} name={folderTitle(name)} count={count} />;
+          // The outbox is filled by composing, not by dropping old mail in.
+          return <Entry key={name} to={{ kind: 'folder', name }} icon={icon} name={folderTitle(name)} count={count}
+            drop={name === 'out' ? undefined : ['folder', name]} />;
         })}
-        <Entry to={{ kind: 'starred' }} icon={Star} name="Starred" />
+        <Entry to={{ kind: 'starred' }} icon={Star} name="Starred" drop={['starred']} />
 
         <div class="group">
           <span>Folders</span>
@@ -145,7 +152,7 @@ export function Sidebar() {
         </div>
         {custom.map((f) => editing?.kind === 'rename-folder' && editing.name === f.name
           ? <FolderEditor key={f.name} rename={f.name} onDone={done} />
-          : <Entry key={f.name} to={{ kind: 'folder', name: f.name }} icon={Folder} name={f.name} count={f.unread}
+          : <Entry key={f.name} to={{ kind: 'folder', name: f.name }} icon={Folder} name={f.name} count={f.unread} drop={['folder', f.name]}
               actions={{ label: `Folder actions for ${f.name}`, items: [
                 { label: 'Rename', icon: Pencil, onSelect: () => setEditing({ kind: 'rename-folder', name: f.name }) },
                 { label: 'Delete', icon: Trash2, danger: true, onSelect: () => setEditing({ kind: 'delete-folder', name: f.name }) },
@@ -158,7 +165,7 @@ export function Sidebar() {
             onClick={() => setEditing({ kind: 'new-label' })}><Plus /></button>
         </div>
         {labels.value.map((l) => (
-          <Entry key={l.name} to={{ kind: 'label', name: l.name }} dot={l.color} name={l.name}
+          <Entry key={l.name} to={{ kind: 'label', name: l.name }} dot={l.color} name={l.name} drop={['label', l.name]}
             actions={{ label: `Label actions for ${l.name}`, items: [
               { label: 'Edit', icon: Pencil, onSelect: () => setEditing({ kind: 'edit-label', label: l }) },
               { label: 'Delete', icon: Trash2, danger: true, onSelect: () => setEditing({ kind: 'delete-label', label: l }) },

@@ -13,3 +13,6 @@
   .sidebar.open { transform: none; }
   .drawer-scrim { display: block; position: fixed; inset: 0; background: var(--scrim); z-index: 39; }
 }
+.drag-ghost { position: fixed; top: -100px; left: -100px; display: inline-flex; align-items: center; padding: 8px 14px;
+  border-radius: var(--radius-md); background: var(--accent); color: var(--accent-text); font: 600 var(--text-sm) var(--font-sans);
+  box-shadow: var(--shadow-lg); }

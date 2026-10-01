@@ -8,6 +8,7 @@ import {
   correspondent, labels, openMsg, refresh, refreshSidebar, selectRange, selected, sortedRows, toggleSelect, view,
 } from './store';
 import { callColor, folderTitle, formatDate } from './format';
+import { dragging, endDrag, startDrag } from './dnd';
 import './MessageList.css';
 
 // anchor is the last row checked without Shift, the start of a range.
@@ -71,7 +72,10 @@ function MessageRow({ r, showFolder, colors }: { r: Row; showFolder: boolean; co
   const who = correspondent(r);
   const isSel = selected.value.has(r.MID);
   return (
-    <div role="row" class={`mrow${r.Unread ? ' unread' : ''}${isSel ? ' selected' : ''}`} aria-selected={isSel}
+    <div role="row" class={`mrow${r.Unread ? ' unread' : ''}${isSel ? ' selected' : ''}${dragging.value.has(r.MID) ? ' dragging' : ''}`}
+      aria-selected={isSel}
+      // Phones use long press to select, so rows only drag on wider screens.
+      draggable={!narrow()} onDragStart={(e) => { pressEnd(); startDrag(e, r.MID); }} onDragEnd={endDrag}
       onClick={() => rowClick(r)}
       onPointerDown={(e) => pressStart(r.MID, e)} onPointerMove={pressMove} onPointerUp={pressEnd} onPointerCancel={pressEnd}
       onContextMenu={(e) => { if (narrow()) e.preventDefault(); }}>
