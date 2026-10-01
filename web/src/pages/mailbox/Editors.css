@@ -5,10 +5,16 @@
 .inline-error { margin: 4px var(--space-3) 0; font-size: var(--text-sm); color: var(--danger); }
 .dialog-pad { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); }
 .dialog-pad p { color: var(--text-muted); }
-.swatches { display: flex; flex-wrap: wrap; gap: var(--space-2); border: 0; padding: 0; margin: 0; }
+.swatches { display: flex; flex-direction: column; gap: var(--space-3); border: 0; padding: 0; margin: 0; }
+.swatch-grid { display: grid; grid-template-columns: repeat(10, 28px); gap: var(--space-2); }
+.custom-color { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-muted); cursor: pointer; }
+.custom-color input { width: 32px; height: 28px; padding: 0; border: 1px solid var(--border); border-radius: var(--radius); background: none; cursor: pointer; }
+@media (max-width: 420px) { .swatch-grid { grid-template-columns: repeat(8, 28px); } }
 .swatches legend { font-size: var(--text-sm); color: var(--text-muted); font-weight: 600; margin-bottom: var(--space-1); padding: 0; }
 .swatch { width: 28px; height: 28px; border-radius: 50%; border: 0; background: var(--c); cursor: pointer; display: inline-flex;
   align-items: center; justify-content: center; color: #fff; padding: 0; }
 .swatch[aria-checked="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--c); }
 .swatch svg.lucide { width: 16px; height: 16px; stroke-width: 3; }
 .form-error { font-size: var(--text-sm); color: var(--danger); }
+[data-theme="dark"] .swatch { box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+[data-theme="dark"] .swatch[aria-checked="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--c), inset 0 0 0 1px rgba(255,255,255,.14); }
