@@ -80,3 +80,12 @@ test('a label offers Edit and Delete', () => {
   fireEvent.click(screen.getByRole('menuitem', { name: 'Edit' }));
   expect(screen.getByRole('dialog', { name: 'Edit label' })).toBeInTheDocument();
 });
+
+test('Escape closes the label dialog', async () => {
+  render(<Sidebar />);
+  fireEvent.click(screen.getByRole('button', { name: 'Label actions for Radio Club/ARES' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Edit' }));
+  const input = screen.getByRole('textbox', { name: 'Name' });
+  fireEvent.keyDown(input, { key: 'Escape' });
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+});

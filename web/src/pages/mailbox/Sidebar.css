@@ -27,9 +27,10 @@
 .group-add svg.lucide { width: 16px; height: 16px; }
 .side-row { position: relative; display: flex; align-items: center; flex: none; }
 .side-row .side-item { flex: 1; min-width: 0; }
-.side-kebab { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); opacity: 0; }
-.side-kebab .ui-iconbtn { width: 28px; height: 28px; }
+.side-kebab { position: absolute; right: 2px; top: 0; bottom: 0; display: flex; align-items: center; }
+.side-kebab .ui-iconbtn { width: 28px; height: 28px; opacity: 0; }
 .side-kebab .ui-iconbtn svg.lucide { width: 16px; height: 16px; }
-.side-row:hover .side-kebab, .side-kebab:focus-within { opacity: 1; }
-.side-row:hover .side-item .count, .side-row:focus-within .side-item .count { visibility: hidden; }
-@media (hover: none) { .side-kebab { opacity: 1; } .side-item .count { margin-right: 28px; } }
+.side-row:hover .side-kebab .ui-iconbtn, .side-kebab .ui-iconbtn:focus-visible, .side-kebab .open .ui-iconbtn { opacity: 1; }
+.side-row:has(.ui-menu-wrap.open) { z-index: 5; }
+.side-row:hover .side-item .count, .side-row:has(.ui-menu-wrap.open) .side-item .count { visibility: hidden; }
+@media (hover: none) { .side-kebab .ui-iconbtn { opacity: 1; } .side-item .count { margin-right: 28px; } }

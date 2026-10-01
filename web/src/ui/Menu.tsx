@@ -53,7 +53,7 @@ export function Menu({ trigger, items, align = 'left' }: Props) {
   };
 
   return (
-    <span ref={wrap} class="ui-menu-wrap" onClick={(e) => {
+    <span ref={wrap} class={`ui-menu-wrap${open ? ' open' : ''}`} onClick={(e) => {
       if (!list.current?.contains(e.target as Node)) setOpen((o) => !o);
     }}>
       {trigger}
