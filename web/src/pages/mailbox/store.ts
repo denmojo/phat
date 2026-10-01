@@ -50,31 +50,49 @@ export function correspondent(r: Row): string {
 }
 
 // sortedRows is rows in display order. Search results keep the server's
-// relevance order; the toolbar hides the sort menu there.
+// relevance order; the toolbar hides the sort menu there. Each column sorts
+// one way (dates as numbers, text with numeric-aware collation), keys are
+// computed once per row, and ties fall back to the message ID so the order
+// doesn't shuffle between refreshes.
+const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
 export const sortedRows = computed<Row[]>(() => {
   if (view.value.kind === 'search') return rows.value;
   const { key, asc } = sort.value;
-  const out = [...rows.value];
-  const cmp = (a: Row, b: Row) => {
-    if (key === 'date') return Date.parse(a.Date) - Date.parse(b.Date);
-    const x = key === 'from' ? correspondent(a) : a.Subject;
-    const y = key === 'from' ? correspondent(b) : b.Subject;
-    return x.localeCompare(y, undefined, { sensitivity: 'base' });
-  };
-  out.sort((a, b) => (asc ? cmp(a, b) : cmp(b, a)));
-  return out;
+  const dir = asc ? 1 : -1;
+  const keyed = rows.value.map((r) => ({
+    r,
+    k: key === 'date' ? Date.parse(r.Date) || 0 : key === 'from' ? correspondent(r) : r.Subject,
+  }));
+  keyed.sort((a, b) => {
+    const c = typeof a.k === 'number' ? (a.k as number) - (b.k as number) : collator.compare(a.k as string, b.k as string);
+    return c * dir || (a.r.MID < b.r.MID ? -1 : a.r.MID > b.r.MID ? 1 : 0);
+  });
+  return keyed.map((x) => x.r);
 });
 
 function report(err: unknown) {
   toast(err instanceof Error ? err.message : String(err), { kind: 'error' });
 }
 
+let refreshSeq = 0;
+
+// refresh reloads the current view. Only the newest request's answer is
+// used, so a slow response for an earlier view or an earlier refresh can't
+// overwrite a newer list. The selection is trimmed to what the list now
+// shows, so a bulk action can never touch a message the user can't see.
 export async function refresh(): Promise<void> {
   const v = view.value;
+  const seq = ++refreshSeq;
   try {
     const got = await api.list(v);
-    if (view.value === v) rows.value = got;
+    if (seq !== refreshSeq || view.value !== v) return;
+    rows.value = got;
+    const shown = new Set(got.map((r) => r.MID));
+    if ([...selected.value].some((m) => !shown.has(m))) {
+      selected.value = new Set([...selected.value].filter((m) => shown.has(m)));
+    }
   } catch (err) {
+    if (seq !== refreshSeq) return;
     // A query the index can't parse leaves the last results on screen.
     if (v.kind === 'search' && err instanceof ApiError && err.status === 400) toast('Search syntax error', { kind: 'error' });
     else report(err);
@@ -212,13 +230,6 @@ export async function applyBulkTo(mids: string[], ...args: Bulk): Promise<BulkRe
     }
   }
   await Promise.all([refresh(), refreshSidebar()]);
-  // Unstarring in Starred or unlabeling in a label view drops rows from
-  // the list; drop them from the selection too.
-  const v = view.value;
-  if ((v.kind === 'starred' && args[0] === 'star') || (v.kind === 'label' && args[0] === 'labels')) {
-    const shown = new Set(rows.value.map((r) => r.MID));
-    selected.value = new Set([...selected.value].filter((m) => shown.has(m)));
-  }
   // Keep an open message in step with what just happened to it.
   const m = openMessage.value;
   if (m && res?.ok.includes(m.MID)) {

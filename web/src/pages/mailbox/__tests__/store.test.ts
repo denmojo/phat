@@ -17,7 +17,10 @@ import * as store from '../store';
 
 beforeEach(() => vi.clearAllMocks());
 
+const listOf = (...mids: string[]) => mids.map((MID) => ({ MID })) as never;
+
 test('applyBulk keeps the failed MIDs selected and refreshes', async () => {
+  vi.mocked(api.list).mockResolvedValueOnce(listOf('b'));
   store.selected.value = new Set(['a', 'b']);
   await store.applyBulk('move', 'Club');
   expect(api.move).toHaveBeenCalledWith(['a', 'b'], 'Club');
@@ -27,6 +30,7 @@ test('applyBulk keeps the failed MIDs selected and refreshes', async () => {
 });
 
 test('a bulk call where everything failed keeps the whole selection', async () => {
+  vi.mocked(api.list).mockResolvedValueOnce(listOf('a', 'b'));
   vi.mocked(api.move).mockRejectedValueOnce(
     new api.ApiError(404, '', { ok: [], failed: { a: 'not found', b: 'not found' } }),
   );
@@ -72,6 +76,7 @@ test('read, star and label changes keep the selection; the rows stay in view', a
   store.openMessage.value = null;
   store.view.value = { kind: 'folder', name: 'in' };
   for (const args of [['read', true], ['star', true], ['labels', ['x'], []]] as const) {
+    vi.mocked(api.list).mockResolvedValueOnce(listOf('a', 'b'));
     store.selected.value = new Set(['a', 'b']);
     await store.applyBulk(...(args as unknown as Parameters<typeof store.applyBulk>));
     expect([...store.selected.value].sort()).toEqual(['a', 'b']);
