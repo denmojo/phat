@@ -1,0 +1,27 @@
+.sidebar { background: var(--bg); padding: var(--space-3) var(--space-2) var(--space-3) var(--space-3); display: flex; flex-direction: column;
+  gap: var(--space-1); overflow-y: auto; min-height: 0; }
+.brand { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-2) var(--space-3); }
+.brand .glyph { color: var(--accent); display: flex; }
+.brand .appname { font-weight: 700; font-size: var(--text-lg); letter-spacing: -.01em; }
+.brand .call { font: 600 var(--text-xs) var(--font-mono); color: var(--text-faint); }
+.compose { display: flex; align-items: center; justify-content: center; gap: var(--space-2); margin: 0 var(--space-1) var(--space-3);
+  background: var(--accent); color: var(--accent-text); border: 0; border-radius: var(--radius); height: 38px; flex: none;
+  font: 600 var(--text-md) var(--font-sans); cursor: pointer; }
+.compose:hover { background: var(--accent-hover); }
+.side-nav { display: flex; flex-direction: column; gap: 1px; }
+.side-nav.foot { margin-top: auto; padding-top: var(--space-3); }
+.side-item { display: flex; align-items: center; gap: var(--space-3); height: 32px; padding: 0 var(--space-3); border-radius: var(--radius);
+  color: var(--text-muted); text-decoration: none; cursor: pointer; flex: none; }
+.side-item .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-item:hover { background: var(--surface-3); }
+.side-item.active { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: inset 3px 0 0 var(--accent); }
+.side-item.active svg { color: var(--accent); }
+.side-item .count { margin-left: auto; background: var(--accent-weak); color: var(--accent); border-radius: var(--radius); padding: 0 6px;
+  min-width: 22px; text-align: center; font-size: var(--text-xs); font-weight: 600; line-height: 18px; }
+.side-item.drop { outline: 2px dashed var(--accent); outline-offset: -2px; background: var(--accent-weak); color: var(--accent); }
+.side-nav .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; margin: 0 4px; }
+.side-nav .group { display: flex; align-items: center; justify-content: space-between; margin: var(--space-4) var(--space-3) var(--space-1);
+  font-size: var(--text-xs); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-faint); }
+.group-add { border: 0; background: none; color: var(--text-faint); padding: 2px; border-radius: var(--radius); cursor: pointer; display: flex; }
+.group-add:hover { background: var(--surface-3); color: var(--text); }
+.group-add svg.lucide { width: 16px; height: 16px; }

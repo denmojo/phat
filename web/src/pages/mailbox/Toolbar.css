@@ -1,0 +1,30 @@
+.topbar { display: flex; align-items: center; gap: var(--space-3); height: 52px; padding: 0 var(--space-1) var(--space-2); flex: none; }
+.topbar .menu-btn { display: none; }
+.search { flex: 1; max-width: 560px; display: flex; align-items: center; gap: var(--space-2); height: 38px; padding: 0 var(--space-3);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-faint); }
+.search:focus-within { border-color: var(--accent); }
+.search input { flex: 1; border: 0; background: none; color: var(--text); outline: none; min-width: 0; }
+.search input::-webkit-search-cancel-button { display: none; }
+.search .kbd { font: 600 var(--text-xs) var(--font-mono); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; color: var(--text-faint); }
+.conn { margin-left: auto; display: flex; align-items: center; gap: var(--space-2); }
+.status { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 var(--space-3); border-radius: var(--radius);
+  background: var(--surface); border: 1px solid var(--border); font-size: var(--text-sm); color: var(--text-muted); white-space: nowrap; }
+.status .light { width: 8px; height: 8px; border-radius: 50%; background: var(--text-faint); }
+.status .light.on { background: var(--ok); }
+.status .light.busy { background: var(--warn); }
+.status .light.off { background: var(--danger); }
+
+.toolbar { display: flex; align-items: center; gap: 2px; height: 48px; padding: 0 var(--space-2); border-bottom: 1px solid var(--border); flex: none; }
+.toolbar .title { font-weight: 600; margin: 0 var(--space-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.toolbar .sel { font-weight: 600; color: var(--accent); margin: 0 var(--space-3) 0 var(--space-1); white-space: nowrap; }
+.toolbar .sep { width: 1px; height: 22px; background: var(--border); margin: 0 var(--space-1); }
+.toolbar .spacer { flex: 1; }
+.toolbar .meta { color: var(--text-faint); font-size: var(--text-sm); margin-right: var(--space-2); white-space: nowrap; }
+
+@media (max-width: 800px) {
+  .topbar { padding: var(--space-2) var(--space-3); height: 56px; }
+  .topbar .menu-btn { display: inline-flex; }
+  .search .kbd, .status .label, .conn .ui-btn .label { display: none; }
+  .conn .ui-btn { padding: 0 10px; }
+  .toolbar .meta { display: none; }
+}

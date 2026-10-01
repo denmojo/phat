@@ -1,7 +1,7 @@
 // Mailbox page state: signals the components read, and the actions that
 // change them. Every server change is followed by a refresh of the list
 // and the sidebar counts.
-import { signal } from '@preact/signals';
+import { computed, signal } from '@preact/signals';
 import * as api from '../../lib/api';
 import { ApiError } from '../../lib/api';
 import { connectWs } from '../../lib/ws';
@@ -24,6 +24,46 @@ export const configChanged = signal(false);
 // composerOpen is set by the composer (web Task 7); a config change while it
 // is open waits for the user instead of reloading the page under them.
 export const composerOpen = signal(false);
+// drawerOpen shows the sidebar as a drawer on narrow screens.
+export const drawerOpen = signal(false);
+
+export type SortKey = 'date' | 'from' | 'subject';
+export type Sort = { key: SortKey; asc: boolean };
+const SORT_KEY = 'phat.sort';
+function loadSort(): Sort {
+  try {
+    const s = JSON.parse(localStorage.getItem(SORT_KEY) ?? '');
+    if (['date', 'from', 'subject'].includes(s.key)) return { key: s.key, asc: !!s.asc };
+  } catch { /* nothing stored */ }
+  return { key: 'date', asc: false };
+}
+export const sort = signal<Sort>(loadSort());
+export function setSort(s: Sort): void {
+  sort.value = s;
+  try { localStorage.setItem(SORT_KEY, JSON.stringify(s)); } catch { /* storage blocked */ }
+}
+
+// correspondent is the address a row is shown under: the recipient for
+// mail this station wrote, the sender otherwise.
+export function correspondent(r: Row): string {
+  return r.Folder === 'out' || r.Folder === 'sent' ? r.To : r.From;
+}
+
+// sortedRows is rows in display order. Search results keep the server's
+// relevance order; the toolbar hides the sort menu there.
+export const sortedRows = computed<Row[]>(() => {
+  if (view.value.kind === 'search') return rows.value;
+  const { key, asc } = sort.value;
+  const out = [...rows.value];
+  const cmp = (a: Row, b: Row) => {
+    if (key === 'date') return Date.parse(a.Date) - Date.parse(b.Date);
+    const x = key === 'from' ? correspondent(a) : a.Subject;
+    const y = key === 'from' ? correspondent(b) : b.Subject;
+    return x.localeCompare(y, undefined, { sensitivity: 'base' });
+  };
+  out.sort((a, b) => (asc ? cmp(a, b) : cmp(b, a)));
+  return out;
+});
 
 function report(err: unknown) {
   toast(err instanceof Error ? err.message : String(err), { kind: 'error' });
@@ -51,6 +91,7 @@ export async function refreshSidebar(): Promise<void> {
 
 export async function setView(v: View): Promise<void> {
   view.value = v;
+  drawerOpen.value = false;
   selected.value = new Set();
   openMessage.value = null;
   rows.value = [];
@@ -66,6 +107,16 @@ export function toggleSelect(mid: string): void {
 
 export function selectAll(): void {
   selected.value = new Set(rows.value.map((r) => r.MID));
+}
+
+// selectRange adds every row between two MIDs, in display order.
+export function selectRange(from: string, to: string): void {
+  const ids = sortedRows.value.map((r) => r.MID);
+  let i = ids.indexOf(from);
+  let j = ids.indexOf(to);
+  if (i < 0 || j < 0) return;
+  if (i > j) [i, j] = [j, i];
+  selected.value = new Set([...selected.value, ...ids.slice(i, j + 1)]);
 }
 
 export function clearSelection(): void {
