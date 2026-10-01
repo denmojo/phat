@@ -6,3 +6,4 @@ phat*.pkg
 docker-data/
 .aider*
 *.swp
+.preview/
