@@ -200,9 +200,9 @@ func (a *App) Connect(connectStr string) (success bool) {
 	if prehookScript.File != "" {
 		log.Println("Running prehook...")
 		prehookScript.Env = append([]string{
-			buildinfo.AppName + "_DIAL_URL=" + connectStr,
-			buildinfo.AppName + "_REMOTE_ADDR=" + conn.RemoteAddr().String(),
-			buildinfo.AppName + "_LOCAL_ADDR=" + conn.LocalAddr().String(),
+			buildinfo.EnvVar("DIAL_URL") + "=" + connectStr,
+			buildinfo.EnvVar("REMOTE_ADDR") + "=" + conn.RemoteAddr().String(),
+			buildinfo.EnvVar("LOCAL_ADDR") + "=" + conn.LocalAddr().String(),
 		}, append(os.Environ(), a.Env()...)...)
 		conn = prehook.Wrap(conn)
 		if err := prehookScript.Execute(ctx, conn); err != nil {

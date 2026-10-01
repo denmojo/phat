@@ -98,7 +98,7 @@ type AccountAddResponse struct {
 }
 
 func AccountAdd(ctx context.Context, callsign, password, recoveryEmail string) error {
-	if t, _ := strconv.ParseBool(os.Getenv("PAT_CMSAPI_MOCK_ACCOUNT_ADD")); t {
+	if t, _ := strconv.ParseBool(os.Getenv(buildinfo.EnvVar("CMSAPI_MOCK_ACCOUNT_ADD"))); t {
 		return nil
 	}
 	req := AccountAddRequest{

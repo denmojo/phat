@@ -132,13 +132,13 @@ func LoadConfig(cfgPath string, fallback cfg.Config) (config cfg.Config, err err
 }
 
 // readRigsFromEnv reads hamlib rigs config from environment.
-// Syntax: PAT_HAMLIB_RIGS_{rig name}_{ATTRIBUTE}
+// Syntax: PHAT_HAMLIB_RIGS_{rig name}_{ATTRIBUTE}
 // _{ATTRIBUTE} is optional (defaults to _ADDRESS).
 // Examples:
-//   - PAT_HAMLIB_RIGS_rig1_NETWORK=tcp
-//   - PAT_HAMLIB_RIGS_rig1_ADDRESS=localhost:8080
-//   - PAT_HAMLIB_RIGS_rig1_VFO=A
-//   - PAT_HAMLIB_RIGS_rig2=localhost:8080
+//   - PHAT_HAMLIB_RIGS_rig1_NETWORK=tcp
+//   - PHAT_HAMLIB_RIGS_rig1_ADDRESS=localhost:8080
+//   - PHAT_HAMLIB_RIGS_rig1_VFO=A
+//   - PHAT_HAMLIB_RIGS_rig2=localhost:8080
 func readRigsFromEnv(rigs *map[string]cfg.HamlibConfig) error {
 	prefix := strings.ToUpper(buildinfo.AppName) + "_HAMLIB_RIGS_"
 	for _, env := range os.Environ() {

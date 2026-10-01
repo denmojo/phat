@@ -217,7 +217,7 @@ func (a *App) sessionExchange(conn net.Conn, targetCall string, master bool) err
 		fmt.Println("      lowercase letters. - https://github.com/la5nta/pat/issues/113")
 	}
 
-	if t, _ := strconv.ParseBool(os.Getenv("PAT_MOCK_NEW_ACCOUNT_MSG")); t {
+	if t, _ := strconv.ParseBool(os.Getenv(buildinfo.EnvVar("MOCK_NEW_ACCOUNT_MSG"))); t {
 		log.Println("Mocking new account msg...")
 		NotifyMBox{a.mbox, a}.ProcessInbound(mockNewAccountMsg())
 	}

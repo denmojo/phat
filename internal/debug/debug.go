@@ -4,12 +4,13 @@ import (
 	"log"
 	"os"
 	"strconv"
+
+	"github.com/la5nta/pat/internal/buildinfo"
 )
 
-const (
-	EnvVar = "PAT_DEBUG"
-	Prefix = "[DEBUG] "
-)
+const Prefix = "[DEBUG] "
+
+var EnvVar = buildinfo.EnvVar("DEBUG")
 
 var enabled bool
 

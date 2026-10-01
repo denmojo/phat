@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+
+	"github.com/la5nta/pat/internal/buildinfo"
 )
 
 const (
@@ -13,7 +15,7 @@ const (
 )
 
 func PasswordRecoveryEmailGet(ctx context.Context, callsign, password string) (string, error) {
-	if t, _ := strconv.ParseBool(os.Getenv("PAT_CMSAPI_MOCK_NO_RECOVERY_EMAIL")); t {
+	if t, _ := strconv.ParseBool(os.Getenv(buildinfo.EnvVar("CMSAPI_MOCK_NO_RECOVERY_EMAIL"))); t {
 		return "", nil
 	}
 	params := url.Values{"callsign": []string{callsign}, "password": []string{password}}

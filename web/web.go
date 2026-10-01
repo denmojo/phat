@@ -21,7 +21,9 @@ import (
 //go:embed dist/**
 var embeddedFS embed.FS
 
-func devServerAddr() string { return strings.TrimSuffix(os.Getenv("PAT_WEB_DEV_ADDR"), "/") }
+func devServerAddr() string {
+	return strings.TrimSuffix(os.Getenv(buildinfo.EnvVar("WEB_DEV_ADDR")), "/")
+}
 
 // DistHandler returns an HTTP handler that serves the static files for the web UI.
 func DistHandler() http.Handler {
