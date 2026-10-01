@@ -58,3 +58,19 @@ func TestUIPagesAreNotCached(t *testing.T) {
 		}
 	}
 }
+
+// The new settings page is served at /ui/config-next during development,
+// and it stays reachable before a callsign is set, like /ui/config.
+func TestUIConfigNextServesNewSettingsPage(t *testing.T) {
+	for _, call := range []string{"N0CALL", ""} {
+		h := UIHandler(call, func() string { return "light" })
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, httptest.NewRequest("GET", "/ui/config-next", nil))
+		if rec.Code != 200 {
+			t.Fatalf("mycall %q: /ui/config-next: %d", call, rec.Code)
+		}
+		if !strings.Contains(rec.Body.String(), `data-appearance="light"`) {
+			t.Errorf("mycall %q: page lacks its template data", call)
+		}
+	}
+}

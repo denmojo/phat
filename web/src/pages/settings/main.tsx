@@ -1,3 +1,7 @@
 import { render } from 'preact';
+import '../../ui/base.css';
+import { applyAppearance, type Appearance } from '../../ui/theme';
+import { App } from './App';
 
-render(<h1>{document.documentElement.dataset.appname} settings</h1>, document.getElementById('app')!);
+applyAppearance((document.documentElement.dataset.appearance as Appearance) || 'system');
+render(<App />, document.getElementById('app')!);
