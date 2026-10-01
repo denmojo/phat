@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	_ "modernc.org/sqlite"
+	"modernc.org/sqlite"
 )
 
 const FileName = "index.db"
@@ -52,6 +52,11 @@ func Open(mboxPath string) (*Index, error) {
 	}
 	if _, err := db.Exec(schema); err != nil {
 		db.Close()
+		if !isCorrupt(err) {
+			// Busy, locked, full disk: the file may be fine, and it holds
+			// the only copy of stars and labels, so leave it alone.
+			return nil, fmt.Errorf("mailindex: apply schema: %w", err)
+		}
 		aside := fmt.Sprintf("%s.corrupt-%d", p, time.Now().Unix())
 		log.Printf("mailindex: %s is unusable (%v); moving it to %s and rebuilding", p, err, aside)
 		if rerr := os.Rename(p, aside); rerr != nil {
@@ -70,8 +75,25 @@ func Open(mboxPath string) (*Index, error) {
 	return &Index{mboxPath: mboxPath, db: db}, nil
 }
 
+// busyTimeoutMS is how long a statement waits on another connection's lock.
+var busyTimeoutMS = 5000
+
+// isCorrupt reports whether err says the file is damaged or not a database
+// (SQLITE_CORRUPT 11, SQLITE_NOTADB 26), the two cases worth rebuilding for.
+func isCorrupt(err error) bool {
+	var se *sqlite.Error
+	if !errors.As(err, &se) {
+		return false
+	}
+	switch se.Code() & 0xff {
+	case 11, 26:
+		return true
+	}
+	return false
+}
+
 func openDB(path string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", path+"?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(ON)")
+	db, err := sql.Open("sqlite", fmt.Sprintf("%s?_pragma=journal_mode(WAL)&_pragma=busy_timeout(%d)&_pragma=foreign_keys(ON)", path, busyTimeoutMS))
 	if err != nil {
 		return nil, err
 	}

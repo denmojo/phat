@@ -1,5 +1,5 @@
 import { Archive, ArrowDownWideNarrow, Ellipsis, FolderInput, Mail, MailOpen, Menu as MenuIcon, RadioTower, RotateCw, Star, StarOff, Trash2, Unplug, X } from 'lucide-preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useCallback, useEffect, useState } from 'preact/hooks';
 import * as api from '../../lib/api';
 import { Checkbox } from '../../ui/Checkbox';
 import { toast } from '../../ui/Toast';
@@ -7,6 +7,7 @@ import { StatusPopover } from './StatusPopover';
 import { IconButton } from '../../ui/IconButton';
 import { Menu } from '../../ui/Menu';
 import { Button } from '../../ui/Button';
+import { Dialog } from '../../ui/Dialog';
 import { SearchBox } from './SearchBox';
 import { LabelMenu } from './LabelMenu';
 import {
@@ -68,6 +69,9 @@ export function Toolbar() {
   const v = view.value;
   const here = v.kind === 'folder' ? v.name : null;
   const toggleAll = () => (all || n > 0 ? clearSelection() : selectAll());
+  // Delete is for good: Phat keeps no trash, so it asks first.
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const cancelDelete = useCallback(() => setConfirmDelete(false), []);
 
   if (n === 0) {
     return (
@@ -97,7 +101,7 @@ export function Toolbar() {
       <Checkbox label="Select all" checked={all} indeterminate={!all} onClick={toggleAll} />
       <span class="sel">{n}<span class="wide-only"> selected</span></span>
       {here !== 'archive' && <IconButton icon={Archive} label="Archive" onClick={() => void applyBulk('move', 'archive')} />}
-      <IconButton icon={Trash2} label="Delete" onClick={() => void applyBulk('delete')} />
+      <IconButton icon={Trash2} label="Delete" onClick={() => setConfirmDelete(true)} />
       <span class="sep wide-only" />
       <IconButton icon={MailOpen} label="Mark read" onClick={() => void applyBulk('read', true)} />
       <span class="wide-only"><IconButton icon={Mail} label="Mark unread" onClick={() => void applyBulk('read', false)} /></span>
@@ -114,6 +118,16 @@ export function Toolbar() {
       </span>
       <span class="spacer" />
       <IconButton icon={X} label="Clear selection" onClick={clearSelection} />
+      <Dialog open={confirmDelete} title={`Delete ${n === 1 ? '1 message' : `${n} messages`}?`} onClose={cancelDelete}
+        footer={(
+          <>
+            <span class="spacer" />
+            <Button onClick={cancelDelete}>Cancel</Button>
+            <Button variant="danger" onClick={() => { setConfirmDelete(false); void applyBulk('delete'); }}>Delete</Button>
+          </>
+        )}>
+        <div class="dialog-pad"><p>{`The selected ${n === 1 ? 'message' : 'messages'} will be deleted for good. Phat keeps no trash.`}</p></div>
+      </Dialog>
     </div>
   );
 }

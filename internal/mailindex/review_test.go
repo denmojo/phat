@@ -1,6 +1,7 @@
 package mailindex
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -182,5 +183,42 @@ func TestSearchMatchesWordPrefixes(t *testing.T) {
 		if err != nil || len(rows) != 0 {
 			t.Errorf("Search(%q) = %d rows, %v; want none", q, len(rows), err)
 		}
+	}
+}
+
+// A locked index.db is busy, not corrupt: Open fails and leaves the file,
+// with its stars and labels, where it is.
+func TestOpenLeavesALockedIndexInPlace(t *testing.T) {
+	mb := newMailbox(t)
+	ix, err := Open(mb)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ix.Close()
+	old := busyTimeoutMS
+	busyTimeoutMS = 50
+	defer func() { busyTimeoutMS = old }()
+
+	holder, err := openDB(filepath.Join(mb, FileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer holder.Close()
+	conn, err := holder.Conn(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	if _, err := conn.ExecContext(context.Background(), "BEGIN EXCLUSIVE"); err != nil {
+		t.Fatal(err)
+	}
+	defer conn.ExecContext(context.Background(), "ROLLBACK")
+
+	if ix, err := Open(mb); err == nil {
+		ix.Close()
+		t.Fatal("Open on a locked index succeeded")
+	}
+	if matches, _ := filepath.Glob(filepath.Join(mb, FileName+".corrupt-*")); len(matches) != 0 {
+		t.Fatalf("a locked index was moved aside: %v", matches)
 	}
 }

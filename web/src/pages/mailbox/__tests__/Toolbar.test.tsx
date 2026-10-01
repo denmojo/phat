@@ -2,7 +2,7 @@ vi.mock('../store', async (orig) => {
   const real = await orig<typeof import('../store')>();
   return { ...real, applyBulk: vi.fn(async () => null), refresh: vi.fn(async () => {}) };
 });
-import { render, screen, fireEvent } from '@testing-library/preact';
+import { render, screen, fireEvent, within } from '@testing-library/preact';
 import * as store from '../store';
 import { Toolbar } from '../Toolbar';
 
@@ -44,4 +44,17 @@ test('Move to lists folders other than the current one', () => {
   fireEvent.click(screen.getByRole('menuitem', { name: 'Club' }));
   expect(store.applyBulk).toHaveBeenCalledWith('move', 'Club');
   expect(screen.queryByRole('menuitem', { name: 'Inbox' })).toBeNull();
+});
+
+test('Delete asks first, since Phat keeps no trash', async () => {
+  store.selected.value = new Set(['a', 'b']);
+  render(<Toolbar />);
+  fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+  expect(store.applyBulk).not.toHaveBeenCalled();
+  const dlg = await screen.findByRole('dialog', { name: 'Delete 2 messages?' });
+  fireEvent.click(within(dlg).getByRole('button', { name: 'Cancel' }));
+  expect(store.applyBulk).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+  fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Delete' }));
+  expect(store.applyBulk).toHaveBeenCalledWith('delete');
 });
