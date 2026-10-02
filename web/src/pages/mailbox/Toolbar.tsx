@@ -47,7 +47,7 @@ export function Topbar() {
       <span class="menu-btn"><IconButton icon={MenuIcon} label="Folders" onClick={() => { drawerOpen.value = true; }} /></span>
       <SearchBox />
       <div class="conn">
-        <IconButton icon={CircleQuestionMark} label="Keyboard shortcuts" title="Keyboard shortcuts (?)" onClick={() => { keysOpen.value = true; }} />
+        <span class="keys-btn"><IconButton icon={CircleQuestionMark} label="Keyboard shortcuts" title="Keyboard shortcuts (?)" onClick={() => { keysOpen.value = true; }} /></span>
         <StatusPopover />
         {button}
       </div>
