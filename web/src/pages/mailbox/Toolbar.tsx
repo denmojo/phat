@@ -1,4 +1,4 @@
-import { Archive, ArrowDownWideNarrow, Ellipsis, FolderInput, Mail, MailOpen, Menu as MenuIcon, RadioTower, RotateCw, Star, StarOff, Trash2, Unplug, X } from 'lucide-preact';
+import { Archive, ArrowDownWideNarrow, CircleQuestionMark, Ellipsis, FolderInput, Mail, MailOpen, Menu as MenuIcon, RadioTower, RotateCw, Star, StarOff, Trash2, Unplug, X } from 'lucide-preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import * as api from '../../lib/api';
 import { Checkbox } from '../../ui/Checkbox';
@@ -13,7 +13,7 @@ import { LabelMenu } from './LabelMenu';
 import { compose } from './Composer';
 import { useHotkeys } from '../../lib/hotkeys';
 import {
-  applyBulk, clearSelection, connectOpen, drawerOpen, folders, refresh, rows, selectAll, selected, setSort, sort, status, view,
+  applyBulk, clearSelection, connectOpen, keysOpen, drawerOpen, folders, refresh, rows, selectAll, selected, setSort, sort, status, view,
   type SortKey,
 } from './store';
 import { folderTitle } from './format';
@@ -47,6 +47,7 @@ export function Topbar() {
       <span class="menu-btn"><IconButton icon={MenuIcon} label="Folders" onClick={() => { drawerOpen.value = true; }} /></span>
       <SearchBox />
       <div class="conn">
+        <IconButton icon={CircleQuestionMark} label="Keyboard shortcuts" title="Keyboard shortcuts (?)" onClick={() => { keysOpen.value = true; }} />
         <StatusPopover />
         {button}
       </div>

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'preact/hooks';
 import type { LucideIcon } from 'lucide-preact';
 import {
-  Archive, EllipsisVertical, Folder, Inbox, MailCheck, MailPlus, MapPin, Pencil, Plus, RadioTower, ScrollText, Send, Settings, Star, Trash2,
+  Archive, EllipsisVertical, Folder, Inbox, MailCheck, MailPlus, MapPin, Pencil, Plus, RadioTower, ScrollText, Send, Settings, Star, Trash2, CircleQuestionMark,
 } from 'lucide-preact';
 import * as api from '../../lib/api';
 import type { Label, View } from '../../lib/types';
@@ -12,7 +12,7 @@ import { Menu, type MenuItem } from '../../ui/Menu';
 import { toast } from '../../ui/Toast';
 import { FolderEditor, deleteFolderMessage } from './FolderEditor';
 import { LabelEditor } from './LabelEditor';
-import { drawerOpen, logOpen, positionOpen, folders, labels, mycall, refresh, refreshSidebar, setView, view } from './store';
+import { drawerOpen, keysOpen, logOpen, positionOpen, folders, labels, mycall, refresh, refreshSidebar, setView, view } from './store';
 import { folderTitle } from './format';
 import { dropTarget, type DropKind } from './dnd';
 import { compose } from './Composer';
@@ -182,6 +182,9 @@ export function Sidebar() {
           <ScrollText /><span>Session log</span>
         </button>
         <a href="/ui/config" class="side-item"><Settings /><span>Settings</span></a>
+        <button type="button" class="side-item" onClick={() => { drawerOpen.value = false; keysOpen.value = true; }}>
+          <CircleQuestionMark /><span>Keyboard shortcuts</span>
+        </button>
       </nav>
 
       {editing?.kind === 'delete-folder' && <DeleteFolder name={editing.name} onClose={done} />}

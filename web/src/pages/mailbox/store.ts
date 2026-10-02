@@ -45,6 +45,8 @@ export const drawerOpen = signal(false);
 export const connectOpen = signal(false);
 export const positionOpen = signal(false);
 export const logOpen = signal(false);
+// keysOpen shows the keyboard shortcut sheet.
+export const keysOpen = signal(false);
 
 // logLines is the server's session log as the websocket streams it.
 export const logLines = signal<string[]>([]);
