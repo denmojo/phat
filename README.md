@@ -66,7 +66,7 @@ Phat also uses services set up for Pat. It calls the Winlink API with the access
 
 ## Reading and writing
 
-Opening a message shows quoted text as an indented block and previews image attachments inline; click an image for full size. Reply, Reply all and Forward sit on the toolbar, with Edit as new under the ⋯ menu. On an archived message, the archive button becomes Move to Inbox.
+Opening a message shows quoted text as an indented block and previews image attachments inline; click an image for full size. Reply, Reply all and Forward sit on the toolbar, with Edit as new under the ⋯ menu. On an archived message, the archive button becomes Move to Inbox. The up and down arrows beside Back step to the previous and next message in the order the list shows, without going back to it.
 
 New message opens the composer. Type callsigns or addresses into To and Cc, separated by commas, semicolons or spaces, or press Enter after each. Attach adds files, and images show a thumbnail. On sending, Phat re-encodes an image as a JPEG no wider than 600 pixels whenever that makes it smaller, as Pat does. P2P only keeps a message off the CMS. Clicking outside the composer leaves it open. Escape, the X and Cancel close it, and if you've typed anything Phat asks before throwing the draft away.
 
@@ -78,6 +78,31 @@ New message opens the composer. Type callsigns or addresses into To and Cc, sepa
 **Winlink forms.** In the composer, Forms opens the catalog of standard templates; type to filter (for example "213" for ICS-213). Update forms downloads the latest templates. Picking one opens the form in a new tab. Submit it there, and back in Phat the subject, body and form files fill into the composer, ready to address and send.
 
 **Position reports.** Position report, at the foot of the sidebar, posts your location to Winlink. Phat fills in the position from a GPS on the machine running it, falls back to the browser's location, or takes latitude and longitude typed by hand, with an optional comment.
+
+## Keyboard shortcuts
+
+Single keys act on the mail while no text field has focus and no dialog or menu is open. Press `?`, or the circled ? in the top bar or the sidebar, for the keys that work on the current screen. A key held with Ctrl, Alt or Command stays with the browser, so Ctrl-R and Cmd-R still reload.
+
+| key | in the message list | in an open message |
+|---|---|---|
+| `n` | new message | |
+| `Enter` | open the message, when exactly one is ticked | |
+| `j` / `k` | | next / previous message |
+| `h` | | back to the list |
+| `r` / `R` | | reply / reply all |
+| `f` | | forward |
+| `a` | archive the selection (in Archive, move it to the Inbox) | archive (in Archive, move to the Inbox) |
+| `t` | delete the selection | delete |
+| `u` | all unread: mark read; otherwise mark unread | mark unread and go back to the list |
+| `s` | all starred: unstar; otherwise star | star or unstar |
+| `l` | label menu | label menu |
+| `m` | move menu | move menu |
+
+Anywhere, `c` opens Connect, `/` jumps to the search box and `?` lists the keys. Delete still asks first, with Delete focused, so Enter confirms it.
+
+After Enter opens a ticked message, going back puts focus on that row's checkbox, so Space unticks it. The tick stays if you come back from the same message; if `j` or `k` took you to another, the tick clears and focus goes to the row of the message you left.
+
+On a phone the keys need a hardware keyboard, Bluetooth or USB. The on-screen keyboard only appears for a text field, and keys typed there go to the field. At phone width the top bar's ? button is hidden to make room; the sidebar entry stays.
 
 ## Connecting
 
