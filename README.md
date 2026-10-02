@@ -104,6 +104,11 @@ After Enter opens a ticked message, going back puts focus on that row's checkbox
 
 On a phone the keys need a hardware keyboard, Bluetooth or USB. The on-screen keyboard only appears for a text field, and keys typed there go to the field. At phone width the top bar's ? button is hidden to make room; the sidebar entry stays.
 
+<p align="center">
+  <img src="docs/screenshot-keys.png" alt="The Keyboard shortcuts sheet open over the inbox, listing the message list keys and the keys that work anywhere" width="100%">
+  <br><em>Pressing ? over the message list</em>
+</p>
+
 ## Connecting
 
 Connect opens the connection dialog. Pick a transport (telnet, ARDOP, VARA HF and FM, PACTOR, AX.25), a gateway from the RMS list or by callsign, and the transport's options. A frequency is given in kHz. If Phat can't tune the radio to it (no rig control configured, or the rig refused), it strikes the frequency through and leaves it out of the connect URL. The + button saves the current settings as an alias, and the trash button beside an alias deletes it.
