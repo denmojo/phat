@@ -47,6 +47,18 @@ test('a key typed into a field is ignored', () => {
   expect(r).not.toHaveBeenCalled();
 });
 
+test('keys still work with focus on a checkbox, as after ticking a row', () => {
+  const t = vi.fn();
+  renderHook(() => useHotkeys({ t }));
+  for (const type of ['checkbox', 'radio', 'button']) {
+    const el = document.createElement('input');
+    el.type = type;
+    document.body.appendChild(el);
+    press('t', {}, el);
+  }
+  expect(t).toHaveBeenCalledTimes(3);
+});
+
 test('an open dialog suppresses the keys', () => {
   const r = vi.fn();
   renderHook(() => useHotkeys({ r }));

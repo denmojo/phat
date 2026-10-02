@@ -1,10 +1,16 @@
 import { useEffect, useRef } from 'preact/hooks';
 
-// isTyping reports a key meant for a field: an input, textarea, select or
-// content-editable element.
+// Inputs that take no typing; a key pressed with one focused (a row's
+// checkbox just ticked) is still a shortcut.
+const untyped = new Set(['checkbox', 'radio', 'button', 'submit', 'reset', 'range', 'color', 'file', 'image']);
+
+// isTyping reports a key meant for a field: a text input, textarea, select
+// or content-editable element.
 export function isTyping(e: KeyboardEvent): boolean {
   const t = e.target as HTMLElement | null;
-  return !!t && (['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName) || t.isContentEditable);
+  if (!t) return false;
+  if (t instanceof HTMLInputElement) return !untyped.has(t.type);
+  return ['TEXTAREA', 'SELECT'].includes(t.tagName) || t.isContentEditable;
 }
 
 // modalOpen reports a modal dialog on the page; Phat's keys stand down
