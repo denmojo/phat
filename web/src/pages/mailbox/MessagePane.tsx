@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
+import { useCallback, useRef, useState } from 'preact/hooks';
 import {
   Archive, ArrowLeft, ChevronDown, ChevronUp, Ellipsis, FilePen, FolderInput, Forward, Inbox, Mail, Reply, ReplyAll, Star, Trash2,
 } from 'lucide-preact';
+import { useHotkeys } from '../../lib/hotkeys';
 import { Button } from '../../ui/Button';
 import { Chip } from '../../ui/Chip';
 import { Dialog } from '../../ui/Dialog';
@@ -36,22 +37,25 @@ export function MessagePane() {
     bar.current?.querySelector<HTMLButtonElement>(`button[aria-label="${other}"]`)?.focus();
   };
   const m = openMessage.value;
-  // j and k step like the down and up arrows, the vim keys. Typing in a
-  // field, a held modifier, or an open dialog leaves them alone.
-  useEffect(() => {
-    if (!m) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'j' && e.key !== 'k') return;
-      if (e.ctrlKey || e.altKey || e.metaKey) return;
-      const t = e.target as HTMLElement;
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName) || t.isContentEditable) return;
-      if (document.querySelector('[aria-modal="true"]')) return;
-      e.preventDefault();
-      void stepMsg(e.key === 'j' ? 1 : -1);
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [!m]);
+  // Keys for the open message: j and k step like the down and up arrows
+  // (vim's down and up), h goes back (vim's left), and the rest do what
+  // their toolbar button does. l and m click the menu buttons so the
+  // menus open exactly as they do by mouse.
+  const click = (label: string) => bar.current?.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)?.click();
+  useHotkeys(m ? {
+    j: () => void stepMsg(1),
+    k: () => void stepMsg(-1),
+    h: closeMsg,
+    r: () => reply(m, false),
+    R: () => reply(m, true),
+    f: () => forward(m),
+    a: () => void applyBulkTo([m.MID], 'move', m.Folder === 'archive' ? 'in' : 'archive'),
+    t: () => setConfirmDelete(true),
+    u: () => void applyBulkTo([m.MID], 'read', false),
+    s: () => void applyBulkTo([m.MID], 'star', !m.Starred),
+    l: () => click('Label'),
+    m: () => click('Move to'),
+  } : {}, !!m);
   if (!m) return null;
   const mids = [m.MID];
   const colors = new Map(labels.value.map((l) => [l.name, l.color]));
@@ -125,7 +129,7 @@ export function MessagePane() {
           <>
             <span class="spacer" />
             <Button onClick={cancelDelete}>Cancel</Button>
-            <Button variant="danger" onClick={() => { setConfirmDelete(false); void applyBulkTo(mids, 'delete'); }}>Delete</Button>
+            <Button variant="danger" autofocus onClick={() => { setConfirmDelete(false); void applyBulkTo(mids, 'delete'); }}>Delete</Button>
           </>
         )}>
         <div class="dialog-pad"><p>“{m.Subject || '(no subject)'}” will be deleted for good. Phat keeps no trash.</p></div>
