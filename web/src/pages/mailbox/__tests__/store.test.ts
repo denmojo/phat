@@ -246,6 +246,24 @@ describe('back from a message opened with Enter', () => {
     expect([...store.selected.value]).toEqual(['a']);
   });
 
+  test('archiving the message Enter opened focuses the row beside it', async () => {
+    await store.openSelected();
+    await store.applyBulkTo(['a'], 'move', 'archive');
+    expect(store.openMessage.value).toBeNull();
+    expect(store.returnFocus.value).toEqual({ Folder: 'in', MID: 'b' });
+  });
+
+  test('a step still in flight does not reopen a message archived meanwhile', async () => {
+    await store.openSelected();
+    let resolve!: (m: never) => void;
+    vi.mocked(api.message).mockImplementationOnce(() => new Promise((r) => { resolve = r; }));
+    const step = store.stepMsg(1);
+    await store.applyBulkTo(['a'], 'move', 'archive');
+    resolve({ MID: 'b' } as never);
+    await step;
+    expect(store.openMessage.value).toBeNull();
+  });
+
   test('a message opened by clicking its row leaves ticks and focus alone', async () => {
     await store.openSelected();
     store.closeMsg();

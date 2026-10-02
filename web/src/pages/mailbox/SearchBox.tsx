@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Search } from 'lucide-preact';
+import { useHotkeys } from '../../lib/hotkeys';
 import { endSearch, setView, view } from './store';
 
 const DEBOUNCE_MS = 250;
@@ -16,19 +17,10 @@ export function SearchBox() {
     if (view.value.kind !== 'search') setQ('');
   }, [view.value]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement;
-      if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName) && !t.isContentEditable) {
-        e.preventDefault();
-        input.current?.focus();
-      }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      if (timer.current) clearTimeout(timer.current);
-    };
+  // / jumps to the box, under the same guard as Phat's other keys.
+  useHotkeys({ '/': () => input.current?.focus() });
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
   }, []);
 
   const run = (text: string) => {

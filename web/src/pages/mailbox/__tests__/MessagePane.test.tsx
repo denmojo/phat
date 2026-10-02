@@ -260,6 +260,27 @@ describe('message-view keys', () => {
     expect(screen.getByRole('menuitem', { name: 'Club' })).toBeInTheDocument();
   });
 
+  test('keys stand down while a menu is open', async () => {
+    render(<MessagePane />);
+    key('l');
+    key('t');
+    key('a');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(api.move).not.toHaveBeenCalled();
+  });
+
+  test('at phone width m opens the menu that holds the move targets', () => {
+    const wide = window.matchMedia;
+    window.matchMedia = ((q: string) => ({ matches: true, media: q, addEventListener() {}, removeEventListener() {} })) as never;
+    try {
+      render(<MessagePane />);
+      key('m');
+      expect(screen.getByRole('menuitem', { name: 'Move to Club' })).toBeInTheDocument();
+    } finally {
+      window.matchMedia = wide;
+    }
+  });
+
   test('h goes back to the list', () => {
     render(<MessagePane />);
     key('h');

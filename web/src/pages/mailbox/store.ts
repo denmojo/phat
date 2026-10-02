@@ -269,6 +269,15 @@ export function closeMsg(): void {
   openMessage.value = null;
 }
 
+// leaveMsg closes a message that was moved or deleted. Its row is gone, so
+// when Enter opened it, focus goes to the row beside it instead.
+function leaveMsg(beside: Row | null): void {
+  openSeq++;
+  if (entry && beside) returnFocus.value = { Folder: beside.Folder, MID: beside.MID };
+  entry = null;
+  openMessage.value = null;
+}
+
 // openSelected opens the message when exactly one is ticked, remembering it
 // as the entry so that coming back from it keeps the tick.
 export async function openSelected(): Promise<void> {
@@ -326,6 +335,9 @@ export async function applyBulk(...args: Bulk): Promise<BulkResult | null> {
 
 export async function applyBulkTo(mids: string[], ...args: Bulk): Promise<BulkResult | null> {
   if (mids.length === 0) return null;
+  // The row beside the open message, should this action take it away.
+  const shown = openMessage.value;
+  const beside = shown && mids.includes(shown.MID) ? (neighbors.value.next ?? neighbors.value.prev) : null;
   let res: BulkResult | null = null;
   try {
     switch (args[0]) {
@@ -355,7 +367,7 @@ export async function applyBulkTo(mids: string[], ...args: Bulk): Promise<BulkRe
   // Keep an open message in step with what just happened to it.
   const m = openMessage.value;
   if (m && res?.ok.includes(m.MID)) {
-    if (args[0] === 'move' || args[0] === 'delete') openMessage.value = null;
+    if (args[0] === 'move' || args[0] === 'delete') leaveMsg(beside);
     else {
       const fresh = await api.message(m.Folder, m.MID).catch(() => null);
       if (fresh) openMessage.value = { ...fresh, Folder: m.Folder };

@@ -26,10 +26,16 @@ export function modalOpen(): boolean {
   return document.querySelector('[aria-modal="true"]') !== null;
 }
 
+// menuOpen reports an open menu; its own keys own the keyboard until it
+// closes, so a letter can't act on the page behind it.
+export function menuOpen(): boolean {
+  return document.querySelector('[role="menu"]') !== null;
+}
+
 // useHotkeys binds single keys to handlers while enabled. Keys match
 // e.key exactly, so 'R' is shifted r. A held Ctrl, Alt or Command leaves
 // the key to the browser (Cmd-R still reloads), and typing in a field or
-// an open dialog leaves it alone.
+// an open dialog or menu leaves it alone.
 export function useHotkeys(keys: Record<string, () => void>, enabled = true): void {
   const current = useRef(keys);
   current.current = keys;
@@ -38,7 +44,7 @@ export function useHotkeys(keys: Record<string, () => void>, enabled = true): vo
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.altKey || e.metaKey) return;
       const run = current.current[e.key];
-      if (!run || isTyping(e) || modalOpen()) return;
+      if (!run || isTyping(e) || modalOpen() || menuOpen()) return;
       if (e.key === 'Enter' && ownsEnter(e)) return;
       e.preventDefault();
       run();

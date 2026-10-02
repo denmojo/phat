@@ -15,6 +15,8 @@ import { applyBulkTo, closeMsg, folders, labels, neighbors, openMessage, stepMsg
 import { callColor, folderTitle } from './format';
 import './MessagePane.css';
 
+const narrow = () => window.matchMedia?.('(max-width: 640px)').matches ?? false;
+
 const fullDate = (iso: string) => {
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
@@ -54,7 +56,8 @@ export function MessagePane() {
     u: () => { void applyBulkTo([m.MID], 'read', false); closeMsg(); },
     s: () => void applyBulkTo([m.MID], 'star', !m.Starred),
     l: () => click('Label'),
-    m: () => click('Move to'),
+    // On a phone the Move to button is hidden; More actions carries the targets there.
+    m: () => click(narrow() ? 'More actions' : 'Move to'),
   } : {}, !!m);
   if (!m) return null;
   const mids = [m.MID];
@@ -93,7 +96,7 @@ export function MessagePane() {
           <Menu trigger={<IconButton icon={FolderInput} label="Move to" />} items={moveTo()} />
         </span>
         <Menu align="right" trigger={<IconButton icon={Ellipsis} label="More actions" />} items={[
-          ...(window.matchMedia?.('(max-width: 640px)').matches ? [
+          ...(narrow() ? [
             { label: 'Reply all', icon: ReplyAll, onSelect: () => reply(m, true) },
             { label: 'Forward', icon: Forward, onSelect: () => forward(m) },
             { label: 'Mark unread', icon: Mail, onSelect: () => { void applyBulkTo(mids, 'read', false); closeMsg(); } },

@@ -93,3 +93,15 @@ test('disabled, the keys do nothing', () => {
   press('r');
   expect(r).not.toHaveBeenCalled();
 });
+
+test('keys stand down while a menu is open', () => {
+  const t = vi.fn();
+  renderHook(() => useHotkeys({ t }));
+  document.body.innerHTML = '<div role="menu"><button role="menuitem">net</button></div>';
+  press('t', {}, document.querySelector('button')!);
+  press('t');
+  expect(t).not.toHaveBeenCalled();
+  document.body.innerHTML = '';
+  press('t');
+  expect(t).toHaveBeenCalledOnce();
+});
