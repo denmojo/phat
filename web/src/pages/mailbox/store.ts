@@ -184,7 +184,7 @@ export async function setView(v: View): Promise<void> {
   if (v.kind !== 'search') browseView.value = v;
   drawerOpen.value = false;
   selected.value = new Set();
-  openMessage.value = null;
+  closeMsg();
   // Refining a search keeps the old results up until the new ones arrive.
   if (!(wasSearch && v.kind === 'search')) rows.value = [];
   await refresh();
@@ -219,11 +219,20 @@ export function clearSelection(): void {
   selected.value = new Set();
 }
 
+let openSeq = 0;
+
+// openMsg opens a message. Only the newest request's answer is used, and
+// closing the message or changing the view retires any request still in
+// flight, so a slow reply can't replace a newer message or reopen a closed
+// one.
 export async function openMsg(folder: string, mid: string): Promise<void> {
+  const seq = ++openSeq;
   try {
-    openMessage.value = { ...(await api.message(folder, mid)), Folder: folder };
+    const got = await api.message(folder, mid);
+    if (seq !== openSeq) return;
+    openMessage.value = { ...got, Folder: folder };
   } catch (err) {
-    report(err);
+    if (seq === openSeq) report(err);
     return;
   }
   const row = rows.value.find((r) => r.MID === mid);
@@ -238,14 +247,16 @@ export async function openMsg(folder: string, mid: string): Promise<void> {
 }
 
 export function closeMsg(): void {
+  openSeq++;
   openMessage.value = null;
 }
 
 // neighbors are the rows on either side of the open message in the list
-// as shown; both are null when no message is open or it has left the list.
+// in display order; both are null when no message is open or it has left
+// the list.
 export const neighbors = computed<{ prev: Row | null; next: Row | null }>(() => {
   const m = openMessage.value;
-  const list = rows.value;
+  const list = sortedRows.value;
   const i = m ? list.findIndex((r) => r.MID === m.MID && r.Folder === m.Folder) : -1;
   if (i < 0) return { prev: null, next: null };
   return { prev: list[i - 1] ?? null, next: list[i + 1] ?? null };

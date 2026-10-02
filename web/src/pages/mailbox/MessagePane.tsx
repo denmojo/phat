@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'preact/hooks';
+import { useCallback, useRef, useState } from 'preact/hooks';
 import {
   Archive, ArrowLeft, ChevronDown, ChevronUp, Ellipsis, FilePen, FolderInput, Forward, Inbox, Mail, Reply, ReplyAll, Star, Trash2,
 } from 'lucide-preact';
@@ -24,6 +24,17 @@ const fullDate = (iso: string) => {
 export function MessagePane() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const cancelDelete = useCallback(() => setConfirmDelete(false), []);
+  const bar = useRef<HTMLDivElement>(null);
+  // step opens the neighbor; when that was the last one on its side, the
+  // arrow switches off, so focus moves to the other arrow (or Back) rather
+  // than dropping to the page.
+  const step = async (dir: -1 | 1) => {
+    await stepMsg(dir);
+    const n = neighbors.value;
+    if (dir < 0 ? n.prev : n.next) return;
+    const other = (dir < 0 ? n.next : n.prev) ? (dir < 0 ? 'Next message' : 'Previous message') : 'Back';
+    bar.current?.querySelector<HTMLButtonElement>(`button[aria-label="${other}"]`)?.focus();
+  };
   const m = openMessage.value;
   if (!m) return null;
   const mids = [m.MID];
@@ -36,10 +47,10 @@ export function MessagePane() {
   const moveTo = () => targets.map((f) => ({ label: folderTitle(f.name), onSelect: () => void applyBulkTo(mids, 'move', f.name) }));
   return (
     <>
-      <div class="toolbar">
+      <div class="toolbar" ref={bar}>
         <IconButton icon={ArrowLeft} label="Back" onClick={closeMsg} />
-        <IconButton icon={ChevronUp} label="Previous message" disabled={!neighbors.value.prev} onClick={() => void stepMsg(-1)} />
-        <IconButton icon={ChevronDown} label="Next message" disabled={!neighbors.value.next} onClick={() => void stepMsg(1)} />
+        <IconButton icon={ChevronUp} label="Previous message" disabled={!neighbors.value.prev} onClick={() => void step(-1)} />
+        <IconButton icon={ChevronDown} label="Next message" disabled={!neighbors.value.next} onClick={() => void step(1)} />
         <span class="sep" />
         <IconButton icon={Reply} label="Reply" onClick={() => reply(m, false)} />
         <span class="wide-only">
@@ -73,7 +84,8 @@ export function MessagePane() {
         <span class="spacer" />
         <span class="meta wide-only">{folderTitle(m.Folder)}</span>
       </div>
-      <article class="msg">
+      {/* Keyed by message, so stepping to another one starts at its top. */}
+      <article class="msg" key={`${m.Folder}/${m.MID}`}>
         <h1>
           <span>{m.Subject || '(no subject)'}</span>
           {(m.Labels ?? []).map((l) => <Chip key={l} color={colors.get(l) ?? '#6b7280'}>{l}</Chip>)}

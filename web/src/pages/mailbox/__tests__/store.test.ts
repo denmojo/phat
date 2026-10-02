@@ -140,4 +140,73 @@ describe('stepping between messages', () => {
     expect(api.message).not.toHaveBeenCalled();
     store.openMessage.value = null;
   });
+
+  test('the arrows follow the order the list shows, not the server order', () => {
+    const before = store.sort.value;
+    store.view.value = { kind: 'folder', name: 'in' };
+    store.rows.value = [
+      { MID: 'c', Folder: 'in', Subject: 'Charlie', Date: '2026-09-03T00:00:00Z' },
+      { MID: 'a', Folder: 'in', Subject: 'Alpha', Date: '2026-09-02T00:00:00Z' },
+      { MID: 'b', Folder: 'in', Subject: 'Bravo', Date: '2026-09-01T00:00:00Z' },
+    ] as never;
+    store.sort.value = { key: 'subject', asc: true };
+    store.openMessage.value = opened('a');
+    expect(store.neighbors.value.prev).toBeNull();
+    expect(store.neighbors.value.next?.MID).toBe('b');
+    store.sort.value = before;
+    store.openMessage.value = null;
+  });
+
+  test('a refresh that drops the open message switches both arrows off', () => {
+    store.rows.value = five;
+    store.openMessage.value = opened('r3');
+    store.rows.value = (five as unknown as { MID: string }[]).filter((r) => r.MID !== 'r3') as never;
+    expect(store.neighbors.value).toEqual({ prev: null, next: null });
+    store.openMessage.value = null;
+  });
+
+  function deferred<T>() {
+    let resolve!: (v: T) => void;
+    const promise = new Promise<T>((r) => { resolve = r; });
+    return { promise, resolve };
+  }
+
+  test('only the last step requested opens, whatever order the replies come in', async () => {
+    store.rows.value = five;
+    store.openMessage.value = opened('r3');
+    const down = deferred<never>();
+    const up = deferred<never>();
+    vi.mocked(api.message).mockImplementationOnce(() => down.promise).mockImplementationOnce(() => up.promise);
+    const first = store.stepMsg(1);
+    const second = store.stepMsg(-1);
+    up.resolve({ MID: 'r2' } as never);
+    await second;
+    down.resolve({ MID: 'r4' } as never);
+    await first;
+    expect(store.openMessage.value).toMatchObject({ MID: 'r2' });
+    store.openMessage.value = null;
+  });
+
+  test('a reply that arrives after Back or a view change does not reopen the message', async () => {
+    store.rows.value = five;
+    store.openMessage.value = opened('r3');
+    const late = deferred<never>();
+    vi.mocked(api.message).mockImplementationOnce(() => late.promise);
+    const step = store.stepMsg(1);
+    store.closeMsg();
+    late.resolve({ MID: 'r4' } as never);
+    await step;
+    expect(store.openMessage.value).toBeNull();
+
+    store.openMessage.value = opened('r3');
+    const late2 = deferred<never>();
+    vi.mocked(api.message).mockImplementationOnce(() => late2.promise);
+    const step2 = store.stepMsg(1);
+    const switched = store.setView({ kind: 'folder', name: 'sent' });
+    late2.resolve({ MID: 'r4' } as never);
+    await Promise.all([step2, switched]);
+    expect(store.openMessage.value).toBeNull();
+    expect(api.setRead).not.toHaveBeenCalled();
+    store.view.value = { kind: 'folder', name: 'in' };
+  });
 });

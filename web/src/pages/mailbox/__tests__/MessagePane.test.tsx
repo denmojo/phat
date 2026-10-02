@@ -121,5 +121,32 @@ test('the arrows step through the list and switch off at its end', async () => {
   expect(prev).toBeEnabled();
   fireEvent.click(prev);
   await waitFor(() => expect(api.message).toHaveBeenCalledWith('in', 'm0'));
+  await waitFor(() => expect(store.openMessage.value).toMatchObject({ MID: 'm0' }));
+  store.rows.value = [];
+});
+
+test('an arrow that switches off at the end hands focus to the other arrow', async () => {
+  store.rows.value = [{ MID: 'm0', Folder: 'in', Unread: false }, { MID: 'm1', Folder: 'in', Unread: false }] as never;
+  vi.mocked(api.message).mockResolvedValueOnce({ ...msg, MID: 'm0' } as never);
+  render(<MessagePane />);
+  const prev = screen.getByRole('button', { name: 'Previous message' });
+  prev.focus();
+  fireEvent.click(prev);
+  await waitFor(() => expect(prev).toBeDisabled());
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Next message' }));
+  store.rows.value = [];
+});
+
+test('stepping to another message starts it scrolled to the top', async () => {
+  store.rows.value = [{ MID: 'm0', Folder: 'in', Unread: false }, { MID: 'm1', Folder: 'in', Unread: false }] as never;
+  vi.mocked(api.message).mockResolvedValueOnce({ ...msg, MID: 'm0' } as never);
+  const { container } = render(<MessagePane />);
+  const before = container.querySelector('article.msg') as HTMLElement;
+  before.scrollTop = 120;
+  fireEvent.click(screen.getByRole('button', { name: 'Previous message' }));
+  await waitFor(() => expect(store.openMessage.value).toMatchObject({ MID: 'm0' }));
+  const after = container.querySelector('article.msg') as HTMLElement;
+  expect(after).not.toBe(before);
+  expect(after.scrollTop).toBe(0);
   store.rows.value = [];
 });
