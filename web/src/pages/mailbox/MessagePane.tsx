@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import {
   Archive, ArrowLeft, ChevronDown, ChevronUp, Ellipsis, FilePen, FolderInput, Forward, Inbox, Mail, Reply, ReplyAll, Star, Trash2,
 } from 'lucide-preact';
@@ -36,6 +36,22 @@ export function MessagePane() {
     bar.current?.querySelector<HTMLButtonElement>(`button[aria-label="${other}"]`)?.focus();
   };
   const m = openMessage.value;
+  // j and k step like the down and up arrows, the vim keys. Typing in a
+  // field, a held modifier, or an open dialog leaves them alone.
+  useEffect(() => {
+    if (!m) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'j' && e.key !== 'k') return;
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+      const t = e.target as HTMLElement;
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName) || t.isContentEditable) return;
+      if (document.querySelector('[aria-modal="true"]')) return;
+      e.preventDefault();
+      void stepMsg(e.key === 'j' ? 1 : -1);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [!m]);
   if (!m) return null;
   const mids = [m.MID];
   const colors = new Map(labels.value.map((l) => [l.name, l.color]));

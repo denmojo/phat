@@ -150,3 +150,40 @@ test('stepping to another message starts it scrolled to the top', async () => {
   expect(after.scrollTop).toBe(0);
   store.rows.value = [];
 });
+
+describe('j and k', () => {
+  const three = [
+    { MID: 'm0', Folder: 'in', Unread: false },
+    { MID: 'm1', Folder: 'in', Unread: false },
+    { MID: 'm2', Folder: 'in', Unread: false },
+  ] as never;
+  afterEach(() => { store.rows.value = []; document.body.innerHTML = ''; });
+
+  test('j opens the next message and k the previous one', async () => {
+    store.rows.value = three;
+    vi.mocked(api.message).mockResolvedValueOnce({ ...msg, MID: 'm2' } as never);
+    render(<MessagePane />);
+    fireEvent.keyDown(document.body, { key: 'j' });
+    await waitFor(() => expect(store.openMessage.value).toMatchObject({ MID: 'm2' }));
+    expect(api.message).toHaveBeenCalledWith('in', 'm2');
+    vi.mocked(api.message).mockResolvedValueOnce({ ...msg, MID: 'm1' } as never);
+    fireEvent.keyDown(document.body, { key: 'k' });
+    await waitFor(() => expect(store.openMessage.value).toMatchObject({ MID: 'm1' }));
+  });
+
+  test('typing in a field, a held modifier, or an open dialog leaves them alone', () => {
+    store.rows.value = three;
+    render(<MessagePane />);
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    fireEvent.keyDown(input, { key: 'j' });
+    fireEvent.keyDown(document.body, { key: 'j', ctrlKey: true });
+    fireEvent.keyDown(document.body, { key: 'k', metaKey: true });
+    const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    document.body.appendChild(dialog);
+    fireEvent.keyDown(document.body, { key: 'j' });
+    expect(api.message).not.toHaveBeenCalled();
+  });
+});
