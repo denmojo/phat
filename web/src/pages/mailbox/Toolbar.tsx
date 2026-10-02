@@ -13,7 +13,7 @@ import { LabelMenu } from './LabelMenu';
 import { compose } from './Composer';
 import { useHotkeys } from '../../lib/hotkeys';
 import {
-  applyBulk, clearSelection, connectOpen, keysOpen, openMsg, drawerOpen, folders, refresh, rows, selectAll, selected, setSort, sort, status, view,
+  applyBulk, clearSelection, connectOpen, keysOpen, openSelected, drawerOpen, folders, refresh, rows, selectAll, selected, setSort, sort, status, view,
   type SortKey,
 } from './store';
 import { folderTitle } from './format';
@@ -82,12 +82,7 @@ export function Toolbar() {
   useHotkeys({
     n: compose,
     t: () => { if (selected.value.size > 0) setConfirmDelete(true); },
-    Enter: () => {
-      if (selected.value.size !== 1) return;
-      const [mid] = selected.value;
-      const row = rows.value.find((r) => r.MID === mid);
-      if (row) void openMsg(row.Folder, row.MID);
-    },
+    Enter: () => { if (selected.value.size === 1) void openSelected(); },
   });
 
   if (n === 0) {

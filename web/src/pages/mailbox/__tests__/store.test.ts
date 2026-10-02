@@ -210,3 +210,49 @@ describe('stepping between messages', () => {
     store.view.value = { kind: 'folder', name: 'in' };
   });
 });
+
+describe('back from a message opened with Enter', () => {
+  const rowsAB = [{ MID: 'a', Folder: 'in', Unread: false }, { MID: 'b', Folder: 'in', Unread: false }] as never;
+  beforeEach(() => {
+    store.view.value = { kind: 'folder', name: 'in' };
+    store.rows.value = rowsAB;
+    store.selected.value = new Set(['a']);
+    store.returnFocus.value = null;
+    vi.mocked(api.message).mockImplementation(async (_f: string, mid: string) => ({ MID: mid }) as never);
+  });
+  afterEach(() => { vi.mocked(api.message).mockReset(); store.openMessage.value = null; store.selected.value = new Set(); });
+
+  test('back from the same message keeps the tick and focuses its row', async () => {
+    await store.openSelected();
+    expect(store.openMessage.value).toMatchObject({ MID: 'a', Folder: 'in' });
+    store.closeMsg();
+    expect([...store.selected.value]).toEqual(['a']);
+    expect(store.returnFocus.value).toEqual({ Folder: 'in', MID: 'a' });
+  });
+
+  test('back after stepping away clears the tick and focuses the message last shown', async () => {
+    await store.openSelected();
+    await store.stepMsg(1);
+    store.closeMsg();
+    expect(store.selected.value.size).toBe(0);
+    expect(store.returnFocus.value).toEqual({ Folder: 'in', MID: 'b' });
+  });
+
+  test('stepping back to the original before leaving keeps the tick', async () => {
+    await store.openSelected();
+    await store.stepMsg(1);
+    await store.stepMsg(-1);
+    store.closeMsg();
+    expect([...store.selected.value]).toEqual(['a']);
+  });
+
+  test('a message opened by clicking its row leaves ticks and focus alone', async () => {
+    await store.openSelected();
+    store.closeMsg();
+    store.returnFocus.value = null;
+    await store.openMsg('in', 'b');
+    store.closeMsg();
+    expect([...store.selected.value]).toEqual(['a']);
+    expect(store.returnFocus.value).toBeNull();
+  });
+});

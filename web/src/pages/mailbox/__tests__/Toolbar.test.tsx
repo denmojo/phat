@@ -1,6 +1,6 @@
 vi.mock('../store', async (orig) => {
   const real = await orig<typeof import('../store')>();
-  return { ...real, applyBulk: vi.fn(async () => null), refresh: vi.fn(async () => {}), openMsg: vi.fn(async () => {}) };
+  return { ...real, applyBulk: vi.fn(async () => null), refresh: vi.fn(async () => {}), openMsg: vi.fn(async () => {}), openSelected: vi.fn(async () => {}) };
 });
 import { render, screen, fireEvent, within } from '@testing-library/preact';
 import * as store from '../store';
@@ -97,13 +97,13 @@ describe('Enter on the list', () => {
     store.selected.value = new Set(['b']);
     render(<Toolbar />);
     enter();
-    expect(store.openMsg).toHaveBeenCalledWith('Club', 'b');
+    expect(store.openSelected).toHaveBeenCalled();
   });
 
   test('with two ticked, Enter does nothing', () => {
     store.selected.value = new Set(['a', 'b']);
     render(<Toolbar />);
     enter();
-    expect(store.openMsg).not.toHaveBeenCalled();
+    expect(store.openSelected).not.toHaveBeenCalled();
   });
 });

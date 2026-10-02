@@ -187,6 +187,7 @@ export async function setView(v: View): Promise<void> {
   drawerOpen.value = false;
   selected.value = new Set();
   closeMsg();
+  returnFocus.value = null;
   // Refining a search keeps the old results up until the new ones arrive.
   if (!(wasSearch && v.kind === 'search')) rows.value = [];
   await refresh();
@@ -223,11 +224,20 @@ export function clearSelection(): void {
 
 let openSeq = 0;
 
+// entry is the message Enter opened from a lone tick. Back from that same
+// message keeps the tick; back from one reached with j or k drops it.
+let entry: { Folder: string; MID: string } | null = null;
+
+// returnFocus names the row whose checkbox takes focus when the list comes
+// back, so Space toggles it at once. The list clears it once used.
+export const returnFocus = signal<{ Folder: string; MID: string } | null>(null);
+
 // openMsg opens a message. Only the newest request's answer is used, and
 // closing the message or changing the view retires any request still in
 // flight, so a slow reply can't replace a newer message or reopen a closed
 // one.
-export async function openMsg(folder: string, mid: string): Promise<void> {
+export async function openMsg(folder: string, mid: string, keepEntry = false): Promise<void> {
+  if (!keepEntry) entry = null;
   const seq = ++openSeq;
   try {
     const got = await api.message(folder, mid);
@@ -250,7 +260,24 @@ export async function openMsg(folder: string, mid: string): Promise<void> {
 
 export function closeMsg(): void {
   openSeq++;
+  const m = openMessage.value;
+  if (entry && m) {
+    if (m.MID !== entry.MID || m.Folder !== entry.Folder) selected.value = new Set();
+    returnFocus.value = { Folder: m.Folder, MID: m.MID };
+  }
+  entry = null;
   openMessage.value = null;
+}
+
+// openSelected opens the message when exactly one is ticked, remembering it
+// as the entry so that coming back from it keeps the tick.
+export async function openSelected(): Promise<void> {
+  if (selected.value.size !== 1) return;
+  const [mid] = selected.value;
+  const row = rows.value.find((r) => r.MID === mid);
+  if (!row) return;
+  entry = { Folder: row.Folder, MID: row.MID };
+  await openMsg(row.Folder, row.MID, true);
 }
 
 // neighbors are the rows on either side of the open message in the list
@@ -268,7 +295,7 @@ export const neighbors = computed<{ prev: Row | null; next: Row | null }>(() => 
 // same way a click on its row would.
 export async function stepMsg(dir: -1 | 1): Promise<void> {
   const row = dir < 0 ? neighbors.value.prev : neighbors.value.next;
-  if (row) await openMsg(row.Folder, row.MID);
+  if (row) await openMsg(row.Folder, row.MID, true);
 }
 
 type Bulk =

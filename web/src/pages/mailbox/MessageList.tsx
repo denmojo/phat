@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'preact/hooks';
 import { Check, Paperclip, Star } from 'lucide-preact';
 import { Checkbox } from '../../ui/Checkbox';
 import { Chip } from '../../ui/Chip';
@@ -5,7 +6,7 @@ import * as api from '../../lib/api';
 import type { Row } from '../../lib/types';
 import { toast } from '../../ui/Toast';
 import {
-  applyBulkTo, correspondent, labels, openMsg, refresh, refreshSidebar, selectRange, selected, sortedRows, toggleSelect, view,
+  applyBulkTo, correspondent, labels, openMsg, refresh, refreshSidebar, selectRange, selected, sortedRows, toggleSelect, view, returnFocus,
 } from './store';
 import { callColor, folderTitle, formatDate } from './format';
 import { dragging, endDrag, startDrag } from './dnd';
@@ -74,7 +75,7 @@ function MessageRow({ r, showFolder, colors }: { r: Row; showFolder: boolean; co
   const who = correspondent(r);
   const isSel = selected.value.has(r.MID);
   return (
-    <div role="row" class={`mrow${r.Unread ? ' unread' : ''}${isSel ? ' selected' : ''}${dragging.value.has(r.MID) ? ' dragging' : ''}`}
+    <div role="row" data-folder={r.Folder} data-mid={r.MID} class={`mrow${r.Unread ? ' unread' : ''}${isSel ? ' selected' : ''}${dragging.value.has(r.MID) ? ' dragging' : ''}`}
       aria-selected={isSel}
       // Phones use long press to select, so rows only drag on wider screens.
       draggable={!narrow()} onDragStart={(e) => { pressEnd(); startDrag(e, r.MID); }} onDragEnd={endDrag}
@@ -121,11 +122,21 @@ export function MessageList() {
   const list = sortedRows.value;
   const showFolder = view.value.kind !== 'folder';
   const colors = new Map(labels.value.map((l) => [l.name, l.color]));
+  const box = useRef<HTMLDivElement>(null);
+  // Back from a message, focus the checkbox of the row it named, so Space
+  // toggles it at once.
+  useEffect(() => {
+    const to = returnFocus.value;
+    if (!to) return;
+    const sel = `[data-folder="${CSS.escape(to.Folder)}"][data-mid="${CSS.escape(to.MID)}"] input[type="checkbox"]`;
+    box.current?.querySelector<HTMLInputElement>(sel)?.focus();
+    returnFocus.value = null;
+  }, [returnFocus.value, list]);
   if (list.length === 0) {
     return <div class="mlist empty"><p>No messages</p></div>;
   }
   return (
-    <div class="mlist" role="table" aria-label="Messages">
+    <div class="mlist" role="table" aria-label="Messages" ref={box}>
       <div role="rowgroup">
         {list.map((r) => <MessageRow key={r.MID} r={r} showFolder={showFolder} colors={colors} />)}
       </div>
