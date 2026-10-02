@@ -23,6 +23,7 @@ const MESSAGE: Group = ['Message view', [
 const LIST: Group = ['Message list', [
   ['n', 'New message'],
   ['t', 'Delete the selected messages (Enter confirms)'],
+  ['Enter', 'Open the selected message (one ticked)'],
 ]];
 
 const ANYWHERE: Group = ['Anywhere', [

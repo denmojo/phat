@@ -13,6 +13,13 @@ export function isTyping(e: KeyboardEvent): boolean {
   return ['TEXTAREA', 'SELECT'].includes(t.tagName) || t.isContentEditable;
 }
 
+// ownsEnter reports a focused control that Enter presses on its own: a
+// button, a link or a menu item. Enter there stays with the control.
+function ownsEnter(e: KeyboardEvent): boolean {
+  const t = e.target as Element | null;
+  return !!t?.closest?.('button, a[href], [role^="menuitem"]');
+}
+
 // modalOpen reports a modal dialog on the page; Phat's keys stand down
 // while one is open so they can't act behind it.
 export function modalOpen(): boolean {
@@ -32,6 +39,7 @@ export function useHotkeys(keys: Record<string, () => void>, enabled = true): vo
       if (e.ctrlKey || e.altKey || e.metaKey) return;
       const run = current.current[e.key];
       if (!run || isTyping(e) || modalOpen()) return;
+      if (e.key === 'Enter' && ownsEnter(e)) return;
       e.preventDefault();
       run();
     };

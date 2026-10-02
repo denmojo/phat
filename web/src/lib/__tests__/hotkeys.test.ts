@@ -59,6 +59,24 @@ test('keys still work with focus on a checkbox, as after ticking a row', () => {
   expect(t).toHaveBeenCalledTimes(3);
 });
 
+test('Enter on a focused button or link stays with that control', () => {
+  const Enter = vi.fn();
+  renderHook(() => useHotkeys({ Enter }));
+  const btn = document.createElement('button');
+  const link = document.createElement('a');
+  link.href = '#x';
+  const item = document.createElement('div');
+  item.setAttribute('role', 'menuitemcheckbox');
+  document.body.append(btn, link, item);
+  for (const el of [btn, link, item]) expect(press('Enter', {}, el).defaultPrevented).toBe(false);
+  expect(Enter).not.toHaveBeenCalled();
+  const box = document.createElement('input');
+  box.type = 'checkbox';
+  document.body.appendChild(box);
+  press('Enter', {}, box);
+  expect(Enter).toHaveBeenCalledOnce();
+});
+
 test('an open dialog suppresses the keys', () => {
   const r = vi.fn();
   renderHook(() => useHotkeys({ r }));

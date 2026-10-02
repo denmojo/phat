@@ -13,7 +13,7 @@ import { LabelMenu } from './LabelMenu';
 import { compose } from './Composer';
 import { useHotkeys } from '../../lib/hotkeys';
 import {
-  applyBulk, clearSelection, connectOpen, keysOpen, drawerOpen, folders, refresh, rows, selectAll, selected, setSort, sort, status, view,
+  applyBulk, clearSelection, connectOpen, keysOpen, openMsg, drawerOpen, folders, refresh, rows, selectAll, selected, setSort, sort, status, view,
   type SortKey,
 } from './store';
 import { folderTitle } from './format';
@@ -77,8 +77,18 @@ export function Toolbar() {
   // Delete is for good: Phat keeps no trash, so it asks first.
   const [confirmDelete, setConfirmDelete] = useState(false);
   const cancelDelete = useCallback(() => setConfirmDelete(false), []);
-  // n starts a new message; t, the trash can, asks to delete the selection.
-  useHotkeys({ n: compose, t: () => { if (selected.value.size > 0) setConfirmDelete(true); } });
+  // n starts a new message; t, the trash can, asks to delete the selection;
+  // Enter opens the selection when it is a single message.
+  useHotkeys({
+    n: compose,
+    t: () => { if (selected.value.size > 0) setConfirmDelete(true); },
+    Enter: () => {
+      if (selected.value.size !== 1) return;
+      const [mid] = selected.value;
+      const row = rows.value.find((r) => r.MID === mid);
+      if (row) void openMsg(row.Folder, row.MID);
+    },
+  });
 
   if (n === 0) {
     return (

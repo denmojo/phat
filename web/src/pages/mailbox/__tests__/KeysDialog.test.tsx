@@ -21,7 +21,7 @@ test('over the list it shows the list keys and the ones that work anywhere', () 
   store.openMessage.value = null;
   store.keysOpen.value = true;
   render(<KeysDialog />);
-  expect(shown().sort()).toEqual(['/', '?', 'c', 'n', 't']);
+  expect(shown().sort()).toEqual(['/', '?', 'Enter', 'c', 'n', 't']);
 });
 
 test('over an open message it shows the message keys and the ones that work anywhere', () => {

@@ -2,7 +2,7 @@
 .keys h3 { margin: 0 0 var(--space-2); font-size: var(--text-sm); font-weight: 600; color: var(--text-muted); }
 .keys dl { margin: 0; display: grid; gap: var(--space-1); }
 .keys dl > div { display: flex; align-items: baseline; gap: var(--space-3); }
-.keys dt { flex: none; width: 2.2em; }
+.keys dt { flex: none; width: 3.6em; }
 .keys dd { margin: 0; font-size: var(--text-md); color: var(--text); }
 .keys kbd { display: inline-block; min-width: 1.6em; padding: 1px var(--space-1); text-align: center;
   font: 600 var(--text-sm) var(--font-mono); color: var(--text);
