@@ -26,6 +26,8 @@
 }
 @media (max-width: 640px) {
   .toolbar .wide-only { display: none; }
+  /* Phones reach the shortcut sheet from the sidebar; the top bar has no room. */
+  .topbar .keys-btn { display: none; }
   .toolbar .narrow-only { display: contents; }
   .toolbar { padding: 0 var(--space-1); }
   .toolbar .sel { margin: 0 var(--space-2) 0 0; }

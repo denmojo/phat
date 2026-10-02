@@ -10,6 +10,7 @@ import { ProgressBar } from './ProgressBar';
 import { PromptDialog } from './PromptDialog';
 import { SessionLog } from './SessionLog';
 import { VersionDialog } from './VersionDialog';
+import { KeysDialog } from './KeysDialog';
 import { configChanged, drawerOpen, openMessage } from './store';
 import './App.css';
 
@@ -36,6 +37,7 @@ export function App() {
       <ConnectDialog />
       <PositionDialog />
       <VersionDialog />
+      <KeysDialog />
       {/* Last, so a prompt opens above any other dialog. */}
       <PromptDialog />
       <Toasts />

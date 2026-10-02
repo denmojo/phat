@@ -9,13 +9,16 @@ type Props = {
   title?: string;
   // label names the button when its visible text may be hidden.
   label?: string;
+  // autofocus takes focus when the button appears, as a dialog's default
+  // action does, so Enter presses it.
+  autofocus?: boolean;
   onClick?: (e: JSX.TargetedMouseEvent<HTMLButtonElement>) => void;
   children: ComponentChildren;
 };
 
-export function Button({ variant = 'default', size = 'md', type = 'button', disabled, title, label, onClick, children }: Props) {
+export function Button({ variant = 'default', size = 'md', type = 'button', disabled, title, label, autofocus, onClick, children }: Props) {
   return (
-    <button type={type} class={`ui-btn ui-btn-${variant} ui-btn-${size}`} disabled={disabled} title={title} aria-label={label} onClick={onClick}>
+    <button type={type} class={`ui-btn ui-btn-${variant} ui-btn-${size}`} disabled={disabled} autofocus={autofocus} title={title} aria-label={label} onClick={onClick}>
       {children}
     </button>
   );
