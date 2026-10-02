@@ -31,6 +31,14 @@ test('system folders first, then custom folders, then Starred, then labels', () 
   expect(names).toEqual(['Inbox', 'Outbox', 'Sent', 'Archive', 'Starred', 'Club', 'Radio Club/ARES']);
 });
 
+test('hovering the name spells out the acronym with the initials in bold', () => {
+  render(<Sidebar />);
+  fireEvent.mouseEnter(screen.getByText('Phat').parentElement as HTMLElement);
+  const tip = screen.getByRole('tooltip');
+  expect(tip).toHaveTextContent('Polished Ham Airmail Tool');
+  expect([...tip.querySelectorAll('b')].map((b) => b.textContent)).toEqual(['P', 'H', 'A', 'T']);
+});
+
 test('Inbox shows its unread count and is marked current', () => {
   render(<Sidebar />);
   const inbox = screen.getByRole('link', { name: /Inbox/ });

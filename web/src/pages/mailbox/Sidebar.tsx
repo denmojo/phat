@@ -10,6 +10,7 @@ import { Dialog } from '../../ui/Dialog';
 import { IconButton } from '../../ui/IconButton';
 import { Menu, type MenuItem } from '../../ui/Menu';
 import { toast } from '../../ui/Toast';
+import { Tooltip } from '../../ui/Tooltip';
 import { FolderEditor, deleteFolderMessage } from './FolderEditor';
 import { LabelEditor } from './LabelEditor';
 import { drawerOpen, keysOpen, logOpen, positionOpen, folders, labels, mycall, refresh, refreshSidebar, setView, view } from './store';
@@ -129,7 +130,9 @@ export function Sidebar() {
     <aside class={`sidebar${drawerOpen.value ? ' open' : ''}`}>
       <div class="brand">
         <span class="glyph"><RadioTower /></span>
-        <span class="appname">Phat</span>
+        <Tooltip id="appname-tip" content={<><b>P</b>olished <b>H</b>am <b>A</b>irmail <b>T</b>ool</>}>
+          <span class="appname">Phat</span>
+        </Tooltip>
         <span class="call">{mycall.value}</span>
       </div>
       <button type="button" class="compose" onClick={() => { drawerOpen.value = false; compose(); }}>

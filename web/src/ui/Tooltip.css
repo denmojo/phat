@@ -1,0 +1,9 @@
+.ui-tooltip { position: relative; display: inline-flex; }
+.ui-tooltip-trigger { cursor: default; border-radius: var(--radius); }
+.ui-tooltip-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ui-tooltip-body { position: absolute; top: calc(100% + var(--space-1)); left: 0; z-index: 50; white-space: nowrap;
+  padding: var(--space-1) var(--space-2); border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); color: var(--text-muted); box-shadow: var(--shadow);
+  font-size: var(--text-sm); font-weight: 400; letter-spacing: normal; pointer-events: none; }
+.ui-tooltip-body b { color: var(--text); font-weight: 700; }
+.ui-tooltip-body[hidden] { display: none; }
