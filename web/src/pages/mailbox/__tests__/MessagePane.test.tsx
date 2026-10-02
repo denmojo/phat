@@ -236,11 +236,13 @@ describe('message-view keys', () => {
     await waitFor(() => expect(api.remove).toHaveBeenCalledWith(['m1']));
   });
 
-  test('u marks it unread and leaves it open', async () => {
+  test('u marks it unread and returns to the list it came from', async () => {
+    store.view.value = { kind: 'label', name: 'net' };
     render(<MessagePane />);
     key('u');
     await waitFor(() => expect(api.setRead).toHaveBeenCalledWith(['m1'], false));
-    expect(store.openMessage.value).not.toBeNull();
+    expect(store.openMessage.value).toBeNull();
+    expect(store.view.value).toEqual({ kind: 'label', name: 'net' });
   });
 
   test('s stars it', async () => {

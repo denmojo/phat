@@ -51,7 +51,7 @@ export function MessagePane() {
     f: () => forward(m),
     a: () => void applyBulkTo([m.MID], 'move', m.Folder === 'archive' ? 'in' : 'archive'),
     t: () => setConfirmDelete(true),
-    u: () => void applyBulkTo([m.MID], 'read', false),
+    u: () => { void applyBulkTo([m.MID], 'read', false); closeMsg(); },
     s: () => void applyBulkTo([m.MID], 'star', !m.Starred),
     l: () => click('Label'),
     m: () => click('Move to'),
