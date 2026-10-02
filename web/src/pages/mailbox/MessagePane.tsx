@@ -65,8 +65,8 @@ export function MessagePane() {
     <>
       <div class="toolbar" ref={bar}>
         <IconButton icon={ArrowLeft} label="Back" onClick={closeMsg} />
-        <IconButton icon={ChevronUp} label="Previous message" disabled={!neighbors.value.prev} onClick={() => void step(-1)} />
-        <IconButton icon={ChevronDown} label="Next message" disabled={!neighbors.value.next} onClick={() => void step(1)} />
+        <IconButton icon={ChevronUp} label="Previous message" title="Previous message (k)" disabled={!neighbors.value.prev} onClick={() => void step(-1)} />
+        <IconButton icon={ChevronDown} label="Next message" title="Next message (j)" disabled={!neighbors.value.next} onClick={() => void step(1)} />
         <span class="sep" />
         <IconButton icon={Reply} label="Reply" onClick={() => reply(m, false)} />
         <span class="wide-only">

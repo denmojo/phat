@@ -187,3 +187,9 @@ describe('j and k', () => {
     expect(api.message).not.toHaveBeenCalled();
   });
 });
+
+test('the arrows\' tooltips name their keys', () => {
+  render(<MessagePane />);
+  expect(screen.getByRole('button', { name: 'Next message' })).toHaveAttribute('title', 'Next message (j)');
+  expect(screen.getByRole('button', { name: 'Previous message' })).toHaveAttribute('title', 'Previous message (k)');
+});
