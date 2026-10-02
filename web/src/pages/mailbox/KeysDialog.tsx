@@ -24,6 +24,11 @@ const LIST: Group = ['Message list', [
   ['n', 'New message'],
   ['t', 'Delete the selected messages (Enter confirms)'],
   ['Enter', 'Open the selected message (one ticked)'],
+  ['a', 'Archive the selected, or move them to Inbox from the archive'],
+  ['u', 'Mark unread, or read if all are unread'],
+  ['s', 'Star, or unstar if all are starred'],
+  ['l', 'Labels for the selected'],
+  ['m', 'Move the selected'],
 ]];
 
 const ANYWHERE: Group = ['Anywhere', [

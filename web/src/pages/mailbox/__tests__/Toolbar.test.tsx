@@ -107,3 +107,69 @@ describe('Enter on the list', () => {
     expect(store.openSelected).not.toHaveBeenCalled();
   });
 });
+
+describe('selection keys', () => {
+  const key = (k: string) => fireEvent.keyDown(document.body, { key: k });
+  const tick = (...rows: { MID: string; Unread?: boolean; Starred?: boolean }[]) => {
+    store.rows.value = rows.map((r) => ({ Folder: 'in', Unread: false, Starred: false, Labels: [], ...r })) as never;
+    store.selected.value = new Set(rows.map((r) => r.MID));
+  };
+
+  test('a archives, and in the Archive folder moves to the Inbox', () => {
+    tick({ MID: 'a' }, { MID: 'b' });
+    const { unmount } = render(<Toolbar />);
+    key('a');
+    expect(store.applyBulk).toHaveBeenCalledWith('move', 'archive');
+    unmount();
+    vi.mocked(store.applyBulk).mockClear();
+    store.view.value = { kind: 'folder', name: 'archive' };
+    render(<Toolbar />);
+    key('a');
+    expect(store.applyBulk).toHaveBeenCalledWith('move', 'in');
+  });
+
+  test('u marks a mixed batch unread, and an all-unread batch read', () => {
+    tick({ MID: 'a', Unread: true }, { MID: 'b' });
+    const { unmount } = render(<Toolbar />);
+    key('u');
+    expect(store.applyBulk).toHaveBeenCalledWith('read', false);
+    unmount();
+    vi.mocked(store.applyBulk).mockClear();
+    tick({ MID: 'a', Unread: true }, { MID: 'b', Unread: true });
+    render(<Toolbar />);
+    key('u');
+    expect(store.applyBulk).toHaveBeenCalledWith('read', true);
+  });
+
+  test('s stars a mixed batch, and unstars an all-starred one', () => {
+    tick({ MID: 'a', Starred: true }, { MID: 'b' });
+    const { unmount } = render(<Toolbar />);
+    key('s');
+    expect(store.applyBulk).toHaveBeenCalledWith('star', true);
+    unmount();
+    vi.mocked(store.applyBulk).mockClear();
+    tick({ MID: 'a', Starred: true }, { MID: 'b', Starred: true });
+    render(<Toolbar />);
+    key('s');
+    expect(store.applyBulk).toHaveBeenCalledWith('star', false);
+  });
+
+  test('l opens the label menu and m the move menu', () => {
+    store.labels.value = [{ name: 'net', color: '#2563eb', count: 1 }];
+    tick({ MID: 'a' });
+    render(<Toolbar />);
+    key('l');
+    expect(screen.getByRole('menuitemcheckbox', { name: 'net' })).toBeInTheDocument();
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: 'Escape' });
+    key('m');
+    expect(screen.getByRole('menuitem', { name: 'Club' })).toBeInTheDocument();
+  });
+
+  test('with nothing ticked they do nothing', () => {
+    store.selected.value = new Set();
+    render(<Toolbar />);
+    for (const k of ['a', 'u', 's', 'l', 'm']) key(k);
+    expect(store.applyBulk).not.toHaveBeenCalled();
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+});

@@ -1,5 +1,5 @@
 import { Archive, ArrowDownWideNarrow, CircleQuestionMark, Ellipsis, FolderInput, Mail, MailOpen, Menu as MenuIcon, RadioTower, RotateCw, Star, StarOff, Trash2, Unplug, X } from 'lucide-preact';
-import { useCallback, useEffect, useState } from 'preact/hooks';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import * as api from '../../lib/api';
 import { Checkbox } from '../../ui/Checkbox';
 import { toast } from '../../ui/Toast';
@@ -84,6 +84,19 @@ export function Toolbar() {
     t: () => { if (selected.value.size > 0) setConfirmDelete(true); },
     Enter: () => { if (selected.value.size === 1) void openSelected(); },
   });
+  // With messages ticked, the selection buttons have the same letters as an
+  // open message. u and s follow the label menu's rule for a mixed batch:
+  // all unread (or all starred) flips back, anything else goes uniform.
+  const bar = useRef<HTMLDivElement>(null);
+  const click = (label: string) => bar.current?.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)?.click();
+  const ticked = () => rows.value.filter((r) => selected.value.has(r.MID));
+  useHotkeys({
+    a: () => void applyBulk('move', here === 'archive' ? 'in' : 'archive'),
+    u: () => void applyBulk('read', ticked().every((r) => r.Unread)),
+    s: () => void applyBulk('star', !ticked().every((r) => r.Starred)),
+    l: () => click('Label'),
+    m: () => click('Move to'),
+  }, n > 0);
 
   if (n === 0) {
     return (
@@ -109,7 +122,7 @@ export function Toolbar() {
 
   const moveTargets = folders.value.filter((f) => f.name !== here && f.name !== 'out');
   return (
-    <div class="toolbar">
+    <div class="toolbar" ref={bar}>
       <Checkbox label="Select all" checked={all} indeterminate={!all} onClick={toggleAll} />
       <span class="sel">{n}<span class="wide-only"> selected</span></span>
       {here !== 'archive' && <IconButton icon={Archive} label="Archive" onClick={() => void applyBulk('move', 'archive')} />}
