@@ -10,6 +10,8 @@ import { Button } from '../../ui/Button';
 import { Dialog } from '../../ui/Dialog';
 import { SearchBox } from './SearchBox';
 import { LabelMenu } from './LabelMenu';
+import { compose } from './Composer';
+import { useHotkeys } from '../../lib/hotkeys';
 import {
   applyBulk, clearSelection, connectOpen, drawerOpen, folders, refresh, rows, selectAll, selected, setSort, sort, status, view,
   type SortKey,
@@ -29,6 +31,8 @@ export function Topbar() {
     setStopping(true);
     api.disconnect(dirty).catch((err) => toast(err instanceof Error ? err.message : String(err), { kind: 'error' }));
   };
+  // c opens Connect from either screen, while there's no session to stop.
+  useHotkeys({ c: () => { connectOpen.value = true; } }, !live);
   let button;
   if (!live) {
     button = <Button variant="primary" label="Connect" onClick={() => { connectOpen.value = true; }}><RadioTower /><span class="label">Connect</span></Button>;
@@ -72,6 +76,8 @@ export function Toolbar() {
   // Delete is for good: Phat keeps no trash, so it asks first.
   const [confirmDelete, setConfirmDelete] = useState(false);
   const cancelDelete = useCallback(() => setConfirmDelete(false), []);
+  // n starts a new message; t, the trash can, asks to delete the selection.
+  useHotkeys({ n: compose, t: () => { if (selected.value.size > 0) setConfirmDelete(true); } });
 
   if (n === 0) {
     return (
@@ -123,7 +129,7 @@ export function Toolbar() {
           <>
             <span class="spacer" />
             <Button onClick={cancelDelete}>Cancel</Button>
-            <Button variant="danger" onClick={() => { setConfirmDelete(false); void applyBulk('delete'); }}>Delete</Button>
+            <Button variant="danger" autofocus onClick={() => { setConfirmDelete(false); void applyBulk('delete'); }}>Delete</Button>
           </>
         )}>
         <div class="dialog-pad"><p>{`The selected ${n === 1 ? 'message' : 'messages'} will be deleted for good. Phat keeps no trash.`}</p></div>

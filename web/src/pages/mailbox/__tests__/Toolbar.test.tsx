@@ -58,3 +58,33 @@ test('Delete asks first, since Phat keeps no trash', async () => {
   fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Delete' }));
   expect(store.applyBulk).toHaveBeenCalledWith('delete');
 });
+
+describe('list keys', () => {
+  const key = (k: string) => fireEvent.keyDown(document.body, { key: k });
+  afterEach(() => { store.composerOpen.value = false; });
+
+  test('n starts a new message', () => {
+    store.selected.value = new Set();
+    render(<Toolbar />);
+    key('n');
+    expect(store.composerOpen.value).toBe(true);
+  });
+
+  test('t asks to delete the selection with Delete focused', () => {
+    store.selected.value = new Set(['a', 'b']);
+    render(<Toolbar />);
+    key('t');
+    const dialog = screen.getByRole('dialog', { name: 'Delete 2 messages?' });
+    const del = within(dialog).getByRole('button', { name: 'Delete' });
+    expect(document.activeElement).toBe(del);
+    fireEvent.click(del);
+    expect(store.applyBulk).toHaveBeenCalledWith('delete');
+  });
+
+  test('t with nothing selected does nothing', () => {
+    store.selected.value = new Set();
+    render(<Toolbar />);
+    key('t');
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});
