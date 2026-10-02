@@ -45,6 +45,8 @@ export const drawerOpen = signal(false);
 export const connectOpen = signal(false);
 export const positionOpen = signal(false);
 export const logOpen = signal(false);
+// keysOpen shows the keyboard shortcut sheet.
+export const keysOpen = signal(false);
 
 // logLines is the server's session log as the websocket streams it.
 export const logLines = signal<string[]>([]);
@@ -184,7 +186,8 @@ export async function setView(v: View): Promise<void> {
   if (v.kind !== 'search') browseView.value = v;
   drawerOpen.value = false;
   selected.value = new Set();
-  openMessage.value = null;
+  closeMsg();
+  returnFocus.value = null;
   // Refining a search keeps the old results up until the new ones arrive.
   if (!(wasSearch && v.kind === 'search')) rows.value = [];
   await refresh();
@@ -219,11 +222,29 @@ export function clearSelection(): void {
   selected.value = new Set();
 }
 
-export async function openMsg(folder: string, mid: string): Promise<void> {
+let openSeq = 0;
+
+// entry is the message Enter opened from a lone tick. Back from that same
+// message keeps the tick; back from one reached with j or k drops it.
+let entry: { Folder: string; MID: string } | null = null;
+
+// returnFocus names the row whose checkbox takes focus when the list comes
+// back, so Space toggles it at once. The list clears it once used.
+export const returnFocus = signal<{ Folder: string; MID: string } | null>(null);
+
+// openMsg opens a message. Only the newest request's answer is used, and
+// closing the message or changing the view retires any request still in
+// flight, so a slow reply can't replace a newer message or reopen a closed
+// one.
+export async function openMsg(folder: string, mid: string, keepEntry = false): Promise<void> {
+  if (!keepEntry) entry = null;
+  const seq = ++openSeq;
   try {
-    openMessage.value = { ...(await api.message(folder, mid)), Folder: folder };
+    const got = await api.message(folder, mid);
+    if (seq !== openSeq) return;
+    openMessage.value = { ...got, Folder: folder };
   } catch (err) {
-    report(err);
+    if (seq === openSeq) report(err);
     return;
   }
   const row = rows.value.find((r) => r.MID === mid);
@@ -238,7 +259,52 @@ export async function openMsg(folder: string, mid: string): Promise<void> {
 }
 
 export function closeMsg(): void {
+  openSeq++;
+  const m = openMessage.value;
+  if (entry && m) {
+    if (m.MID !== entry.MID || m.Folder !== entry.Folder) selected.value = new Set();
+    returnFocus.value = { Folder: m.Folder, MID: m.MID };
+  }
+  entry = null;
   openMessage.value = null;
+}
+
+// leaveMsg closes a message that was moved or deleted. Its row is gone, so
+// when Enter opened it, focus goes to the row beside it instead.
+function leaveMsg(beside: Row | null): void {
+  openSeq++;
+  if (entry && beside) returnFocus.value = { Folder: beside.Folder, MID: beside.MID };
+  entry = null;
+  openMessage.value = null;
+}
+
+// openSelected opens the message when exactly one is ticked, remembering it
+// as the entry so that coming back from it keeps the tick.
+export async function openSelected(): Promise<void> {
+  if (selected.value.size !== 1) return;
+  const [mid] = selected.value;
+  const row = rows.value.find((r) => r.MID === mid);
+  if (!row) return;
+  entry = { Folder: row.Folder, MID: row.MID };
+  await openMsg(row.Folder, row.MID, true);
+}
+
+// neighbors are the rows on either side of the open message in the list
+// in display order; both are null when no message is open or it has left
+// the list.
+export const neighbors = computed<{ prev: Row | null; next: Row | null }>(() => {
+  const m = openMessage.value;
+  const list = sortedRows.value;
+  const i = m ? list.findIndex((r) => r.MID === m.MID && r.Folder === m.Folder) : -1;
+  if (i < 0) return { prev: null, next: null };
+  return { prev: list[i - 1] ?? null, next: list[i + 1] ?? null };
+});
+
+// stepMsg opens the message above (-1) or below (1) the open one, the
+// same way a click on its row would.
+export async function stepMsg(dir: -1 | 1): Promise<void> {
+  const row = dir < 0 ? neighbors.value.prev : neighbors.value.next;
+  if (row) await openMsg(row.Folder, row.MID, true);
 }
 
 type Bulk =
@@ -269,6 +335,9 @@ export async function applyBulk(...args: Bulk): Promise<BulkResult | null> {
 
 export async function applyBulkTo(mids: string[], ...args: Bulk): Promise<BulkResult | null> {
   if (mids.length === 0) return null;
+  // The row beside the open message, should this action take it away.
+  const shown = openMessage.value;
+  const beside = shown && mids.includes(shown.MID) ? (neighbors.value.next ?? neighbors.value.prev) : null;
   let res: BulkResult | null = null;
   try {
     switch (args[0]) {
@@ -298,7 +367,7 @@ export async function applyBulkTo(mids: string[], ...args: Bulk): Promise<BulkRe
   // Keep an open message in step with what just happened to it.
   const m = openMessage.value;
   if (m && res?.ok.includes(m.MID)) {
-    if (args[0] === 'move' || args[0] === 'delete') openMessage.value = null;
+    if (args[0] === 'move' || args[0] === 'delete') leaveMsg(beside);
     else {
       const fresh = await api.message(m.Folder, m.MID).catch(() => null);
       if (fresh) openMessage.value = { ...fresh, Folder: m.Folder };

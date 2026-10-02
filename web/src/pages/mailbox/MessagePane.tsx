@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'preact/hooks';
+import { useCallback, useRef, useState } from 'preact/hooks';
 import {
-  Archive, ArrowLeft, Ellipsis, FilePen, FolderInput, Forward, Inbox, Mail, Reply, ReplyAll, Star, Trash2,
+  Archive, ArrowLeft, ChevronDown, ChevronUp, Ellipsis, FilePen, FolderInput, Forward, Inbox, Mail, Reply, ReplyAll, Star, Trash2,
 } from 'lucide-preact';
+import { useHotkeys } from '../../lib/hotkeys';
 import { Button } from '../../ui/Button';
 import { Chip } from '../../ui/Chip';
 import { Dialog } from '../../ui/Dialog';
@@ -10,9 +11,11 @@ import { Menu } from '../../ui/Menu';
 import { MessageAttachments } from './Attachments';
 import { editAsNew, forward, reply } from './Composer';
 import { LabelMenu } from './LabelMenu';
-import { applyBulkTo, closeMsg, folders, labels, openMessage } from './store';
+import { applyBulkTo, closeMsg, folders, labels, neighbors, openMessage, stepMsg } from './store';
 import { callColor, folderTitle } from './format';
 import './MessagePane.css';
+
+const narrow = () => window.matchMedia?.('(max-width: 640px)').matches ?? false;
 
 const fullDate = (iso: string) => {
   const d = new Date(iso);
@@ -24,7 +27,38 @@ const fullDate = (iso: string) => {
 export function MessagePane() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const cancelDelete = useCallback(() => setConfirmDelete(false), []);
+  const bar = useRef<HTMLDivElement>(null);
+  // step opens the neighbor; when that was the last one on its side, the
+  // arrow switches off, so focus moves to the other arrow (or Back) rather
+  // than dropping to the page.
+  const step = async (dir: -1 | 1) => {
+    await stepMsg(dir);
+    const n = neighbors.value;
+    if (dir < 0 ? n.prev : n.next) return;
+    const other = (dir < 0 ? n.next : n.prev) ? (dir < 0 ? 'Next message' : 'Previous message') : 'Back';
+    bar.current?.querySelector<HTMLButtonElement>(`button[aria-label="${other}"]`)?.focus();
+  };
   const m = openMessage.value;
+  // Keys for the open message: j and k step like the down and up arrows
+  // (vim's down and up), h goes back (vim's left), and the rest do what
+  // their toolbar button does. l and m click the menu buttons so the
+  // menus open exactly as they do by mouse.
+  const click = (label: string) => bar.current?.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)?.click();
+  useHotkeys(m ? {
+    j: () => void stepMsg(1),
+    k: () => void stepMsg(-1),
+    h: closeMsg,
+    r: () => reply(m, false),
+    R: () => reply(m, true),
+    f: () => forward(m),
+    a: () => void applyBulkTo([m.MID], 'move', m.Folder === 'archive' ? 'in' : 'archive'),
+    t: () => setConfirmDelete(true),
+    u: () => { void applyBulkTo([m.MID], 'read', false); closeMsg(); },
+    s: () => void applyBulkTo([m.MID], 'star', !m.Starred),
+    l: () => click('Label'),
+    // On a phone the Move to button is hidden; More actions carries the targets there.
+    m: () => click(narrow() ? 'More actions' : 'Move to'),
+  } : {}, !!m);
   if (!m) return null;
   const mids = [m.MID];
   const colors = new Map(labels.value.map((l) => [l.name, l.color]));
@@ -36,8 +70,10 @@ export function MessagePane() {
   const moveTo = () => targets.map((f) => ({ label: folderTitle(f.name), onSelect: () => void applyBulkTo(mids, 'move', f.name) }));
   return (
     <>
-      <div class="toolbar">
+      <div class="toolbar" ref={bar}>
         <IconButton icon={ArrowLeft} label="Back" onClick={closeMsg} />
+        <IconButton icon={ChevronUp} label="Previous message" title="Previous message (k)" disabled={!neighbors.value.prev} onClick={() => void step(-1)} />
+        <IconButton icon={ChevronDown} label="Next message" title="Next message (j)" disabled={!neighbors.value.next} onClick={() => void step(1)} />
         <span class="sep" />
         <IconButton icon={Reply} label="Reply" onClick={() => reply(m, false)} />
         <span class="wide-only">
@@ -60,7 +96,7 @@ export function MessagePane() {
           <Menu trigger={<IconButton icon={FolderInput} label="Move to" />} items={moveTo()} />
         </span>
         <Menu align="right" trigger={<IconButton icon={Ellipsis} label="More actions" />} items={[
-          ...(window.matchMedia?.('(max-width: 640px)').matches ? [
+          ...(narrow() ? [
             { label: 'Reply all', icon: ReplyAll, onSelect: () => reply(m, true) },
             { label: 'Forward', icon: Forward, onSelect: () => forward(m) },
             { label: 'Mark unread', icon: Mail, onSelect: () => { void applyBulkTo(mids, 'read', false); closeMsg(); } },
@@ -71,7 +107,8 @@ export function MessagePane() {
         <span class="spacer" />
         <span class="meta wide-only">{folderTitle(m.Folder)}</span>
       </div>
-      <article class="msg">
+      {/* Keyed by message, so stepping to another one starts at its top. */}
+      <article class="msg" key={`${m.Folder}/${m.MID}`}>
         <h1>
           <span>{m.Subject || '(no subject)'}</span>
           {(m.Labels ?? []).map((l) => <Chip key={l} color={colors.get(l) ?? '#6b7280'}>{l}</Chip>)}
@@ -95,7 +132,7 @@ export function MessagePane() {
           <>
             <span class="spacer" />
             <Button onClick={cancelDelete}>Cancel</Button>
-            <Button variant="danger" onClick={() => { setConfirmDelete(false); void applyBulkTo(mids, 'delete'); }}>Delete</Button>
+            <Button variant="danger" autofocus onClick={() => { setConfirmDelete(false); void applyBulkTo(mids, 'delete'); }}>Delete</Button>
           </>
         )}>
         <div class="dialog-pad"><p>“{m.Subject || '(no subject)'}” will be deleted for good. Phat keeps no trash.</p></div>

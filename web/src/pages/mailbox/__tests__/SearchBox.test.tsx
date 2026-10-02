@@ -41,3 +41,18 @@ test('a search the server rejects keeps the previous rows and says so', async ()
   expect(store.rows.value).toHaveLength(1);
   expect(screen.getByRole('alert')).toHaveTextContent('Search syntax error');
 });
+
+test('/ goes to the search box, but not behind a dialog or with a modifier held', () => {
+  render(<SearchBox />);
+  const box = screen.getByRole('searchbox', { name: 'Search mail' });
+  const modal = document.createElement('div');
+  modal.setAttribute('aria-modal', 'true');
+  document.body.appendChild(modal);
+  fireEvent.keyDown(document.body, { key: '/' });
+  expect(document.activeElement).not.toBe(box);
+  modal.remove();
+  fireEvent.keyDown(document.body, { key: '/', ctrlKey: true });
+  expect(document.activeElement).not.toBe(box);
+  fireEvent.keyDown(document.body, { key: '/' });
+  expect(document.activeElement).toBe(box);
+});

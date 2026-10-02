@@ -81,3 +81,10 @@ test('a label chip carries an x that removes that label from that row only, with
   expect(api.message).not.toHaveBeenCalled();
   expect(store.selected.value.size).toBe(0);
 });
+
+test('coming back to the list puts focus on the checkbox of the row named to return to', () => {
+  store.returnFocus.value = { Folder: 'in', MID: 'm2' };
+  render(<MessageList />);
+  expect(document.activeElement).toBe(screen.getByRole('checkbox', { name: 'Select Subject m2' }));
+  expect(store.returnFocus.value).toBeNull();
+});

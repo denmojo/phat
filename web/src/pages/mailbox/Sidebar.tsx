@@ -1,7 +1,7 @@
 import { useRef, useState } from 'preact/hooks';
 import type { LucideIcon } from 'lucide-preact';
 import {
-  Archive, EllipsisVertical, Folder, Inbox, MailCheck, MailPlus, MapPin, Pencil, Plus, RadioTower, ScrollText, Send, Settings, Star, Trash2,
+  Archive, EllipsisVertical, Folder, Inbox, MailCheck, MailPlus, MapPin, Pencil, Plus, RadioTower, ScrollText, Send, Settings, Star, Trash2, CircleQuestionMark,
 } from 'lucide-preact';
 import * as api from '../../lib/api';
 import type { Label, View } from '../../lib/types';
@@ -10,9 +10,10 @@ import { Dialog } from '../../ui/Dialog';
 import { IconButton } from '../../ui/IconButton';
 import { Menu, type MenuItem } from '../../ui/Menu';
 import { toast } from '../../ui/Toast';
+import { Tooltip } from '../../ui/Tooltip';
 import { FolderEditor, deleteFolderMessage } from './FolderEditor';
 import { LabelEditor } from './LabelEditor';
-import { drawerOpen, logOpen, positionOpen, folders, labels, mycall, refresh, refreshSidebar, setView, view } from './store';
+import { drawerOpen, keysOpen, logOpen, positionOpen, folders, labels, mycall, refresh, refreshSidebar, setView, view } from './store';
 import { folderTitle } from './format';
 import { dropTarget, type DropKind } from './dnd';
 import { compose } from './Composer';
@@ -129,7 +130,9 @@ export function Sidebar() {
     <aside class={`sidebar${drawerOpen.value ? ' open' : ''}`}>
       <div class="brand">
         <span class="glyph"><RadioTower /></span>
-        <span class="appname">Phat</span>
+        <Tooltip id="appname-tip" content={<><b>P</b>olished <b>H</b>am <b>A</b>irmail <b>T</b>ool</>}>
+          <span class="appname">Phat</span>
+        </Tooltip>
         <span class="call">{mycall.value}</span>
       </div>
       <button type="button" class="compose" onClick={() => { drawerOpen.value = false; compose(); }}>
@@ -182,6 +185,9 @@ export function Sidebar() {
           <ScrollText /><span>Session log</span>
         </button>
         <a href="/ui/config" class="side-item"><Settings /><span>Settings</span></a>
+        <button type="button" class="side-item" onClick={() => { drawerOpen.value = false; keysOpen.value = true; }}>
+          <CircleQuestionMark /><span>Keyboard shortcuts</span>
+        </button>
       </nav>
 
       {editing?.kind === 'delete-folder' && <DeleteFolder name={editing.name} onClose={done} />}

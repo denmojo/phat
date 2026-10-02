@@ -1,5 +1,5 @@
-import { Archive, ArrowDownWideNarrow, Ellipsis, FolderInput, Mail, MailOpen, Menu as MenuIcon, RadioTower, RotateCw, Star, StarOff, Trash2, Unplug, X } from 'lucide-preact';
-import { useCallback, useEffect, useState } from 'preact/hooks';
+import { Archive, ArrowDownWideNarrow, CircleQuestionMark, Ellipsis, FolderInput, Mail, MailOpen, Menu as MenuIcon, RadioTower, RotateCw, Star, StarOff, Trash2, Unplug, X } from 'lucide-preact';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import * as api from '../../lib/api';
 import { Checkbox } from '../../ui/Checkbox';
 import { toast } from '../../ui/Toast';
@@ -10,8 +10,10 @@ import { Button } from '../../ui/Button';
 import { Dialog } from '../../ui/Dialog';
 import { SearchBox } from './SearchBox';
 import { LabelMenu } from './LabelMenu';
+import { compose } from './Composer';
+import { useHotkeys } from '../../lib/hotkeys';
 import {
-  applyBulk, clearSelection, connectOpen, drawerOpen, folders, refresh, rows, selectAll, selected, setSort, sort, status, view,
+  applyBulk, clearSelection, connectOpen, keysOpen, openSelected, drawerOpen, folders, refresh, rows, selectAll, selected, setSort, sort, status, view,
   type SortKey,
 } from './store';
 import { folderTitle } from './format';
@@ -29,6 +31,8 @@ export function Topbar() {
     setStopping(true);
     api.disconnect(dirty).catch((err) => toast(err instanceof Error ? err.message : String(err), { kind: 'error' }));
   };
+  // c opens Connect from either screen, while there's no session to stop.
+  useHotkeys({ c: () => { connectOpen.value = true; } }, !live);
   let button;
   if (!live) {
     button = <Button variant="primary" label="Connect" onClick={() => { connectOpen.value = true; }}><RadioTower /><span class="label">Connect</span></Button>;
@@ -43,6 +47,7 @@ export function Topbar() {
       <span class="menu-btn"><IconButton icon={MenuIcon} label="Folders" onClick={() => { drawerOpen.value = true; }} /></span>
       <SearchBox />
       <div class="conn">
+        <span class="keys-btn"><IconButton icon={CircleQuestionMark} label="Keyboard shortcuts" title="Keyboard shortcuts (?)" onClick={() => { keysOpen.value = true; }} /></span>
         <StatusPopover />
         {button}
       </div>
@@ -72,6 +77,26 @@ export function Toolbar() {
   // Delete is for good: Phat keeps no trash, so it asks first.
   const [confirmDelete, setConfirmDelete] = useState(false);
   const cancelDelete = useCallback(() => setConfirmDelete(false), []);
+  // n starts a new message; t, the trash can, asks to delete the selection;
+  // Enter opens the selection when it is a single message.
+  useHotkeys({
+    n: compose,
+    t: () => { if (selected.value.size > 0) setConfirmDelete(true); },
+    Enter: () => { if (selected.value.size === 1) void openSelected(); },
+  });
+  // With messages ticked, the selection buttons have the same letters as an
+  // open message. u and s follow the label menu's rule for a mixed batch:
+  // all unread (or all starred) flips back, anything else goes uniform.
+  const bar = useRef<HTMLDivElement>(null);
+  const click = (label: string) => bar.current?.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)?.click();
+  const ticked = () => rows.value.filter((r) => selected.value.has(r.MID));
+  useHotkeys({
+    a: () => void applyBulk('move', here === 'archive' ? 'in' : 'archive'),
+    u: () => void applyBulk('read', ticked().every((r) => r.Unread)),
+    s: () => void applyBulk('star', !ticked().every((r) => r.Starred)),
+    l: () => click('Label'),
+    m: () => click('Move to'),
+  }, n > 0);
 
   if (n === 0) {
     return (
@@ -97,7 +122,7 @@ export function Toolbar() {
 
   const moveTargets = folders.value.filter((f) => f.name !== here && f.name !== 'out');
   return (
-    <div class="toolbar">
+    <div class="toolbar" ref={bar}>
       <Checkbox label="Select all" checked={all} indeterminate={!all} onClick={toggleAll} />
       <span class="sel">{n}<span class="wide-only"> selected</span></span>
       {here !== 'archive' && <IconButton icon={Archive} label="Archive" onClick={() => void applyBulk('move', 'archive')} />}
@@ -123,7 +148,7 @@ export function Toolbar() {
           <>
             <span class="spacer" />
             <Button onClick={cancelDelete}>Cancel</Button>
-            <Button variant="danger" onClick={() => { setConfirmDelete(false); void applyBulk('delete'); }}>Delete</Button>
+            <Button variant="danger" autofocus onClick={() => { setConfirmDelete(false); void applyBulk('delete'); }}>Delete</Button>
           </>
         )}>
         <div class="dialog-pad"><p>{`The selected ${n === 1 ? 'message' : 'messages'} will be deleted for good. Phat keeps no trash.`}</p></div>

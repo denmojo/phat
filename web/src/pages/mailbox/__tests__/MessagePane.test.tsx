@@ -111,3 +111,179 @@ test('in the archive, Archive becomes Move to Inbox', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Move to Inbox' }));
   await waitFor(() => expect(api.move).toHaveBeenCalledWith(['m1'], 'in'));
 });
+
+test('the arrows step through the list and switch off at its end', async () => {
+  store.rows.value = [{ MID: 'm0', Folder: 'in', Unread: false }, { MID: 'm1', Folder: 'in', Unread: false }] as never;
+  vi.mocked(api.message).mockResolvedValueOnce({ ...msg, MID: 'm0' } as never);
+  render(<MessagePane />);
+  expect(screen.getByRole('button', { name: 'Next message' })).toBeDisabled();
+  const prev = screen.getByRole('button', { name: 'Previous message' });
+  expect(prev).toBeEnabled();
+  fireEvent.click(prev);
+  await waitFor(() => expect(api.message).toHaveBeenCalledWith('in', 'm0'));
+  await waitFor(() => expect(store.openMessage.value).toMatchObject({ MID: 'm0' }));
+  store.rows.value = [];
+});
+
+test('an arrow that switches off at the end hands focus to the other arrow', async () => {
+  store.rows.value = [{ MID: 'm0', Folder: 'in', Unread: false }, { MID: 'm1', Folder: 'in', Unread: false }] as never;
+  vi.mocked(api.message).mockResolvedValueOnce({ ...msg, MID: 'm0' } as never);
+  render(<MessagePane />);
+  const prev = screen.getByRole('button', { name: 'Previous message' });
+  prev.focus();
+  fireEvent.click(prev);
+  await waitFor(() => expect(prev).toBeDisabled());
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Next message' }));
+  store.rows.value = [];
+});
+
+test('stepping to another message starts it scrolled to the top', async () => {
+  store.rows.value = [{ MID: 'm0', Folder: 'in', Unread: false }, { MID: 'm1', Folder: 'in', Unread: false }] as never;
+  vi.mocked(api.message).mockResolvedValueOnce({ ...msg, MID: 'm0' } as never);
+  const { container } = render(<MessagePane />);
+  const before = container.querySelector('article.msg') as HTMLElement;
+  before.scrollTop = 120;
+  fireEvent.click(screen.getByRole('button', { name: 'Previous message' }));
+  await waitFor(() => expect(store.openMessage.value).toMatchObject({ MID: 'm0' }));
+  const after = container.querySelector('article.msg') as HTMLElement;
+  expect(after).not.toBe(before);
+  expect(after.scrollTop).toBe(0);
+  store.rows.value = [];
+});
+
+describe('j and k', () => {
+  const three = [
+    { MID: 'm0', Folder: 'in', Unread: false },
+    { MID: 'm1', Folder: 'in', Unread: false },
+    { MID: 'm2', Folder: 'in', Unread: false },
+  ] as never;
+  afterEach(() => { store.rows.value = []; document.body.innerHTML = ''; });
+
+  test('j opens the next message and k the previous one', async () => {
+    store.rows.value = three;
+    vi.mocked(api.message).mockResolvedValueOnce({ ...msg, MID: 'm2' } as never);
+    render(<MessagePane />);
+    fireEvent.keyDown(document.body, { key: 'j' });
+    await waitFor(() => expect(store.openMessage.value).toMatchObject({ MID: 'm2' }));
+    expect(api.message).toHaveBeenCalledWith('in', 'm2');
+    vi.mocked(api.message).mockResolvedValueOnce({ ...msg, MID: 'm1' } as never);
+    fireEvent.keyDown(document.body, { key: 'k' });
+    await waitFor(() => expect(store.openMessage.value).toMatchObject({ MID: 'm1' }));
+  });
+
+  test('typing in a field, a held modifier, or an open dialog leaves them alone', () => {
+    store.rows.value = three;
+    render(<MessagePane />);
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    fireEvent.keyDown(input, { key: 'j' });
+    fireEvent.keyDown(document.body, { key: 'j', ctrlKey: true });
+    fireEvent.keyDown(document.body, { key: 'k', metaKey: true });
+    const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    document.body.appendChild(dialog);
+    fireEvent.keyDown(document.body, { key: 'j' });
+    expect(api.message).not.toHaveBeenCalled();
+  });
+});
+
+test('the arrows\' tooltips name their keys', () => {
+  render(<MessagePane />);
+  expect(screen.getByRole('button', { name: 'Next message' })).toHaveAttribute('title', 'Next message (j)');
+  expect(screen.getByRole('button', { name: 'Previous message' })).toHaveAttribute('title', 'Previous message (k)');
+});
+
+describe('message-view keys', () => {
+  const key = (k: string) => fireEvent.keyDown(document.body, { key: k });
+  afterEach(() => { store.composerOpen.value = false; });
+
+  test('r replies, R replies to all, f forwards', () => {
+    store.openMessage.value = { ...msg, Cc: [{ Addr: 'W1AW' }] } as never;
+    render(<MessagePane />);
+    key('r');
+    expect(store.composerOpen.value).toBe(true);
+    expect(store.draft.value.to).toEqual(['EOC-1']);
+    expect(store.draft.value.cc).toEqual([]);
+    store.composerOpen.value = false;
+    key('R');
+    expect(store.draft.value.cc).toContain('W1AW');
+    store.composerOpen.value = false;
+    key('f');
+    expect(store.draft.value.to).toEqual([]);
+    expect(store.draft.value.subject).toMatch(/^Fw: /);
+  });
+
+  test('a archives, and in the archive moves back to the Inbox', async () => {
+    const { unmount } = render(<MessagePane />);
+    key('a');
+    await waitFor(() => expect(api.move).toHaveBeenCalledWith(['m1'], 'archive'));
+    unmount();
+    store.openMessage.value = { ...msg, Folder: 'archive' } as never;
+    render(<MessagePane />);
+    key('a');
+    await waitFor(() => expect(api.move).toHaveBeenCalledWith(['m1'], 'in'));
+  });
+
+  test('t asks to delete with Delete focused, so Enter confirms', async () => {
+    render(<MessagePane />);
+    key('t');
+    const dialog = screen.getByRole('dialog');
+    const del = within(dialog).getByRole('button', { name: 'Delete' });
+    expect(document.activeElement).toBe(del);
+    expect(api.remove).not.toHaveBeenCalled();
+    fireEvent.click(del);
+    await waitFor(() => expect(api.remove).toHaveBeenCalledWith(['m1']));
+  });
+
+  test('u marks it unread and returns to the list it came from', async () => {
+    store.view.value = { kind: 'label', name: 'net' };
+    render(<MessagePane />);
+    key('u');
+    await waitFor(() => expect(api.setRead).toHaveBeenCalledWith(['m1'], false));
+    expect(store.openMessage.value).toBeNull();
+    expect(store.view.value).toEqual({ kind: 'label', name: 'net' });
+  });
+
+  test('s stars it', async () => {
+    render(<MessagePane />);
+    key('s');
+    await waitFor(() => expect(api.star).toHaveBeenCalledWith(['m1'], true));
+  });
+
+  test('l opens the label menu and m the move menu', () => {
+    render(<MessagePane />);
+    key('l');
+    expect(screen.getByRole('menuitemcheckbox', { name: 'net' })).toBeInTheDocument();
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: 'Escape' });
+    key('m');
+    expect(screen.getByRole('menuitem', { name: 'Club' })).toBeInTheDocument();
+  });
+
+  test('keys stand down while a menu is open', async () => {
+    render(<MessagePane />);
+    key('l');
+    key('t');
+    key('a');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(api.move).not.toHaveBeenCalled();
+  });
+
+  test('at phone width m opens the menu that holds the move targets', () => {
+    const wide = window.matchMedia;
+    window.matchMedia = ((q: string) => ({ matches: true, media: q, addEventListener() {}, removeEventListener() {} })) as never;
+    try {
+      render(<MessagePane />);
+      key('m');
+      expect(screen.getByRole('menuitem', { name: 'Move to Club' })).toBeInTheDocument();
+    } finally {
+      window.matchMedia = wide;
+    }
+  });
+
+  test('h goes back to the list', () => {
+    render(<MessagePane />);
+    key('h');
+    expect(store.openMessage.value).toBeNull();
+  });
+});

@@ -65,3 +65,16 @@ test('the session button keeps its name when narrow screens hide the text', asyn
   fireEvent.click(abort);
   expect(await screen.findByRole('button', { name: 'Force disconnect' })).toHaveAttribute('aria-label', 'Force disconnect');
 });
+
+test('c opens Connect while idle and does nothing during a session', () => {
+  store.status.value = st();
+  const { unmount } = render(<Topbar />);
+  fireEvent.keyDown(document.body, { key: 'c' });
+  expect(store.connectOpen.value).toBe(true);
+  unmount();
+  store.connectOpen.value = false;
+  store.status.value = st({ connected: true });
+  render(<Topbar />);
+  fireEvent.keyDown(document.body, { key: 'c' });
+  expect(store.connectOpen.value).toBe(false);
+});
