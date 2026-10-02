@@ -111,3 +111,15 @@ test('in the archive, Archive becomes Move to Inbox', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Move to Inbox' }));
   await waitFor(() => expect(api.move).toHaveBeenCalledWith(['m1'], 'in'));
 });
+
+test('the arrows step through the list and switch off at its end', async () => {
+  store.rows.value = [{ MID: 'm0', Folder: 'in', Unread: false }, { MID: 'm1', Folder: 'in', Unread: false }] as never;
+  vi.mocked(api.message).mockResolvedValueOnce({ ...msg, MID: 'm0' } as never);
+  render(<MessagePane />);
+  expect(screen.getByRole('button', { name: 'Next message' })).toBeDisabled();
+  const prev = screen.getByRole('button', { name: 'Previous message' });
+  expect(prev).toBeEnabled();
+  fireEvent.click(prev);
+  await waitFor(() => expect(api.message).toHaveBeenCalledWith('in', 'm0'));
+  store.rows.value = [];
+});

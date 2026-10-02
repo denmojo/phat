@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'preact/hooks';
 import {
-  Archive, ArrowLeft, Ellipsis, FilePen, FolderInput, Forward, Inbox, Mail, Reply, ReplyAll, Star, Trash2,
+  Archive, ArrowLeft, ChevronDown, ChevronUp, Ellipsis, FilePen, FolderInput, Forward, Inbox, Mail, Reply, ReplyAll, Star, Trash2,
 } from 'lucide-preact';
 import { Button } from '../../ui/Button';
 import { Chip } from '../../ui/Chip';
@@ -10,7 +10,7 @@ import { Menu } from '../../ui/Menu';
 import { MessageAttachments } from './Attachments';
 import { editAsNew, forward, reply } from './Composer';
 import { LabelMenu } from './LabelMenu';
-import { applyBulkTo, closeMsg, folders, labels, openMessage } from './store';
+import { applyBulkTo, closeMsg, folders, labels, neighbors, openMessage, stepMsg } from './store';
 import { callColor, folderTitle } from './format';
 import './MessagePane.css';
 
@@ -38,6 +38,8 @@ export function MessagePane() {
     <>
       <div class="toolbar">
         <IconButton icon={ArrowLeft} label="Back" onClick={closeMsg} />
+        <IconButton icon={ChevronUp} label="Previous message" disabled={!neighbors.value.prev} onClick={() => void stepMsg(-1)} />
+        <IconButton icon={ChevronDown} label="Next message" disabled={!neighbors.value.next} onClick={() => void stepMsg(1)} />
         <span class="sep" />
         <IconButton icon={Reply} label="Reply" onClick={() => reply(m, false)} />
         <span class="wide-only">

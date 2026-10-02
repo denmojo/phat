@@ -241,6 +241,23 @@ export function closeMsg(): void {
   openMessage.value = null;
 }
 
+// neighbors are the rows on either side of the open message in the list
+// as shown; both are null when no message is open or it has left the list.
+export const neighbors = computed<{ prev: Row | null; next: Row | null }>(() => {
+  const m = openMessage.value;
+  const list = rows.value;
+  const i = m ? list.findIndex((r) => r.MID === m.MID && r.Folder === m.Folder) : -1;
+  if (i < 0) return { prev: null, next: null };
+  return { prev: list[i - 1] ?? null, next: list[i + 1] ?? null };
+});
+
+// stepMsg opens the message above (-1) or below (1) the open one, the
+// same way a click on its row would.
+export async function stepMsg(dir: -1 | 1): Promise<void> {
+  const row = dir < 0 ? neighbors.value.prev : neighbors.value.next;
+  if (row) await openMsg(row.Folder, row.MID);
+}
+
 type Bulk =
   | ['move', string]
   | ['read', boolean]

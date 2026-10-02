@@ -90,3 +90,54 @@ test('unstarring in the Starred view drops the rows from the selection', async (
   expect(store.selected.value.size).toBe(0);
   store.view.value = { kind: 'folder', name: 'in' };
 });
+
+describe('stepping between messages', () => {
+  const five = ['r1', 'r2', 'r3', 'r4', 'r5'].map((MID) => ({ MID, Folder: 'in', Unread: false })) as never;
+  const opened = (MID: string, Folder = 'in') => ({ MID, Folder }) as never;
+
+  test('neighbors are the rows on either side of the open message', () => {
+    store.rows.value = five;
+    store.openMessage.value = opened('r3');
+    expect(store.neighbors.value.prev?.MID).toBe('r2');
+    expect(store.neighbors.value.next?.MID).toBe('r4');
+  });
+
+  test('the first and last rows have no neighbor past the end', () => {
+    store.rows.value = five;
+    store.openMessage.value = opened('r1');
+    expect(store.neighbors.value.prev).toBeNull();
+    store.openMessage.value = opened('r5');
+    expect(store.neighbors.value.next).toBeNull();
+  });
+
+  test('a message missing from the list, or none open, has no neighbors', () => {
+    store.rows.value = five;
+    store.openMessage.value = opened('gone');
+    expect(store.neighbors.value).toEqual({ prev: null, next: null });
+    store.openMessage.value = opened('r3', 'archive');
+    expect(store.neighbors.value).toEqual({ prev: null, next: null });
+    store.openMessage.value = null;
+    expect(store.neighbors.value).toEqual({ prev: null, next: null });
+  });
+
+  test('stepping down opens the next row and marks it read when unread', async () => {
+    store.rows.value = [
+      { MID: 'r3', Folder: 'in', Unread: false },
+      { MID: 'r4', Folder: 'Club', Unread: true },
+    ] as never;
+    store.openMessage.value = opened('r3');
+    vi.mocked(api.message).mockResolvedValueOnce({ MID: 'r4' } as never);
+    await store.stepMsg(1);
+    expect(api.message).toHaveBeenCalledWith('Club', 'r4');
+    expect(api.setRead).toHaveBeenCalledWith(['r4'], true);
+    expect(store.openMessage.value).toMatchObject({ MID: 'r4', Folder: 'Club' });
+  });
+
+  test('stepping past the end does nothing', async () => {
+    store.rows.value = five;
+    store.openMessage.value = opened('r1');
+    await store.stepMsg(-1);
+    expect(api.message).not.toHaveBeenCalled();
+    store.openMessage.value = null;
+  });
+});
