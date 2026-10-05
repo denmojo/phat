@@ -198,6 +198,15 @@ describe('message-view keys', () => {
   const key = (k: string) => fireEvent.keyDown(document.body, { key: k });
   afterEach(() => { store.composerOpen.value = false; });
 
+  test('n starts a new message with the message still open', () => {
+    render(<MessagePane />);
+    key('n');
+    expect(store.composerOpen.value).toBe(true);
+    expect(store.draft.value.to).toEqual([]);
+    expect(store.draft.value.subject).toBe('');
+    expect(store.openMessage.value?.MID).toBe('m1');
+  });
+
   test('r replies, R replies to all, f forwards', () => {
     store.openMessage.value = { ...msg, Cc: [{ Addr: 'W1AW' }] } as never;
     render(<MessagePane />);

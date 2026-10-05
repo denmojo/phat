@@ -12,6 +12,7 @@ const MESSAGE: Group = ['Message view', [
   ['r', 'Reply'],
   ['R', 'Reply all'],
   ['f', 'Forward'],
+  ['n', 'New message'],
   ['a', 'Archive, or move to Inbox from the archive'],
   ['t', 'Delete (Enter confirms)'],
   ['u', 'Mark unread and go back to the list'],
