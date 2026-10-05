@@ -55,7 +55,7 @@ func ListenAndServe(ctx context.Context, a *app.App, addr string) error {
 		if relay, err := newPatRelay(via, handler.wsHub); err != nil {
 			log.Printf("Ignoring %v", err)
 		} else {
-			log.Printf("Connects go through Pat at %s", relay.base)
+			log.Printf("Connects can go through Pat at %s", relay.base)
 			handler.wsHub.relay = relay
 			go relay.run(ctx)
 		}
@@ -384,7 +384,8 @@ func (h Handler) positionHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h Handler) DisconnectHandler(w http.ResponseWriter, req *http.Request) {
-	if h.wsHub.relay != nil {
+	// The session to stop is Phat's own when it has one, else Pat's.
+	if s := h.GetStatus(); !s.Connected && !s.Dialing && h.wsHub.relay != nil && h.wsHub.relay.busy() {
 		h.wsHub.relay.disconnect(w, req)
 		return
 	}
@@ -396,7 +397,11 @@ func (h Handler) DisconnectHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h Handler) ConnectHandler(w http.ResponseWriter, req *http.Request) {
-	if h.wsHub.relay != nil {
+	if req.FormValue("via") == "pat" {
+		if h.wsHub.relay == nil {
+			http.Error(w, "connect_via is not set, or its address was refused at startup", http.StatusBadRequest)
+			return
+		}
 		h.wsHub.relay.connect(w, req)
 		return
 	}

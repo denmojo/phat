@@ -22,8 +22,8 @@ import (
 // back at this Phat is refused instead of calling itself forever.
 const relayHeader = "X-Phat-Relay"
 
-// patRelay hands Connect, Abort and Disconnect to a running Pat, set by
-// connect_via. Winlink's production servers turn away a client named Phat
+// patRelay hands a Connect the page sends with via=pat to a running Pat,
+// set by connect_via, and its Abort and Disconnect after it. Winlink's production servers turn away a client named Phat
 // until Winlink admits it, while Pat sharing the same mailbox is admitted.
 // Pat runs the session under its own name; the relay carries its status,
 // log, progress and prompts back to Phat's page. Mail needs no relay:
@@ -95,12 +95,20 @@ func (r *patRelay) forward(w http.ResponseWriter, req *http.Request, path string
 	_, _ = io.Copy(w, resp.Body)
 }
 
+// busy reports whether Pat is dialing or holds a session.
+func (r *patRelay) busy() bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.status != nil && (r.status.Connected || r.status.Dialing)
+}
+
 // overlay puts Pat's session state into Phat's status while Pat is
-// reachable, so the page shows the session Pat is running.
+// reachable and Phat has no session of its own, so the page shows the
+// session Pat is running.
 func (r *patRelay) overlay(s *types.Status) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if r.status == nil {
+	if r.status == nil || s.Connected || s.Dialing {
 		return
 	}
 	s.Connected = r.status.Connected

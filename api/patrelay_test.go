@@ -143,7 +143,7 @@ func TestRelayConnectGoesToPat(t *testing.T) {
 	}
 	h.wsHub.relay = r
 
-	rec, body := do(t, h, "GET", "/api/connect?url="+"telnet%3A%2F%2FN0CALL%3ACMSTelnet%40cms.example%3A8772%2Fwl2k", nil)
+	rec, body := do(t, h, "GET", "/api/connect?via=pat&url="+"telnet%3A%2F%2FN0CALL%3ACMSTelnet%40cms.example%3A8772%2Fwl2k", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d: %s", rec.Code, body)
 	}
@@ -157,9 +157,9 @@ func TestRelayConnectGoesToPat(t *testing.T) {
 
 func TestRelayDisconnectGoesToPat(t *testing.T) {
 	p := newFakePat(t)
-	h, _ := newTestHandler(t)
-	r, _ := newPatRelay(p.srv.URL, h.wsHub)
-	h.wsHub.relay = r
+	h, pat, out := relayed(t, p)
+	_ = pat.WriteJSON(map[string]any{"Status": map[string]any{"connected": true}})
+	next(t, out, "Status")
 
 	rec, _ := do(t, h, "POST", "/api/disconnect?dirty=true", nil)
 	if p.dirty != "true" {
@@ -167,6 +167,45 @@ func TestRelayDisconnectGoesToPat(t *testing.T) {
 	}
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("status %d, want Pat's 400 passed through", rec.Code)
+	}
+}
+
+func TestConnectWithoutViaStaysDirect(t *testing.T) {
+	p := newFakePat(t)
+	h, _ := newTestHandler(t)
+	r, _ := newPatRelay(p.srv.URL, h.wsHub)
+	h.wsHub.relay = r
+
+	do(t, h, "GET", "/api/connect?url=", nil) // empty returns before any prompt
+	if p.connectURL != "" {
+		t.Fatalf("a direct connect reached Pat with %q", p.connectURL)
+	}
+}
+
+func TestConnectViaPatWithoutConnectVia(t *testing.T) {
+	h, _ := newTestHandler(t)
+
+	rec, body := do(t, h, "GET", "/api/connect?via=pat&url=x", nil)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status %d, want 400", rec.Code)
+	}
+	if !strings.Contains(string(body), "connect_via") {
+		t.Fatalf("error %q should name the setting", body)
+	}
+}
+
+func TestDisconnectStaysDirectWhilePatIsIdle(t *testing.T) {
+	p := newFakePat(t)
+	h, pat, out := relayed(t, p)
+	_ = pat.WriteJSON(map[string]any{"Status": map[string]any{"connected": false}})
+	next(t, out, "Status")
+
+	rec, _ := do(t, h, "POST", "/api/disconnect?dirty=false", nil)
+	if p.dirty != "" {
+		t.Fatal("a disconnect with no Pat session reached Pat")
+	}
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status %d, want Phat's own 400 for no session", rec.Code)
 	}
 }
 
@@ -178,7 +217,7 @@ func TestRelayConnectWithPatDown(t *testing.T) {
 	r, _ := newPatRelay(addr, h.wsHub)
 	h.wsHub.relay = r
 
-	rec, body := do(t, h, "GET", "/api/connect?url=x", nil)
+	rec, body := do(t, h, "GET", "/api/connect?via=pat&url=x", nil)
 	if rec.Code != http.StatusBadGateway {
 		t.Fatalf("status %d, want 502", rec.Code)
 	}
@@ -193,7 +232,7 @@ func TestRelayRefusesALoop(t *testing.T) {
 	r, _ := newPatRelay(p.srv.URL, h.wsHub)
 	h.wsHub.relay = r
 
-	req := httptest.NewRequest("GET", "/api/connect?url=x", nil)
+	req := httptest.NewRequest("GET", "/api/connect?via=pat&url=x", nil)
 	req.Header.Set(relayHeader, "1")
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, req)
