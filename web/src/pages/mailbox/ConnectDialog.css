@@ -20,6 +20,11 @@
 .cf-note { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-sm); color: var(--text-muted); }
 .cf-note.warn { color: var(--danger); font-weight: 600; }
 .cf-note svg.lucide { width: 16px; height: 16px; }
+.cf-route { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); margin: 0; padding: 0; border: 0;
+  font-size: var(--text-sm); color: var(--text); }
+.cf-route legend { float: left; margin-right: var(--space-1); padding: 0; color: var(--text-muted); }
+.cf-route label { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; }
+.cf-route code { font: var(--text-sm) var(--font-mono); color: var(--text-muted); }
 .cf-url input { width: 100%; border-style: dashed !important; color: var(--text-muted) !important; font: var(--text-sm) var(--font-mono) !important; }
 .cf-rms { padding: 0 var(--space-4) var(--space-4); }
 .ui-dialog-foot .flip { transform: rotate(180deg); }

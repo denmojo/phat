@@ -64,7 +64,7 @@ export function General({ s, edit, errors, redacted, account, onCheckAccount, on
         hint="Largest message, in bytes, to download without asking. Use -1 for no limit."
         onInput={(v) => edit((d) => { d.autoDownload = v; })} />
       <Field label="Connect through Pat" value={s.connectVia} error={errors.connectVia} placeholder="http://localhost:8080"
-        hint="Optional. The address of a Pat using this same mailbox. Connect, Abort and Disconnect then run in Pat, under Pat's name. Leave empty for Phat to connect itself."
+        hint="Optional. The address of a Pat using this same mailbox. The Connect dialog then offers to run the session in Pat, under Pat's name. Leave empty for Phat to connect itself."
         onInput={(v) => edit((d) => { d.connectVia = v; })} />
     </Section>
   );

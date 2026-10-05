@@ -27,12 +27,19 @@ function stored(): string {
 
 const close = () => { connectOpen.value = false; };
 
-// connect starts a session with the URL as shown and reports the result.
-function connect(url: string) {
+// The route is remembered per browser; with connect_via set it starts on Pat.
+const ROUTE_KEY = 'phat_connect_route';
+function storedRoute(): 'pat' | 'direct' {
+  try { return localStorage.getItem(ROUTE_KEY) === 'direct' ? 'direct' : 'pat'; } catch { return 'pat'; }
+}
+
+// connect starts a session with the URL as shown, in Phat or through Pat,
+// and reports the result.
+function connect(url: string, viaPat: boolean) {
   try { localStorage.setItem(storeKey(), url); } catch { /* storage blocked */ }
   close();
   logOpen.value = true;
-  api.connect(url)
+  api.connect(url, viaPat)
     .then((r) => { if (r.NumReceived === 0) toast('No new messages'); })
     .catch(() => toast('Connect failed. See the session log.', { kind: 'error' }));
 }
@@ -58,6 +65,8 @@ function ConnectForm() {
   const [deleting, setDeleting] = useState(false);
   const [showRms, setShowRms] = useState(false);
   const [rmsMode, setRmsMode] = useState(() => modeFor(parse(stored()).transport) ?? 'ardop');
+  const [via, setVia] = useState('');
+  const [route, setRoute] = useState(storedRoute);
   const qsySeq = useRef(0);
 
   // urlFor keeps a frequency unless the rig refused or failed to tune to it.
@@ -110,8 +119,10 @@ function ConnectForm() {
   useEffect(() => {
     api.connectAliases().then((a) => setAliases(a ?? {})).catch(() => {});
     api.config().then((c) => {
-      const n = (c as { ardop?: { connect_requests?: number } })?.ardop?.connect_requests;
+      const cfg = c as { ardop?: { connect_requests?: number }; connect_via?: string } | null;
+      const n = cfg?.ardop?.connect_requests;
       if (n) setTriesHint(String(n));
+      setVia(cfg?.connect_via?.trim() ?? '');
     }).catch(() => {});
   }, []);
 
@@ -154,6 +165,11 @@ function ConnectForm() {
   const closeNaming = useCallback(() => setNaming(false), []);
   const closeDeleting = useCallback(() => setDeleting(false), []);
   const busy = qsy.state === 'busy';
+  const viaPat = !!via && route === 'pat';
+  const pickRoute = (r: 'pat' | 'direct') => {
+    setRoute(r);
+    try { localStorage.setItem(ROUTE_KEY, r); } catch { /* storage blocked */ }
+  };
 
   return (
     <Dialog open title="Connect" onClose={close} wide
@@ -164,10 +180,10 @@ function ConnectForm() {
           </Button>
           <span class="spacer" />
           <Button onClick={close}>Cancel</Button>
-          <Button variant="primary" disabled={busy} onClick={() => connect(urlText)}><RadioTower /><span>Connect</span></Button>
+          <Button variant="primary" disabled={busy} onClick={() => connect(urlText, viaPat)}><RadioTower /><span>Connect</span></Button>
         </>
       )}>
-      <form class="connect" onSubmit={(e) => { e.preventDefault(); if (!busy) connect(urlText); }}>
+      <form class="connect" onSubmit={(e) => { e.preventDefault(); if (!busy) connect(urlText, viaPat); }}>
         <div class="cf-alias">
           <select aria-label="Alias" value={alias} onChange={(e) => {
             const name = e.currentTarget.value;
@@ -248,6 +264,14 @@ function ConnectForm() {
           <p class="cf-note warn" title="Could not set the radio frequency. See the session log, or set the frequency by hand.">
             <TriangleAlert />QSY failure
           </p>
+        )}
+        {via && (
+          <fieldset class="cf-route">
+            <legend>Connect</legend>
+            <label><input type="radio" name="cf-route" checked={route === 'direct'} onChange={() => pickRoute('direct')} />Direct</label>
+            <label><input type="radio" name="cf-route" checked={route === 'pat'} onChange={() => pickRoute('pat')} />
+              Through Pat at <code>{via}</code></label>
+          </fieldset>
         )}
         <label class="cf-url">
           <span class="sr">Connect URL</span>
