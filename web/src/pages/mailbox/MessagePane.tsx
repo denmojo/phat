@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'preact/hooks';
 import {
-  Archive, ArrowLeft, ChevronDown, ChevronUp, Ellipsis, FilePen, FolderInput, Forward, Inbox, Mail, Reply, ReplyAll, Star, Trash2,
+  Archive, ArrowLeft, ChevronDown, ChevronUp, Ellipsis, FilePen, FolderInput, Pencil, Forward, Inbox, Mail, Reply, ReplyAll, Star, Trash2,
 } from 'lucide-preact';
 import { useHotkeys } from '../../lib/hotkeys';
 import { Button } from '../../ui/Button';
@@ -9,7 +9,7 @@ import { Dialog } from '../../ui/Dialog';
 import { IconButton } from '../../ui/IconButton';
 import { Menu } from '../../ui/Menu';
 import { MessageAttachments } from './Attachments';
-import { editAsNew, forward, reply } from './Composer';
+import { compose, editAsNew, editOutbox, forward, reply } from './Composer';
 import { LabelMenu } from './LabelMenu';
 import { applyBulkTo, closeMsg, folders, labels, neighbors, openMessage, stepMsg } from './store';
 import { callColor, folderTitle } from './format';
@@ -42,7 +42,8 @@ export function MessagePane() {
   // Keys for the open message: j and k step like the down and up arrows
   // (vim's down and up), h goes back (vim's left), and the rest do what
   // their toolbar button does. l and m click the menu buttons so the
-  // menus open exactly as they do by mouse.
+  // menus open exactly as they do by mouse. n starts a new message, as it
+  // does over the list, which is unmounted while a message is open.
   const click = (label: string) => bar.current?.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)?.click();
   useHotkeys(m ? {
     j: () => void stepMsg(1),
@@ -51,6 +52,7 @@ export function MessagePane() {
     r: () => reply(m, false),
     R: () => reply(m, true),
     f: () => forward(m),
+    n: compose,
     a: () => void applyBulkTo([m.MID], 'move', m.Folder === 'archive' ? 'in' : 'archive'),
     t: () => setConfirmDelete(true),
     u: () => { void applyBulkTo([m.MID], 'read', false); closeMsg(); },
@@ -80,6 +82,8 @@ export function MessagePane() {
           <IconButton icon={ReplyAll} label="Reply all" onClick={() => reply(m, true)} />
           <IconButton icon={Forward} label="Forward" onClick={() => forward(m)} />
         </span>
+        {/* A message still waiting in the Outbox can be edited in place. */}
+        {m.Folder === 'out' && <IconButton icon={Pencil} label="Edit" onClick={() => editOutbox(m)} />}
         <span class="sep" />
         {archived
           ? <IconButton icon={Inbox} label="Move to Inbox" onClick={() => void applyBulkTo(mids, 'move', 'in')} />

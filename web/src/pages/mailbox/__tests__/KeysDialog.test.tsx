@@ -28,7 +28,7 @@ test('over an open message it shows the message keys and the ones that work anyw
   store.openMessage.value = { MID: 'm1', Folder: 'in' } as never;
   store.keysOpen.value = true;
   render(<KeysDialog />);
-  expect(shown().sort()).toEqual(['/', '?', 'R', 'a', 'c', 'f', 'h', 'j', 'k', 'l', 'm', 'r', 's', 't', 'u']);
+  expect(shown().sort()).toEqual(['/', '?', 'R', 'a', 'c', 'f', 'h', 'j', 'k', 'l', 'm', 'n', 'r', 's', 't', 'u']);
   store.openMessage.value = null;
 });
 

@@ -1,15 +1,18 @@
 vi.mock('../../../lib/api', async (orig) => ({
   ...(await orig<typeof import('../../../lib/api')>()),
   send: vi.fn(async () => 'Message posted (0.00 kB)'),
+  remove: vi.fn(async (mids: string[]) => ({ ok: mids, failed: {} })),
   list: vi.fn(async () => []),
   folders: vi.fn(async () => []),
   labels: vi.fn(async () => []),
   pollForm: vi.fn(async () => { throw new Error('not yet'); }),
 }));
+vi.mock('../../../ui/Toast', async (orig) => ({ ...(await orig<typeof import('../../../ui/Toast')>()), toast: vi.fn() }));
 import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
+import { toast } from '../../../ui/Toast';
 import * as api from '../../../lib/api';
 import * as store from '../store';
-import { Composer, compose, editAsNew, forward, reply } from '../Composer';
+import { Composer, compose, editAsNew, editOutbox, forward, reply } from '../Composer';
 import type { Message } from '../../../lib/types';
 
 const msg: Message = {
@@ -153,4 +156,77 @@ test('a refused send keeps the composer open and shows the server error', async 
   fireEvent.click(screen.getByRole('button', { name: 'Send' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Validation error: no recipients');
   expect(store.composerOpen.value).toBe(true);
+});
+
+describe('editing a message in the Outbox', () => {
+  const queued: Message = { ...msg, MID: 'q1', Folder: 'out', From: { Addr: 'N0CALL' }, To: [{ Addr: 'EOC-1' }], Cc: null, P2POnly: true };
+  afterEach(() => { store.openMessage.value = null; });
+
+  test('opens the message as it is, titled Edit message', async () => {
+    editOutbox(queued);
+    render(<Composer />);
+    const d = store.draft.value;
+    expect(d.to).toEqual(['EOC-1']);
+    expect(d.subject).toBe('Shelter status');
+    expect(d.body).toBe('All good.\nTwo cots left.');
+    expect(d.p2pOnly).toBe(true);
+    expect(d.replaces).toBe('q1');
+    expect(await screen.findByRole('dialog', { name: 'Edit message' })).toBeInTheDocument();
+  });
+
+  test('Send posts the new version, then deletes the original and closes it', async () => {
+    store.openMessage.value = queued as never;
+    editOutbox(queued);
+    render(<Composer />);
+    store.draft.value = { ...store.draft.value, body: 'Three cots left.' };
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await waitFor(() => expect(api.remove).toHaveBeenCalledWith(['q1']));
+    expect(sent().get('body')).toBe('Three cots left.');
+    expect(sent().get('p2ponly')).toBe('on');
+    const postedFirst = (api.send as unknown as { mock: { invocationCallOrder: number[] } }).mock.invocationCallOrder[0]!;
+    const removedAfter = (api.remove as unknown as { mock: { invocationCallOrder: number[] } }).mock.invocationCallOrder[0]!;
+    expect(postedFirst).toBeLessThan(removedAfter);
+    await waitFor(() => expect(store.composerOpen.value).toBe(false));
+    expect(store.openMessage.value).toBeNull();
+  });
+
+  test('a refused post leaves the original in place and the composer open', async () => {
+    (api.send as unknown as { mockRejectedValueOnce: (e: unknown) => void })
+      .mockRejectedValueOnce(new api.ApiError(400, 'Validation error: no recipients'));
+    editOutbox(queued);
+    render(<Composer />);
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Validation error: no recipients');
+    expect(api.remove).not.toHaveBeenCalled();
+    expect(store.composerOpen.value).toBe(true);
+  });
+
+  test('Discard leaves the original alone', async () => {
+    editOutbox(queued);
+    render(<Composer />);
+    store.draft.value = { ...store.draft.value, body: 'Changed my mind.' };
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Discard' }));
+    expect(store.composerOpen.value).toBe(false);
+    expect(api.send).not.toHaveBeenCalled();
+    expect(api.remove).not.toHaveBeenCalled();
+  });
+
+  test('when the post succeeds but the original cannot be deleted, the toast says why in words', async () => {
+    (api.remove as unknown as { mockRejectedValueOnce: (e: unknown) => void })
+      .mockRejectedValueOnce(new api.ApiError(207, '{"ok":[],"failed":{"q1":"not found"}}', { ok: [], failed: { q1: 'not found' } }));
+    editOutbox(queued);
+    render(<Composer />);
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await waitFor(() => expect(toast).toHaveBeenCalledWith(
+      'The edit is queued, but the original could not be removed: not found', { kind: 'error' }));
+    expect(store.composerOpen.value).toBe(false);
+  });
+
+  test('a new message and edit as new replace nothing', () => {
+    compose();
+    expect(store.draft.value.replaces).toBeNull();
+    editAsNew(queued);
+    expect(store.draft.value.replaces).toBeNull();
+  });
 });

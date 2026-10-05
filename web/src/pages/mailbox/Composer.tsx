@@ -9,7 +9,7 @@ import { TokenField } from '../../ui/TokenField';
 import { toast } from '../../ui/Toast';
 import { DraftAttachments } from './Attachments';
 import { FormCatalog } from './FormCatalog';
-import { type Draft, composerOpen, draft, emptyDraft, mycall, refresh, refreshSidebar } from './store';
+import { type Draft, closeMsg, composerOpen, draft, emptyDraft, mycall, openMessage, refresh, refreshSidebar } from './store';
 import './Composer.css';
 
 const addrs = (list: { Addr: string }[] | null | undefined) => (list ?? []).map((a) => a.Addr);
@@ -89,12 +89,35 @@ export function editAsNew(m: Message) {
   reattach(m);
 }
 
+// editOutbox opens a message still waiting in the Outbox for editing.
+// Send posts the edited version and then deletes this one, so the Outbox
+// holds it once; a refused post or a discard leaves the original as it was.
+export function editOutbox(m: Message) {
+  open({ ...emptyDraft(), to: addrs(m.To), cc: addrs(m.Cc), subject: m.Subject, body: m.Body, p2pOnly: m.P2POnly, replaces: m.MID });
+  reattach(m);
+}
+
 // closeComposer discards the draft without asking: Send calls it after a
 // post, and Discard after the user has confirmed.
 export function closeComposer() {
   stopFormPolling();
   composerOpen.value = false;
   draft.value = emptyDraft();
+}
+
+// removeOriginal deletes the Outbox message an edit replaced and closes it
+// if it is open. A delete that fails (a connect sent it meanwhile) is
+// reported, since the new version is already queued beside it.
+async function removeOriginal(mid: string) {
+  try {
+    const res = await api.remove([mid]);
+    const why = res?.failed?.[mid];
+    if (why) toast(`The edit is queued, but the original could not be removed: ${why}`, { kind: 'error' });
+  } catch (err) {
+    const why = err instanceof api.ApiError ? err.result?.failed?.[mid] ?? err.message : err instanceof Error ? err.message : String(err);
+    toast(`The edit is queued, but the original could not be removed: ${why}`, { kind: 'error' });
+  }
+  if (openMessage.value?.MID === mid) closeMsg();
 }
 
 const set = (patch: Partial<Draft>) => { draft.value = { ...draft.value, ...patch }; };
@@ -140,6 +163,8 @@ export function Composer() {
     setError('');
     try {
       const result = await api.send(form);
+      // The edited version is in the Outbox now; only then does the original go.
+      if (cur.replaces) await removeOriginal(cur.replaces);
       closeComposer();
       toast(result || 'Message posted');
       await Promise.all([refresh(), refreshSidebar()]);
@@ -158,7 +183,7 @@ export function Composer() {
     input.value = '';
   };
 
-  const title = d.inReplyTo ? 'Reply' : 'New message';
+  const title = d.replaces ? 'Edit message' : d.inReplyTo ? 'Reply' : 'New message';
   return (
     <>
       <Dialog open={isOpen} title={title} onClose={tryClose} wide closeOnBackdrop={false}
