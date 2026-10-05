@@ -37,8 +37,11 @@ export interface Draft {
   // inReplyTo is "<folder>/<mid>" of the message being answered.
   inReplyTo: string | null;
   p2pOnly: boolean;
+  // replaces is the MID of the Outbox message this draft is an edit of;
+  // Send deletes that message once the new version is posted.
+  replaces: string | null;
 }
-export const emptyDraft = (): Draft => ({ to: [], cc: [], subject: '', body: '', files: [], inReplyTo: null, p2pOnly: false });
+export const emptyDraft = (): Draft => ({ to: [], cc: [], subject: '', body: '', files: [], inReplyTo: null, p2pOnly: false, replaces: null });
 export const draft = signal<Draft>(emptyDraft());
 // drawerOpen shows the sidebar as a drawer on narrow screens.
 export const drawerOpen = signal(false);
