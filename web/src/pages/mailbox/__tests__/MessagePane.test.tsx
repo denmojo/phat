@@ -296,3 +296,15 @@ describe('message-view keys', () => {
     expect(store.openMessage.value).toBeNull();
   });
 });
+
+test('an Outbox message has an Edit button that opens it for editing; other folders do not', () => {
+  const { unmount } = render(<MessagePane />);
+  expect(screen.queryByRole('button', { name: 'Edit' })).toBeNull();
+  unmount();
+  store.openMessage.value = { ...msg, Folder: 'out' } as never;
+  render(<MessagePane />);
+  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+  expect(store.composerOpen.value).toBe(true);
+  expect(store.draft.value.replaces).toBe('m1');
+  store.composerOpen.value = false;
+});
