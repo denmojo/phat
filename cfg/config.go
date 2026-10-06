@@ -74,7 +74,7 @@ type Config struct {
 
 	// Default HTTP listen address (for web UI).
 	//
-	// Use ":8080" to listen on any device, port 8080.
+	// Use ":8081" to listen on any device, port 8081.
 	HTTPAddr string `json:"http_addr"`
 
 	// Address of a running Pat to hand web connects to, sharing this
@@ -400,7 +400,7 @@ var DefaultConfig = Config{
 		"telnet": "telnet://{mycall}:CMSTelnet@cms.winlink.org:8772/wl2k",
 	},
 	Listen:   []string{},
-	HTTPAddr: "localhost:8080",
+	HTTPAddr: "localhost:8081",
 	AX25: AX25Config{
 		Engine: DefaultAX25Engine(),
 		Beacon: BeaconConfig{

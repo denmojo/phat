@@ -14,7 +14,7 @@ import (
 func HTTPHandle(ctx context.Context, a *app.App, args []string) {
 	addr := a.Config().HTTPAddr
 	if addr == "" {
-		addr = ":8080" // For backwards compatibility (remove in future)
+		addr = ":8081" // For backwards compatibility (remove in future)
 	}
 
 	set := pflag.NewFlagSet("http", pflag.ExitOnError)

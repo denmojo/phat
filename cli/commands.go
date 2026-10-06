@@ -43,7 +43,7 @@ var Commands = []app.Command{
 		Desc:  "Run http server for web UI.",
 		Usage: "[options]",
 		Options: map[string]string{
-			"--addr, -a": "Listen address. Default is :8080.",
+			"--addr, -a": "Listen address. Default is localhost:8081.",
 		},
 		HandleFunc: HTTPHandle,
 		MayConnect: true,
