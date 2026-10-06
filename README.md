@@ -24,7 +24,7 @@ Winlink hasn't approved Phat, in two ways: its client name and an API key. Phat 
 
 **Phat has no Winlink API key.** Some features call the Winlink API at api.winlink.org, which needs an access key issued by the Winlink Development Team to each client program. The key issued to Pat belongs to Pat, and Pat's maintainer asked that Phat not use it (see [Pat's maintainer's agreement](#pats-maintainers-agreement)). Until Phat has its own key, these three don't work:
 
-- **RMS gateway list.** Phat can't download a fresh list. The Connect dialog still shows the list compiled into Phat itself, a snapshot that came with the source code Phat was forked from, so it's there whether or not you have Pat installed. Gateways added or changed since then won't appear, and Update cache reports the missing key.
+- **RMS gateway list.** Phat can't download a fresh list. The Connect dialog still shows the list compiled into Phat itself, a snapshot that came with the source code Phat was forked from, so it's there whether or not you have Pat installed. Gateways added or changed since then won't appear, and Update cache reports the missing key. If you have Pat, Phat can use Pat's list instead, which Pat keeps current with its own key: the first-run copy brings it over, and `phat rmslist --from-pat` copies Pat's latest whenever you want.
 - **Account creation.** Phat can't register a new Winlink account, from Settings or from `phat init`.
 - **Password recovery.** Phat can't read or set your account's password recovery email.
 
@@ -72,7 +72,7 @@ Phat's default greeting to peer-to-peer stations is also Pat's, "Open source Win
 
 Phat has no packaged releases yet. Build it from source (see Building), then run `phat http` and open http://localhost:8081/ui.
 
-On first run, Phat looks for a Pat installation and copies its config, mailbox and forms into Phat's own directories: `~/.config/phat` and `~/.local/share/phat` on Linux, `~/Library/Application Support/phat` on macOS. It copies rather than moves, so Pat keeps working, and it never copies into a mailbox Phat already has. Without a Pat installation, Phat opens Settings first; enter your callsign, locator and Winlink password, and Save.
+On first run, Phat looks for a Pat installation and copies its config, mailbox, forms and saved RMS list into Phat's own directories: `~/.config/phat` and `~/.local/share/phat` on Linux, `~/Library/Application Support/phat` on macOS. It copies rather than moves, so Pat keeps working, and it never copies into a mailbox Phat already has. Without a Pat installation, Phat opens Settings first; enter your callsign, locator and Winlink password, and Save.
 
 There's no Docker image for Phat yet. Pat's Dockerfile and compose file are still in the repository, but they build and run Pat's names and paths, so if you ran Pat in Docker, run Phat from a built binary for now.
 
@@ -81,6 +81,8 @@ There's no Docker image for Phat yet. Pat's Dockerfile and compose file are stil
 Phat and Pat install side by side: different binaries, different directories, different config files. The copy from Pat happens once, while Phat has no config of its own. After that the two mailboxes are separate copies, and mail fetched in one doesn't appear in the other, unless you start Phat on Pat's mailbox as [Connecting through Pat](#connecting-through-pat) describes.
 
 Pat uses port 8080 and Phat uses 8081, so both run at the same time with no extra steps. When the first-run copy brings over a Pat config set to 8080, Phat's copy moves to 8081; Pat's own config isn't touched. To use a different port, run `phat http -a localhost:<port>` or change `http_addr` in Phat's config file.
+
+With its own copy of the forms, Phat can fall behind Pat's. `phat templates from-pat` replaces Phat's forms with a copy of Pat's current ones, and `phat rmslist --from-pat` does the same for the RMS list. Both only read from Pat.
 
 For setting up ARDOP, VARA, AX.25 and rig control, [Pat's wiki](https://github.com/la5nta/pat/wiki) applies to Phat unchanged.
 
