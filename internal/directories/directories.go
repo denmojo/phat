@@ -184,6 +184,14 @@ func MigrateFromPat() error {
 			return err
 		}
 	}
+	// Pat's saved RMS lists, which Pat keeps current with its own key.
+	if lists, _ := patRMSLists(); len(lists) > 0 {
+		for _, src := range lists {
+			if err := copyFile(src, filepath.Join(DataDir(), filepath.Base(src))); err != nil {
+				return err
+			}
+		}
+	}
 	// config.json goes last: once it exists, later starts skip the copy.
 	dst := filepath.Join(ConfigDir(), "config.json")
 	if err := copyFile(filepath.Join(patCfg, "config.json"), dst); err != nil {
