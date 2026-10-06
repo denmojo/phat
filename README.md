@@ -18,7 +18,7 @@ Phat is a separate project. It isn't affiliated with Pat or its maintainers, nor
 
 ## Winlink approval is pending
 
-Winlink hasn't approved Phat, in two ways. Phat's requests for both are waiting on the Winlink Development Team, which has a backlog and is holding new client and API requests until it publishes new documentation. Approval may come late or never, so this README describes how to use Phat without it.
+Winlink hasn't approved Phat, in two ways: its client name and an API key. Phat asked the Winlink Development Team to accept its client name in October 2026. The team replied that it is holding new client requests while it writes rules for third-party clients, so the request waits on that backlog and on the new documentation. Phat will ask for an API key once that documentation is out. Approval may come late or never, so this README describes how to use Phat without it.
 
 **Winlink's servers refuse Phat by name.** The production Common Message Server (CMS) only accepts client programs it knows. To send and receive Winlink mail, [connect through Pat](#connecting-through-pat), set up just below. Telnet to Winlink's test server also works (see [Winlink CMS access](#winlink-cms-access)), and peer-to-peer sessions don't involve the CMS at all.
 
