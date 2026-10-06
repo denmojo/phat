@@ -56,6 +56,18 @@ test('a blank callsign blocks the save', async () => {
   expect(api.saveConfig).not.toHaveBeenCalled();
 });
 
+test('connect through Pat takes an http address and saves it', async () => {
+  render(<App />);
+  const via = await screen.findByLabelText(/Connect through Pat/);
+  fireEvent.input(via, { target: { value: 'localhost:8080' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  expect(await screen.findByText('Use an address like http://localhost:8080.')).toBeInTheDocument();
+  expect(api.saveConfig).not.toHaveBeenCalled();
+  fireEvent.input(via, { target: { value: 'http://localhost:8080' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() => expect(api.saveConfig).toHaveBeenCalledWith({ ...base(), connect_via: 'http://localhost:8080' }));
+});
+
 test('the transports pick from the rigs defined under rig control', async () => {
   render(<App />);
   await screen.findByLabelText(/Callsign/);

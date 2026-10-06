@@ -54,3 +54,19 @@ test('Update reports the new version', async () => {
   await waitFor(() => expect(api.formsUpdate).toHaveBeenCalled());
   expect(await screen.findByText('Updated forms to 1.0.201')).toBeInTheDocument();
 });
+
+test('an update Pat ran says the forms belong to Pat', async () => {
+  (api.formsUpdate as unknown as ReturnType<typeof vi.fn>)
+    .mockResolvedValueOnce({ action: 'update', newestVersion: '1.0.202', owner: 'pat' });
+  render(<FormCatalog open onClose={() => {}} />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Update forms' }));
+  expect(await screen.findByText('Pat updated its forms to 1.0.202. These forms belong to Pat.')).toBeInTheDocument();
+});
+
+test('Pat already current says so, and that the forms are Pat\'s', async () => {
+  (api.formsUpdate as unknown as ReturnType<typeof vi.fn>)
+    .mockResolvedValueOnce({ action: 'none', newestVersion: '1.0.202', owner: 'pat' });
+  render(<FormCatalog open onClose={() => {}} />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Update forms' }));
+  expect(await screen.findByText('Pat already has the latest forms (1.0.202). These forms belong to Pat.')).toBeInTheDocument();
+});

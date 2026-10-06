@@ -97,10 +97,41 @@ test('Connect remembers the URL, closes, connects, and says when nothing came in
   render(<ConnectDialog />);
   fireEvent.input(screen.getByLabelText('Target'), { target: { value: 'WL2K' } });
   fireEvent.click(screen.getByRole('button', { name: 'Connect' }));
-  expect(api.connect).toHaveBeenCalledWith('telnet://N0CALL:pw@cms.example.invalid:8772/WL2K');
+  expect(api.connect).toHaveBeenCalledWith('telnet://N0CALL:pw@cms.example.invalid:8772/WL2K', false);
   expect(localStorage.getItem('pat_connect_url_N0CALL')).toBe('telnet://N0CALL:pw@cms.example.invalid:8772/WL2K');
   expect(store.connectOpen.value).toBe(false);
   await waitFor(() => expect(toast).toHaveBeenCalledWith('No new messages'));
+});
+
+test('with connect_via empty there is no route choice and the connect is direct', async () => {
+  render(<ConnectDialog />);
+  await waitFor(() => expect(api.config).toHaveBeenCalled());
+  expect(screen.queryByRole('radio', { name: /Through Pat/ })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Connect' }));
+  expect(api.connect).toHaveBeenCalledWith(expect.any(String), false);
+});
+
+test('with connect_via set the dialog offers direct or through Pat, starting on Pat', async () => {
+  mock(api.config).mockResolvedValueOnce({ connect_via: 'http://localhost:8080' });
+  render(<ConnectDialog />);
+  const pat = await screen.findByRole('radio', { name: /Through Pat/ });
+  expect(pat).toBeChecked();
+  expect(screen.getByText('http://localhost:8080')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Connect' }));
+  expect(api.connect).toHaveBeenLastCalledWith(expect.any(String), true);
+});
+
+test('choosing Direct connects in Phat and is remembered for next time', async () => {
+  mock(api.config).mockResolvedValue({ connect_via: 'http://localhost:8080' });
+  const { unmount } = render(<ConnectDialog />);
+  fireEvent.click(await screen.findByRole('radio', { name: 'Direct' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Connect' }));
+  expect(api.connect).toHaveBeenLastCalledWith(expect.any(String), false);
+  unmount();
+  store.connectOpen.value = true;
+  render(<ConnectDialog />);
+  expect(await screen.findByRole('radio', { name: 'Direct' })).toBeChecked();
+  mock(api.config).mockReset();
 });
 
 test('a failed connect says so', async () => {

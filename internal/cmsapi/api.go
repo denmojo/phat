@@ -10,6 +10,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -31,9 +32,18 @@ const (
 	PathPasswordValidate = "/account/password/validate"
 	PathAccountAdd       = "/account/add"
 
-	// AccessKey issued December 2017 by the WDT for use with Pat
-	AccessKey = "1880278F11684B358F36845615BD039A"
+	// AccessKey is the Winlink API access key issued by the WDT for this
+	// program. Phat has none yet. The key the WDT issued to Pat in December
+	// 2017 is Pat's alone: Martin (LA5NTA) asked on 2026-10-06 that Phat not
+	// use it. Until Phat's own key is issued, every call that needs one
+	// returns ErrNoAccessKey without touching the network.
+	AccessKey = ""
 )
+
+// ErrNoAccessKey is returned by every Winlink API call while Phat has no
+// access key of its own.
+var ErrNoAccessKey = errors.New("not available in Phat yet: it has no Winlink API access key. " +
+	"Use Pat or another Winlink client for this")
 
 type VersionAdd struct {
 	Callsign string `json:"callsign"`
@@ -154,6 +164,9 @@ type RFC1123Time struct{ time.Time }
 // historyHours is the number of hours of history to include (maximum: 48). If < 1, then API default is used.
 // serviceCodes defaults to "PUBLIC".
 func GetGatewayStatus(ctx context.Context, mode string, historyHours int, serviceCodes ...string) (io.ReadCloser, error) {
+	if AccessKey == "" {
+		return nil, ErrNoAccessKey
+	}
 	switch {
 	case mode == "":
 		mode = "AnyAll"

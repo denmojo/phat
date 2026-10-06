@@ -49,6 +49,17 @@ func ListenAndServe(ctx context.Context, a *app.App, addr string) error {
 	}
 
 	handler := NewHandler(a)
+	if via := a.Config().ConnectVia; via != "" {
+		// A bad address leaves the page up and connecting directly, so
+		// Settings stays reachable to fix it.
+		if relay, err := newPatRelay(via, handler.wsHub); err != nil {
+			log.Printf("Ignoring %v", err)
+		} else {
+			log.Printf("Connects can go through Pat at %s", relay.base)
+			handler.wsHub.relay = relay
+			go relay.run(ctx)
+		}
+	}
 	go handler.wsHub.WatchMBox(ctx, a.Mailbox())
 	if err := a.EnableWebSocket(ctx, handler.wsHub); err != nil {
 		return err
@@ -123,6 +134,7 @@ func NewHandler(app *app.App) *Handler {
 	r.HandleFunc("/api/config/connect_aliases/{alias}", h.connectAliasHandler).Methods("GET", "PUT", "DELETE")
 
 	r.HandleFunc("/api/reload", h.reloadHandler).Methods("POST")
+	r.HandleFunc("/api/pat-choice", h.patChoiceHandler).Methods("GET", "POST")
 	r.HandleFunc("/api/bandwidths", h.bandwidthsHandler).Methods("GET")
 	r.HandleFunc("/api/connect_aliases", h.connectAliasesHandler).Methods("GET") // DEPRECATED: Use /api/config/connect_aliases.
 	r.HandleFunc("/api/new-release-check", h.newReleaseCheckHandler).Methods("GET")
@@ -133,7 +145,7 @@ func NewHandler(app *app.App) *Handler {
 	r.HandleFunc("/api/form", h.FormsManager().GetFormDataHandler).Methods("GET")
 	r.HandleFunc("/api/forms", h.FormsManager().GetFormTemplateHandler).Methods("GET")
 	r.PathPrefix("/api/forms/").Handler(http.StripPrefix("/api/forms/", http.HandlerFunc(h.FormsManager().GetFormAssetHandler))).Methods("GET")
-	r.HandleFunc("/api/formsUpdate", h.FormsManager().UpdateFormTemplatesHandler).Methods("POST")
+	r.HandleFunc("/api/formsUpdate", h.formsUpdateHandler).Methods("POST")
 
 	r.HandleFunc("/api/winlink-account/password-recovery-email", h.winlinkPasswordRecoveryEmailHandler).Methods("GET", "PUT")
 	r.HandleFunc("/api/winlink-account/registration", h.winlinkAccountRegistrationHandler).Methods("GET", "POST")
@@ -233,7 +245,7 @@ func (h Handler) wsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) statusHandler(w http.ResponseWriter, _ *http.Request) {
-	_ = json.NewEncoder(w).Encode(h.GetStatus())
+	_ = json.NewEncoder(w).Encode(h.wsHub.status())
 }
 
 func (h Handler) bandwidthsHandler(w http.ResponseWriter, req *http.Request) {
@@ -373,6 +385,11 @@ func (h Handler) positionHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h Handler) DisconnectHandler(w http.ResponseWriter, req *http.Request) {
+	// The session to stop is Phat's own when it has one, else Pat's.
+	if s := h.GetStatus(); !s.Connected && !s.Dialing && h.wsHub.relay != nil && h.wsHub.relay.busy() {
+		h.wsHub.relay.disconnect(w, req)
+		return
+	}
 	dirty, _ := strconv.ParseBool(req.FormValue("dirty"))
 	if ok := h.AbortActiveConnection(dirty); !ok {
 		w.WriteHeader(http.StatusBadRequest)
@@ -381,6 +398,14 @@ func (h Handler) DisconnectHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h Handler) ConnectHandler(w http.ResponseWriter, req *http.Request) {
+	if req.FormValue("via") == "pat" {
+		if h.wsHub.relay == nil {
+			http.Error(w, "connect_via is not set, or its address was refused at startup", http.StatusBadRequest)
+			return
+		}
+		h.wsHub.relay.connect(w, req)
+		return
+	}
 	connectStr := req.FormValue("url")
 
 	nMsgs := h.Mailbox().InboxCount()

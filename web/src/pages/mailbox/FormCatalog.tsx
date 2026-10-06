@@ -82,8 +82,16 @@ export function FormCatalog({ open, onClose }: { open: boolean; onClose: () => v
     setUpdating(true);
     setNote(null);
     try {
-      const r = (await api.formsUpdate()) as { action: string; newestVersion: string };
-      if (r.action === 'update') {
+      const r = (await api.formsUpdate()) as { action: string; newestVersion: string; owner?: string };
+      if (r.owner === 'pat') {
+        // Phat uses Pat's forms folder, so Pat ran the update.
+        setNote({
+          text: r.action === 'update'
+            ? `Pat updated its forms to ${r.newestVersion}. These forms belong to Pat.`
+            : `Pat already has the latest forms (${r.newestVersion}). These forms belong to Pat.`,
+        });
+        if (r.action === 'update') await load();
+      } else if (r.action === 'update') {
         setNote({ text: `Updated forms to ${r.newestVersion}` });
         await load();
       } else {

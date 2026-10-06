@@ -16,19 +16,78 @@ Phat is a separate project. It isn't affiliated with Pat or its maintainers, nor
   <br><em>Phone view</em>
 </p>
 
+## Winlink approval is pending
+
+Winlink hasn't approved Phat, in two ways: its client name and an API key. Phat asked the Winlink Development Team to accept its client name in October 2026. The team replied that it is holding new client requests while it writes rules for third-party clients, so the request waits on that backlog and on the new documentation. Phat will ask for an API key once that documentation is out. Approval may come late or never, so this README describes how to use Phat without it.
+
+**Winlink's servers refuse Phat by name.** The production Common Message Server (CMS) only accepts client programs it knows. To send and receive Winlink mail, [connect through Pat](#connecting-through-pat), set up just below. Telnet to Winlink's test server also works (see [Winlink CMS access](#winlink-cms-access)), and peer-to-peer sessions don't involve the CMS at all.
+
+**Phat has no Winlink API key.** Some features call the Winlink API at api.winlink.org, which needs an access key issued by the Winlink Development Team to each client program. The key issued to Pat belongs to Pat, and Pat's maintainer asked that Phat not use it (see [Pat's maintainer's agreement](#pats-maintainers-agreement)). Until Phat has its own key, these three don't work:
+
+- **RMS gateway list.** Phat can't download a fresh list. The Connect dialog still shows the list compiled into Phat itself, a snapshot that came with the source code Phat was forked from, so it's there whether or not you have Pat installed. Gateways added or changed since then won't appear, and Update cache reports the missing key. If you have Pat, Phat can use Pat's list instead, which Pat keeps current with its own key: the first-run copy brings it over, and `phat rmslist --from-pat` copies Pat's latest whenever you want.
+- **Account creation.** Phat can't register a new Winlink account, from Settings or from `phat init`.
+- **Password recovery.** Phat can't read or set your account's password recovery email.
+
+To create an account or change its recovery email, use Pat or another Winlink client, or your account settings at [winlink.org](https://winlink.org/).
+
+The same key also sits behind a few smaller checks, which are skipped for now: whether your callsign has an account, whether your password is correct, the Message Pickup Station commands (`phat mps`), and the daily version report Pat sends to Winlink. Settings shows a warning mark beside your callsign instead of the account's status. Sending and receiving mail don't use the Winlink API and are unaffected.
+
+## Getting connected
+
+New to Winlink? Install Pat and get it sending and receiving mail on its own first ([Pat's releases](https://github.com/la5nta/pat/releases), [Pat's wiki](https://github.com/la5nta/pat/wiki)). Then install Phat. There are two ways to connect with it.
+
+### Connecting through Pat
+
+Phat works on Pat's mailbox and hands its connects to your running Pat. Pat stays exactly as you installed it: its own config, its own port, started however you start it now. It runs each session under its own client name, which the CMS accepts, and the mail goes into the mailbox Phat is showing.
+
+Leave Pat running as usual, on its default port 8080, and start Phat with `phat http`. Phat uses port 8081, so the two don't collide.
+
+The first time you open http://localhost:8081/ui, Phat asks "Connect through your Pat?". Click Connect through Pat, and Phat saves Pat's mailbox, forms and address in its own config and restarts on them. That's all the setup there is. Click Use Phat on its own instead to keep a separate copy of Pat's mail.
+
+If you started Phat before this version, or chose Use Phat on its own and changed your mind, set it up by hand:
+
+1. Start Phat on Pat's mailbox:
+
+   ```
+   # macOS
+   phat --mbox "$HOME/Library/Application Support/pat/mailbox" http
+   # Linux
+   phat --mbox ~/.local/share/pat/mailbox http
+   ```
+
+2. Open http://localhost:8081/ui, go to Settings > General and set Connect through Pat to Pat's address, `http://localhost:8080`. Click Save, and in the Restart required dialog that opens, click Restart now so Phat picks up the setting.
+
+Started this way, Phat needs the same `--mbox` every time, whether from a terminal or a service.
+
+Pat and Phat now show the same mail, with two exceptions. Messages you move into folders you made in Phat stay on disk, but Pat doesn't show them, because Pat has no folders of your own, only Inbox, Outbox, Sent and Archive. Move one back to Inbox or Archive and Pat shows it again. Stars and labels are Phat's alone, so Pat never shows them.
+
+The Connect dialog then offers Direct or Through Pat. It starts on Through Pat and remembers your choice in each browser. Through Pat, the Connect, Abort and Disconnect buttons go to Pat, and Pat's status, session log, transfer progress and prompts appear in Phat's page as they would for a session of Phat's own. Direct runs the session in Phat as before, so peer-to-peer and the test server still work without Pat. Clear the setting to remove the choice. Make sure the address is Pat's (8080), not Phat's own (8081). If it points at Phat by mistake, a connect through Pat fails with an error saying so.
+
+### Connecting to Winlink's test server
+
+Without Pat, Phat can connect over telnet to cms-z, Winlink's test server, which accepts Phat by name and delivers mail like the production server. Add the alias described under [Winlink CMS access](#winlink-cms-access). Radio gateways relay to the production server, so over RF they refuse Phat until Winlink approves it.
+
+## Pat's maintainer's agreement
+
+Phat uses services set up for Pat. In October 2026, Pat's maintainer, Martin Hebnes Pedersen (LA5NTA), agreed to Phat fetching form template updates from Pat's server, api.getpat.io, and to Phat connecting through Pat as described above. He asked one thing in return: that Phat not use the Winlink API access key issued to Pat, which is why the features listed under [Winlink approval is pending](#winlink-approval-is-pending) are off until Phat has its own key.
+
+Phat's default greeting to peer-to-peer stations is also Pat's, "Open source Winlink client - getpat.io"; you can change it with `motd` in the config file.
+
 ## Installing
 
-Phat has no packaged releases yet. Build it from source (see Building), then run `phat http` and open http://localhost:8080/ui.
+Phat has no packaged releases yet. Build it from source (see Building), then run `phat http` and open http://localhost:8081/ui.
 
-On first run, Phat looks for a Pat installation and copies its config, mailbox and forms into Phat's own directories: `~/.config/phat` and `~/.local/share/phat` on Linux, `~/Library/Application Support/phat` on macOS. It copies rather than moves, so Pat keeps working, and it never copies into a mailbox Phat already has. Without a Pat installation, Phat opens Settings first; enter your callsign, locator and Winlink password, and Save.
+On first run, Phat looks for a Pat installation and copies its config, mailbox, forms and saved RMS list into Phat's own directories: `~/.config/phat` and `~/.local/share/phat` on Linux, `~/Library/Application Support/phat` on macOS. It copies rather than moves, so Pat keeps working, and it never copies into a mailbox Phat already has. Without a Pat installation, Phat opens Settings first; enter your callsign, locator and Winlink password, and Save.
 
 There's no Docker image for Phat yet. Pat's Dockerfile and compose file are still in the repository, but they build and run Pat's names and paths, so if you ran Pat in Docker, run Phat from a built binary for now.
 
 ### Running Phat beside Pat
 
-Phat and Pat install side by side: different binaries, different directories, different config files. The copy from Pat happens once, while Phat has no config of its own. After that the two mailboxes are separate copies, and mail fetched in one doesn't appear in the other.
+Phat and Pat install side by side: different binaries, different directories, different config files. The copy from Pat happens once, while Phat has no config of its own. After that the two mailboxes are separate copies, and mail fetched in one doesn't appear in the other, unless you start Phat on Pat's mailbox as [Connecting through Pat](#connecting-through-pat) describes.
 
-Both default to port 8080, and the copied config keeps Pat's `http_addr`. To run them at the same time, give Phat its own port, either with `phat http -a localhost:8081` or by changing `http_addr` in Phat's config file.
+Pat uses port 8080 and Phat uses 8081, so both run at the same time with no extra steps. When the first-run copy brings over Pat's config, Phat's copy moves off Pat's port, to 8081, or to 8082 if Pat uses 8081. Pat's own config isn't touched. To use a different port, run `phat http -a localhost:<port>` or change `http_addr` in Phat's config file.
+
+With its own copy of the forms, Phat can fall behind Pat's. `phat templates from-pat` replaces Phat's forms with a copy of Pat's current ones, and `phat rmslist --from-pat` does the same for the RMS list. Both only read from Pat.
 
 For setting up ARDOP, VARA, AX.25 and rig control, [Pat's wiki](https://github.com/la5nta/pat/wiki) applies to Phat unchanged.
 
@@ -46,9 +105,7 @@ Until Phat is on that list, connect over telnet to the test server instead. In S
 telnet://{mycall}:CMSTelnet@cms-z.winlink.org:8772/wl2k
 ```
 
-cms-z is a full Winlink server: mail sent through it reaches its recipients, and mail waiting for you is delivered. Radio gateways relay to the CMS, so expect the same refusal over RF until the name is approved. Peer-to-peer sessions don't involve the CMS and work as they do in Pat.
-
-Phat also uses services set up for Pat. It calls the Winlink API with the access key the Winlink Development Team issued to Pat, for the RMS gateway list, account creation and password recovery. It fetches form template updates from Pat's server, api.getpat.io. And its default greeting to peer-to-peer stations is Pat's, "Open source Winlink client - getpat.io"; you can change it with `motd` in the config file.
+cms-z is a full Winlink server: mail sent through it reaches its recipients, and mail waiting for you is delivered. Radio gateways relay to the CMS, so expect the same refusal over RF until the name is approved. Peer-to-peer sessions don't involve the CMS and work as they do in Pat. To reach the production CMS, and through it the radio gateways, [connect through Pat](#connecting-through-pat).
 
 ## The mailbox
 
@@ -75,7 +132,7 @@ New message opens the composer. Type callsigns or addresses into To and Cc, sepa
   <br><em>Compose</em>
 </p>
 
-**Winlink forms.** In the composer, Forms opens the catalog of standard templates; type to filter (for example "213" for ICS-213). Update forms downloads the latest templates. Picking one opens the form in a new tab. Submit it there, and back in Phat the subject, body and form files fill into the composer, ready to address and send.
+**Winlink forms.** In the composer, Forms opens the catalog of standard templates; type to filter (for example "213" for ICS-213). Update forms downloads the latest templates. When Phat uses Pat's forms folder, Update forms asks Pat to run the update, and says the forms belong to Pat; Pat has to be running. `phat templates update` doesn't touch Pat's folder. Picking one opens the form in a new tab. Submit it there, and back in Phat the subject, body and form files fill into the composer, ready to address and send.
 
 **Position reports.** Position report, at the foot of the sidebar, posts your location to Winlink. Phat fills in the position from a GPS on the machine running it, falls back to the browser's location, or takes latitude and longitude typed by hand, with an optional comment.
 
@@ -124,7 +181,7 @@ While a session is dialing, the Connect button becomes Abort; once connected it 
 
 Settings has sections for General (callsign, locator, Winlink password, auxiliary addresses), Connect aliases, Transports, Rig control, GPSd, Schedule and Interface. Appearance, under Interface, switches between System, Light and Dark as you click. Save writes the config, and Restart now restarts Phat to apply it and reports when it's back.
 
-If your callsign has no Winlink account yet, General says so and offers Create one, which walks you through registering it.
+General checks whether your callsign has a Winlink account and offers to create one. Both need a Winlink API key, so for now General shows a warning mark instead; see [Winlink approval is pending](#winlink-approval-is-pending).
 
 <p align="center">
   <img src="docs/screenshot-settings.png" alt="The Settings page: a section list on the left and the General section with callsign, locator, password, auxiliary addresses and download limit" width="100%">

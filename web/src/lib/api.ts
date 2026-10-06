@@ -75,8 +75,14 @@ export const send = (form: FormData) => call('/api/mailbox/out', { method: 'POST
 export const config = () => json<Config>('/api/config');
 export const saveConfig = (c: Config) => call('/api/config', req('PUT', c));
 export const reload = () => call('/api/reload', req('POST'));
+// The first-run question "Connect through your Pat?" and what Yes would set.
+export interface PatChoice { ask: boolean; pat_url?: string; mailbox?: string; forms?: string }
+export const patChoice = () => json<PatChoice>('/api/pat-choice');
+export const answerPatChoice = (use: boolean) => call('/api/pat-choice', req('POST', { use }));
 export const status = () => json<Status>('/api/status');
-export const connect = (url: string) => json<{ NumReceived: number }>(`/api/connect?url=${enc(url)}`);
+// connect runs a session; viaPat hands it to the Pat named in connect_via.
+export const connect = (url: string, viaPat = false) =>
+  json<{ NumReceived: number }>(`/api/connect?url=${enc(url)}${viaPat ? '&via=pat' : ''}`);
 export const disconnect = (dirty: boolean) => call(`/api/disconnect?dirty=${dirty}`);
 export const qsy = (transport: string, freq: number | string) => call('/api/qsy', req('POST', { transport, freq }));
 export const bandwidths = (mode: string) => json<{ mode: string; bandwidths: string[]; default?: string }>(`/api/bandwidths?mode=${enc(mode)}`);

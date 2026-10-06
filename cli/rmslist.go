@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/la5nta/pat/app"
+	"github.com/la5nta/pat/internal/directories"
 	"github.com/spf13/pflag"
 )
 
@@ -20,6 +21,7 @@ func RMSListHandle(ctx context.Context, a *app.App, args []string) {
 	mode := set.StringP("mode", "m", "", "")
 	band := set.StringP("band", "b", "", "")
 	forceDownload := set.BoolP("force-download", "d", false, "")
+	fromPat := set.BoolP("from-pat", "p", false, "")
 	byDistance := set.BoolP("sort-distance", "s", false, "")
 	byLinkQuality := set.BoolP("sort-link-quality", "q", false, "Sort by predicted link quality")
 	set.Parse(args)
@@ -27,6 +29,14 @@ func RMSListHandle(ctx context.Context, a *app.App, args []string) {
 	var query string
 	if len(set.Args()) > 0 {
 		query = strings.ToUpper(set.Args()[0])
+	}
+
+	if *fromPat {
+		files, err := directories.CopyRMSListFromPat()
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Copied Pat's RMS list (%d file(s)) from %s", len(files), directories.PatDataDir())
 	}
 
 	*mode = strings.ToLower(*mode)

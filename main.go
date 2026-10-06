@@ -45,7 +45,10 @@ func main() {
 		os.Exit(1)
 	}
 	var opts app.Options
-	optionsSet(&opts).Parse(options)
+	set := optionsSet(&opts)
+	set.Parse(options)
+	opts.MailboxPathSet = set.Changed("mbox")
+	opts.FormsPathSet = set.Changed("forms")
 
 	if len(args) == 0 {
 		args = append(args, "")

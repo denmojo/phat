@@ -43,7 +43,7 @@ var Commands = []app.Command{
 		Desc:  "Run http server for web UI.",
 		Usage: "[options]",
 		Options: map[string]string{
-			"--addr, -a": "Listen address. Default is :8080.",
+			"--addr, -a": "Listen address. Default is localhost:8081.",
 		},
 		HandleFunc: HTTPHandle,
 		MayConnect: true,
@@ -115,7 +115,8 @@ var Commands = []app.Command{
 		Options: map[string]string{
 			"--mode, -m":              "Mode filter.",
 			"--band, -b":              "Band filter (e.g. '80m').",
-			"--force-download, -d":    "Force download of latest list from winlink.org.",
+			"--force-download, -d":    "Force download of latest list from winlink.org (needs a Winlink API key, which Phat doesn't have yet).",
+			"--from-pat, -p":          "Copy Pat's current RMS list first. Pat keeps it up to date with its own key, so this is how Phat gets a current list while it has none.",
 			"--sort-distance, -s":     "Sort by distance",
 			"--sort-link-quality, -q": "Sort by predicted link quality (requires VOACAP)",
 		},

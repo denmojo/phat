@@ -16,6 +16,7 @@ export type FormState = {
   password: string;
   aux: string[];
   autoDownload: string;
+  connectVia: string;
   listen: string[];
   aliases: AliasRow[];
   rigs: RigRow[];
@@ -53,6 +54,7 @@ export function fromConfig(config: Config): FormState {
     password: c.secure_login_password ?? '',
     aux: (c.auxiliary_addresses ?? []).filter((a: string) => a && a.trim()),
     autoDownload: str(c.auto_download_size_limit ?? -1),
+    connectVia: c.connect_via ?? '',
     listen: [...(c.listen ?? [])],
     aliases: Object.entries(c.connect_aliases ?? {}).map(([name, url]) => ({ name, url: url as string })),
     rigs: Object.entries(c.hamlib_rigs ?? {}).map(([name, r]: [string, any]) => ({ name, network: r.network ?? '', address: r.address ?? '', vfo: r.VFO ?? '' })),
@@ -112,7 +114,7 @@ export function toConfig(original: Config, s: FormState): Config {
 
   const keepAppearance = s.appearance === 'system' && !o.ui?.appearance;
 
-  return {
+  const out: Raw = {
     ...o,
     mycall: s.mycall.trim(),
     locator: s.locator.trim(),
@@ -150,4 +152,8 @@ export function toConfig(original: Config, s: FormState): Config {
     gpsd: { ...o.gpsd, addr: s.gpsd.addr, update_locator: s.gpsd.updateLocator, allow_forms: s.gpsd.allowForms, use_server_time: s.gpsd.useServerTime },
     schedule: collection(o.schedule, schedule, Object.keys(schedule).length === 0),
   };
+  const via = s.connectVia.trim();
+  if (via) out.connect_via = via;
+  else delete out.connect_via;
+  return out;
 }

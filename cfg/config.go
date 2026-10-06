@@ -74,8 +74,23 @@ type Config struct {
 
 	// Default HTTP listen address (for web UI).
 	//
-	// Use ":8080" to listen on any device, port 8080.
+	// Use ":8081" to listen on any device, port 8081.
 	HTTPAddr string `json:"http_addr"`
+
+	// Address of a running Pat to hand web connects to, sharing this
+	// mailbox. Empty means Phat connects itself.
+	//
+	// Example: "http://localhost:8080"
+	ConnectVia string `json:"connect_via,omitempty"`
+
+	// Mailbox and forms folders, when not Phat's own. Connecting through
+	// Pat sets them to Pat's. The --mbox and --forms flags override them.
+	MailboxPath string `json:"mailbox_path,omitempty"`
+	FormsPath   string `json:"forms_path,omitempty"`
+
+	// Set by the first-run copy from Pat: the web page asks once whether
+	// to connect through that Pat, then clears it.
+	AskUsePat bool `json:"ask_use_pat,omitempty"`
 
 	// Web UI preferences.
 	UI UIConfig `json:"ui"`
@@ -385,7 +400,7 @@ type GPSdConfig struct {
 }
 
 var DefaultConfig = Config{
-	UI: UIConfig{Appearance: "system"},
+	UI:                    UIConfig{Appearance: "system"},
 	MOTD:                  []string{"Open source Winlink client - getpat.io"},
 	AuxAddrs:              []AuxAddr{},
 	ServiceCodes:          []string{"PUBLIC"},
@@ -394,7 +409,7 @@ var DefaultConfig = Config{
 		"telnet": "telnet://{mycall}:CMSTelnet@cms.winlink.org:8772/wl2k",
 	},
 	Listen:   []string{},
-	HTTPAddr: "localhost:8080",
+	HTTPAddr: "localhost:8081",
 	AX25: AX25Config{
 		Engine: DefaultAX25Engine(),
 		Beacon: BeaconConfig{
