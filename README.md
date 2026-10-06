@@ -132,7 +132,7 @@ New message opens the composer. Type callsigns or addresses into To and Cc, sepa
   <br><em>Compose</em>
 </p>
 
-**Winlink forms.** In the composer, Forms opens the catalog of standard templates; type to filter (for example "213" for ICS-213). Update forms downloads the latest templates. Picking one opens the form in a new tab. Submit it there, and back in Phat the subject, body and form files fill into the composer, ready to address and send.
+**Winlink forms.** In the composer, Forms opens the catalog of standard templates; type to filter (for example "213" for ICS-213). Update forms downloads the latest templates. When Phat uses Pat's forms folder, Update forms leaves it alone; update forms in Pat. Picking one opens the form in a new tab. Submit it there, and back in Phat the subject, body and form files fill into the composer, ready to address and send.
 
 **Position reports.** Position report, at the foot of the sidebar, posts your location to Winlink. Phat fills in the position from a GPS on the machine running it, falls back to the browser's location, or takes latitude and longitude typed by hand, with an optional comment.
 
