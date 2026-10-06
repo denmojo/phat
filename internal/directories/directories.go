@@ -197,14 +197,16 @@ func MigrateFromPat() error {
 	if err := copyFile(filepath.Join(patCfg, "config.json"), dst); err != nil {
 		return err
 	}
-	return movePhatOffPatsPort(dst)
+	return adjustCopiedConfig(dst)
 }
 
-// movePhatOffPatsPort rewrites http_addr in Phat's copy of Pat's config from
-// port 8080, Pat's default, to 8081, Phat's, keeping the host. Pat keeps
-// running on 8080 as installed and Phat starts beside it with no flags. A
-// port the user chose for Pat is left as it is.
-func movePhatOffPatsPort(path string) error {
+// adjustCopiedConfig makes two changes to Phat's copy of Pat's config.
+// It moves http_addr from port 8080, Pat's default, to 8081, Phat's,
+// keeping the host, so Pat keeps 8080 as installed and Phat starts beside
+// it with no flags; a port the user chose for Pat is left as it is. And it
+// sets ask_use_pat, so the web page asks once whether to connect through
+// this Pat.
+func adjustCopiedConfig(path string) error {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return err
@@ -213,20 +215,19 @@ func movePhatOffPatsPort(path string) error {
 	if err := json.Unmarshal(b, &cfg); err != nil {
 		return nil // not ours to repair; config loading reports it
 	}
+	cfg["ask_use_pat"] = json.RawMessage("true")
 	var addr string
-	if raw, ok := cfg["http_addr"]; !ok || json.Unmarshal(raw, &addr) != nil {
-		return nil
+	if raw, ok := cfg["http_addr"]; ok && json.Unmarshal(raw, &addr) == nil {
+		if host, port, err := net.SplitHostPort(addr); err == nil && port == "8080" {
+			moved := net.JoinHostPort(host, "8081")
+			cfg["http_addr"], _ = json.Marshal(moved)
+			log.Printf("Phat's web port is 8081 (Pat keeps 8080): http_addr %s -> %s", addr, moved)
+		}
 	}
-	host, port, err := net.SplitHostPort(addr)
-	if err != nil || port != "8080" {
-		return nil
-	}
-	cfg["http_addr"], _ = json.Marshal(net.JoinHostPort(host, "8081"))
 	out, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return err
 	}
-	log.Printf("Phat's web port is 8081 (Pat keeps 8080): http_addr %s -> %s", addr, net.JoinHostPort(host, "8081"))
 	return os.WriteFile(path, append(out, '\n'), 0o644)
 }
 

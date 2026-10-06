@@ -68,6 +68,23 @@ type Options struct {
 	LogPath      string
 	EventLogPath string
 	FormsPath    string
+
+	// Set when --mbox or --forms was given, so the flag wins over the
+	// mailbox_path and forms_path config settings.
+	MailboxPathSet bool
+	FormsPathSet   bool
+}
+
+// applyConfigFolders uses the config's mailbox and forms folders (set
+// when connecting through Pat) unless a flag named one.
+func applyConfigFolders(opts Options, c cfg.Config) Options {
+	if !opts.MailboxPathSet && c.MailboxPath != "" {
+		opts.MailboxPath = filepath.Clean(c.MailboxPath)
+	}
+	if !opts.FormsPathSet && c.FormsPath != "" {
+		opts.FormsPath = filepath.Clean(c.FormsPath)
+	}
+	return opts
 }
 
 type App struct {
@@ -214,6 +231,8 @@ func (a *App) Run(ctx context.Context, cmd Command, args []string) {
 	if err != nil {
 		log.Fatalf("Unable to load/write config: %s", err)
 	}
+	a.options = applyConfigFolders(a.options, a.config)
+	debug.Printf("Mailbox dir is\t'%s' (after config)", a.options.MailboxPath)
 
 	// Initialize logger
 	f, err := os.Create(a.options.LogPath)

@@ -83,6 +83,15 @@ type Config struct {
 	// Example: "http://localhost:8080"
 	ConnectVia string `json:"connect_via,omitempty"`
 
+	// Mailbox and forms folders, when not Phat's own. Connecting through
+	// Pat sets them to Pat's. The --mbox and --forms flags override them.
+	MailboxPath string `json:"mailbox_path,omitempty"`
+	FormsPath   string `json:"forms_path,omitempty"`
+
+	// Set by the first-run copy from Pat: the web page asks once whether
+	// to connect through that Pat, then clears it.
+	AskUsePat bool `json:"ask_use_pat,omitempty"`
+
 	// Web UI preferences.
 	UI UIConfig `json:"ui"`
 

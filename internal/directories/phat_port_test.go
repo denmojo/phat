@@ -38,6 +38,9 @@ func TestMigrateFromPatMovesPhatOffPatsPort(t *testing.T) {
 			if got["http_addr"] != tc.want {
 				t.Errorf("http_addr = %v, want %s", got["http_addr"], tc.want)
 			}
+			if got["ask_use_pat"] != true {
+				t.Errorf("ask_use_pat = %v, want true so the web page asks once", got["ask_use_pat"])
+			}
 			if got["mycall"] != "N0CALL" {
 				t.Errorf("other settings lost: %v", got)
 			}
