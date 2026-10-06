@@ -24,7 +24,7 @@ Winlink hasn't approved Phat, in two ways. Phat's requests for both are waiting 
 
 **Phat has no Winlink API key.** Some features call the Winlink API at api.winlink.org, which needs an access key issued by the Winlink Development Team to each client program. The key issued to Pat belongs to Pat, and Pat's maintainer asked that Phat not use it (see [Pat's maintainer's agreement](#pats-maintainers-agreement)). Until Phat has its own key, these three don't work:
 
-- **RMS gateway list.** Phat can't download a fresh list. The Connect dialog still shows the list built into Phat (the one it inherited from Pat), or the copy Phat already saved if you used it before. Gateways added or changed since then won't appear, and Update cache reports the missing key.
+- **RMS gateway list.** Phat can't download a fresh list. The Connect dialog still shows the list built into Phat (the one it inherited from Pat). Gateways added or changed since then won't appear, and Update cache reports the missing key.
 - **Account creation.** Phat can't register a new Winlink account, from Settings or from `phat init`.
 - **Password recovery.** Phat can't read or set your account's password recovery email.
 
