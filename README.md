@@ -85,7 +85,7 @@ There's no Docker image for Phat yet. Pat's Dockerfile and compose file are stil
 
 Phat and Pat install side by side: different binaries, different directories, different config files. The copy from Pat happens once, while Phat has no config of its own. After that the two mailboxes are separate copies, and mail fetched in one doesn't appear in the other, unless you start Phat on Pat's mailbox as [Connecting through Pat](#connecting-through-pat) describes.
 
-Pat uses port 8080 and Phat uses 8081, so both run at the same time with no extra steps. When the first-run copy brings over a Pat config set to 8080, Phat's copy moves to 8081; Pat's own config isn't touched. To use a different port, run `phat http -a localhost:<port>` or change `http_addr` in Phat's config file.
+Pat uses port 8080 and Phat uses 8081, so both run at the same time with no extra steps. When the first-run copy brings over Pat's config, Phat's copy moves off Pat's port, to 8081, or to 8082 if Pat uses 8081. Pat's own config isn't touched. To use a different port, run `phat http -a localhost:<port>` or change `http_addr` in Phat's config file.
 
 With its own copy of the forms, Phat can fall behind Pat's. `phat templates from-pat` replaces Phat's forms with a copy of Pat's current ones, and `phat rmslist --from-pat` does the same for the RMS list. Both only read from Pat.
 
