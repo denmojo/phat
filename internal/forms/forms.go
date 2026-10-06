@@ -103,6 +103,10 @@ type UpdateResponse struct {
 	Action        string `json:"action"`
 }
 
+// ErrPatsForms refuses a forms update while Phat uses Pat's forms folder,
+// which Pat keeps current itself.
+var ErrPatsForms = errors.New("Phat uses Pat's forms folder; update forms in Pat instead")
+
 var client = httpClient{http.Client{Timeout: 10 * time.Second}}
 
 // NewManager instantiates the forms manager
@@ -372,6 +376,10 @@ func (m *Manager) GetFormTemplateHandler(w http.ResponseWriter, r *http.Request)
 // UpdateFormTemplatesHandler handles API calls to update form templates.
 func (m *Manager) UpdateFormTemplatesHandler(w http.ResponseWriter, r *http.Request) {
 	response, err := m.UpdateFormTemplates(r.Context())
+	if errors.Is(err, ErrPatsForms) {
+		http.Error(w, err.Error(), http.StatusConflict)
+		return
+	}
 	if err != nil {
 		http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
 		return
@@ -382,6 +390,9 @@ func (m *Manager) UpdateFormTemplatesHandler(w http.ResponseWriter, r *http.Requ
 
 // UpdateFormTemplates handles searching for and installing the latest version of the form templates.
 func (m *Manager) UpdateFormTemplates(ctx context.Context) (UpdateResponse, error) {
+	if directories.IsPatsForms(m.config.FormsPath) {
+		return UpdateResponse{}, ErrPatsForms
+	}
 	if err := os.MkdirAll(m.config.FormsPath, 0o755); err != nil {
 		return UpdateResponse{}, fmt.Errorf("can't write to forms dir [%w]", err)
 	}

@@ -24,6 +24,12 @@ var (
 func PatConfigDir() string { return filepath.Join(xdg.ConfigHome, "pat") }
 func PatDataDir() string   { return filepath.Join(xdg.DataHome, "pat") }
 
+// IsPatsForms reports whether dir is Pat's own forms folder.
+func IsPatsForms(dir string) bool {
+	same, _ := sameDir(dir, filepath.Join(PatDataDir(), "Standard_Forms"))
+	return same
+}
+
 func patRMSLists() ([]string, error) {
 	return filepath.Glob(filepath.Join(PatDataDir(), "rmslist*.json"))
 }
