@@ -201,11 +201,10 @@ func MigrateFromPat() error {
 }
 
 // adjustCopiedConfig makes two changes to Phat's copy of Pat's config.
-// It moves http_addr from port 8080, Pat's default, to 8081, Phat's,
-// keeping the host, so Pat keeps 8080 as installed and Phat starts beside
-// it with no flags; a port the user chose for Pat is left as it is. And it
-// sets ask_use_pat, so the web page asks once whether to connect through
-// this Pat.
+// It moves http_addr off Pat's port, keeping the host: Phat takes 8081,
+// or 8082 when Pat is on 8081, so Pat keeps its port as installed and
+// Phat starts beside it with no flags. And it sets ask_use_pat, so the
+// web page asks once whether to connect through this Pat.
 func adjustCopiedConfig(path string) error {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -218,10 +217,14 @@ func adjustCopiedConfig(path string) error {
 	cfg["ask_use_pat"] = json.RawMessage("true")
 	var addr string
 	if raw, ok := cfg["http_addr"]; ok && json.Unmarshal(raw, &addr) == nil {
-		if host, port, err := net.SplitHostPort(addr); err == nil && port == "8080" {
-			moved := net.JoinHostPort(host, "8081")
+		if host, port, err := net.SplitHostPort(addr); err == nil {
+			ours := "8081"
+			if port == ours {
+				ours = "8082"
+			}
+			moved := net.JoinHostPort(host, ours)
 			cfg["http_addr"], _ = json.Marshal(moved)
-			log.Printf("Phat's web port is 8081 (Pat keeps 8080): http_addr %s -> %s", addr, moved)
+			log.Printf("Phat's web port is %s (Pat keeps %s): http_addr %s -> %s", ours, port, addr, moved)
 		}
 	}
 	out, err := json.MarshalIndent(cfg, "", "  ")

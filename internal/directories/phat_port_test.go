@@ -14,7 +14,9 @@ func TestMigrateFromPatMovesPhatOffPatsPort(t *testing.T) {
 		{"localhost:8080", "localhost:8081"},
 		{":8080", ":8081"},
 		{"0.0.0.0:8080", "0.0.0.0:8081"},
-		{"localhost:9000", "localhost:9000"}, // a port Pat's user chose is left alone
+		{"localhost:9000", "localhost:8081"}, // any port Pat holds, Phat leaves to Pat
+		{"localhost:8081", "localhost:8082"},
+		{"localhost:8082", "localhost:8081"},
 	} {
 		t.Run(tc.pat, func(t *testing.T) {
 			home := t.TempDir()

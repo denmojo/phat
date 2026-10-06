@@ -3,8 +3,10 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/la5nta/pat/app"
@@ -131,5 +133,39 @@ func TestPatChoiceNoKeepsPhatOnItsOwn(t *testing.T) {
 	c := savedConfig(t, h)
 	if c.AskUsePat || c.MailboxPath != "" || c.FormsPath != "" || c.ConnectVia != "" {
 		t.Errorf("No changed more than the question: %+v", c)
+	}
+}
+
+// Only a Phat that was asked takes an answer: a POST from anywhere else
+// must not repoint an existing install at Pat.
+func TestPatChoiceRefusesAnswerWhenNotAsked(t *testing.T) {
+	fakePatInstall(t, `{"mycall":"N0CALL"}`)
+	h, _ := newTestHandler(t)
+
+	rec, _ := do(t, h, "POST", "/api/pat-choice", map[string]bool{"use": true})
+	if rec.Code != http.StatusConflict {
+		t.Errorf("POST without the question: %d, want 409", rec.Code)
+	}
+	if c := savedConfig(t, h); c.MailboxPath != "" || c.ConnectVia != "" {
+		t.Errorf("config changed: %+v", c)
+	}
+}
+
+// A cross-site form or text/plain POST skips the browser's preflight, so
+// the answer must arrive as JSON.
+func TestPatChoiceRequiresJSON(t *testing.T) {
+	fakePatInstall(t, `{"mycall":"N0CALL"}`)
+	h, _ := newTestHandler(t)
+	askUsePat(t, h)
+
+	req := httptest.NewRequest("POST", "/api/pat-choice", strings.NewReader(`{"use":true}`))
+	req.Header.Set("Content-Type", "text/plain")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnsupportedMediaType {
+		t.Errorf("text/plain POST: %d, want 415", rec.Code)
+	}
+	if c := savedConfig(t, h); c.MailboxPath != "" || !c.AskUsePat {
+		t.Errorf("config changed: %+v", c)
 	}
 }

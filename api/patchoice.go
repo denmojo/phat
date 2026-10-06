@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"mime"
 	"net"
 	"net/http"
 	"os"
@@ -81,6 +82,16 @@ func (h Handler) patChoiceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Only JSON, so a cross-site page can't send the answer without the
+	// browser's preflight, and only while the question is open.
+	if mt, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type")); mt != "application/json" {
+		http.Error(w, "send the answer as application/json", http.StatusUnsupportedMediaType)
+		return
+	}
+	if !c.AskUsePat || !havePat {
+		http.Error(w, "Phat isn't asking about Pat", http.StatusConflict)
+		return
+	}
 	var v struct {
 		Use bool `json:"use"`
 	}
@@ -89,10 +100,6 @@ func (h Handler) patChoiceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if v.Use {
-		if !havePat {
-			http.Error(w, "no Pat install found", http.StatusConflict)
-			return
-		}
 		c.MailboxPath, c.FormsPath, c.ConnectVia = pat.Mailbox, pat.Forms, pat.PatURL
 	}
 	c.AskUsePat = false
