@@ -145,7 +145,7 @@ func NewHandler(app *app.App) *Handler {
 	r.HandleFunc("/api/form", h.FormsManager().GetFormDataHandler).Methods("GET")
 	r.HandleFunc("/api/forms", h.FormsManager().GetFormTemplateHandler).Methods("GET")
 	r.PathPrefix("/api/forms/").Handler(http.StripPrefix("/api/forms/", http.HandlerFunc(h.FormsManager().GetFormAssetHandler))).Methods("GET")
-	r.HandleFunc("/api/formsUpdate", h.FormsManager().UpdateFormTemplatesHandler).Methods("POST")
+	r.HandleFunc("/api/formsUpdate", h.formsUpdateHandler).Methods("POST")
 
 	r.HandleFunc("/api/winlink-account/password-recovery-email", h.winlinkPasswordRecoveryEmailHandler).Methods("GET", "PUT")
 	r.HandleFunc("/api/winlink-account/registration", h.winlinkAccountRegistrationHandler).Methods("GET", "POST")
