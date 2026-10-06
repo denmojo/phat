@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -49,6 +50,10 @@ func InitHandle(ctx context.Context, a *app.App, args []string) {
 	// Check if account exists via Winlink API
 	fmt.Printf("\nChecking Winlink account: %s...\n", callsign)
 	switch exists, err := accountExists(ctx, callsign); {
+	case errors.Is(err, cmsapi.ErrNoAccessKey):
+		fmt.Println("⚠ Phat can't check Winlink accounts yet: it has no Winlink API access key. Assuming the account exists.")
+		fmt.Println("  To create an account or recover a password, use Pat or another Winlink client.")
+		handleExistingAccount(ctx, &cfg)
 	case err != nil:
 		fmt.Println("⚠ Check failed due to network error. Assuming account exists.")
 		handleExistingAccount(ctx, &cfg)
@@ -268,7 +273,7 @@ func accountExists(ctx context.Context, callsign string) (exists bool, err error
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		exists, err = cmsapi.AccountExists(ctx, callsign)
-		if err == nil {
+		if err == nil || errors.Is(err, cmsapi.ErrNoAccessKey) {
 			break
 		}
 		debug.Printf("Winlink API call failed: %v. Retrying...", err)
@@ -283,7 +288,7 @@ func validatePassword(ctx context.Context, callsign, password string) (valid boo
 		defer cancel()
 		valid, err = cmsapi.ValidatePassword(ctx, callsign, password)
 		cancel()
-		if err == nil {
+		if err == nil || errors.Is(err, cmsapi.ErrNoAccessKey) {
 			break
 		}
 		debug.Printf("Winlink API call failed: %v. Retrying...", err)
@@ -298,7 +303,7 @@ func getPasswordRecoveryEmail(ctx context.Context, callsign, password string) (e
 		defer cancel()
 		email, err = cmsapi.PasswordRecoveryEmailGet(ctx, callsign, password)
 		cancel()
-		if err == nil {
+		if err == nil || errors.Is(err, cmsapi.ErrNoAccessKey) {
 			break
 		}
 		debug.Printf("Winlink API call failed: %v. Retrying...", err)

@@ -32,6 +32,9 @@ func getJSON(ctx context.Context, path string, queryParams url.Values, v interfa
 }
 
 func doJSON(req *http.Request, v interface{}) error {
+	if AccessKey == "" {
+		return ErrNoAccessKey
+	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
