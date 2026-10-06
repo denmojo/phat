@@ -28,7 +28,7 @@ Winlink hasn't approved Phat, in two ways: its client name and an API key. Phat 
 - **Account creation.** Phat can't register a new Winlink account, from Settings or from `phat init`.
 - **Password recovery.** Phat can't read or set your account's password recovery email.
 
-Use other means for these: Pat or another Winlink client, or your account settings at [winlink.org](https://winlink.org/).
+To create an account or change its recovery email, use Pat or another Winlink client, or your account settings at [winlink.org](https://winlink.org/).
 
 The same key also sits behind a few smaller checks, which are skipped for now: whether your callsign has an account, whether your password is correct, the Message Pickup Station commands (`phat mps`), and the daily version report Pat sends to Winlink. Settings shows a warning mark beside your callsign instead of the account's status. Sending and receiving mail don't use the Winlink API and are unaffected.
 
