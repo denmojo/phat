@@ -32,20 +32,35 @@ Use other means for these: Pat or another Winlink client, or your account settin
 
 The same key also sits behind a few smaller checks, which are skipped for now: whether your callsign has an account, whether your password is correct, the Message Pickup Station commands (`phat mps`), and the daily version report Pat sends to Winlink. Settings shows a warning mark beside your callsign instead of the account's status. Sending and receiving mail don't use the Winlink API and are unaffected.
 
-## Connecting through Pat
+## Getting connected
 
-Phat can hand its connects to a running Pat that shares its mailbox. Pat runs the session under its own client name, which the CMS accepts, and writes the mail into the mailbox Phat reads, so nothing needs copying back. You need Pat installed alongside Phat ([Pat's releases](https://github.com/la5nta/pat/releases)).
+New to Winlink? Install Pat and get it sending and receiving mail on its own first ([Pat's releases](https://github.com/la5nta/pat/releases), [Pat's wiki](https://github.com/la5nta/pat/wiki)). Then install Phat. There are two ways to connect with it.
 
-1. Run Pat against Phat's mailbox, on its own port. Phat's mailbox is the `mailbox` folder in its data directory: `~/.local/share/phat/mailbox` on Linux, `~/Library/Application Support/phat/mailbox` on macOS.
+### Connecting through Pat
+
+Phat works on Pat's mailbox and hands its connects to your running Pat. Pat stays exactly as you installed it: its own config, its own port, started however you start it now. It runs each session under its own client name, which the CMS accepts, and the mail goes into the mailbox Phat is showing.
+
+1. Leave Pat running as usual, on its default port 8080.
+2. Start Phat on Pat's mailbox and on a port of its own:
 
    ```
-   pat --mbox "$HOME/Library/Application Support/phat/mailbox" http -a localhost:8080
+   # macOS
+   phat --mbox "$HOME/Library/Application Support/pat/mailbox" http -a localhost:8081
+   # Linux
+   phat --mbox ~/.local/share/pat/mailbox http -a localhost:8081
    ```
 
-2. Run Phat on another port, for example `phat http -a localhost:8081`.
-3. In Phat, open Settings > General and set Connect through Pat to Pat's address, `http://localhost:8080`. Save, then Restart now.
+3. Open http://localhost:8081/ui, go to Settings > General and set Connect through Pat to Pat's address, `http://localhost:8080`. Save, then Restart now.
+
+Start Phat with the same `--mbox` every time, whether from a terminal or a service.
+
+Pat and Phat now show the same mail, with two exceptions. Messages you move into folders you made in Phat stay on disk, but Pat doesn't show them; move one back to Inbox or Archive and Pat shows it again. Stars and labels are Phat's alone, so Pat never shows them.
 
 The Connect dialog then offers Direct or Through Pat. It starts on Through Pat and remembers your choice in each browser. Through Pat, the Connect, Abort and Disconnect buttons go to Pat, and Pat's status, session log, transfer progress and prompts appear in Phat's page as they would for a session of Phat's own. Direct runs the session in Phat as before, so peer-to-peer and the test server still work without Pat. Clear the setting to remove the choice. An address that points back at Phat itself is refused.
+
+### Connecting to Winlink's test server
+
+Without Pat, Phat can connect over telnet to cms-z, Winlink's test server, which accepts Phat by name and delivers mail like the production server. Add the alias described under [Winlink CMS access](#winlink-cms-access). Radio gateways relay to the production server, so over RF they refuse Phat until Winlink approves it.
 
 ## Pat's maintainer's agreement
 
@@ -63,7 +78,7 @@ There's no Docker image for Phat yet. Pat's Dockerfile and compose file are stil
 
 ### Running Phat beside Pat
 
-Phat and Pat install side by side: different binaries, different directories, different config files. The copy from Pat happens once, while Phat has no config of its own. After that the two mailboxes are separate copies, and mail fetched in one doesn't appear in the other, unless you point Pat at Phat's mailbox as [Connecting through Pat](#connecting-through-pat) describes.
+Phat and Pat install side by side: different binaries, different directories, different config files. The copy from Pat happens once, while Phat has no config of its own. After that the two mailboxes are separate copies, and mail fetched in one doesn't appear in the other, unless you start Phat on Pat's mailbox as [Connecting through Pat](#connecting-through-pat) describes.
 
 Both default to port 8080, and the copied config keeps Pat's `http_addr`. To run them at the same time, give Phat its own port, either with `phat http -a localhost:8081` or by changing `http_addr` in Phat's config file.
 
