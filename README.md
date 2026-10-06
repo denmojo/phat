@@ -16,6 +16,18 @@ Phat is a separate project. It isn't affiliated with Pat or its maintainers, nor
   <br><em>Phone view</em>
 </p>
 
+## Not available yet: the Winlink API
+
+Some features call the Winlink API at api.winlink.org, which needs an access key issued by the Winlink Development Team to each client program. Phat doesn't have one yet. The key issued to Pat belongs to Pat, so Phat doesn't use it, and until Phat's own key is issued these three don't work:
+
+- **RMS gateway list.** Phat can't download a fresh list. The Connect dialog still shows the list built into Phat (the one it inherited from Pat), or the copy Phat already saved if you used it before. Gateways added or changed since then won't appear, and Update cache reports the missing key.
+- **Account creation.** Phat can't register a new Winlink account, from Settings or from `phat init`.
+- **Password recovery.** Phat can't read or set your account's password recovery email.
+
+Use other means for these: Pat or another Winlink client, or your account settings at [winlink.org](https://winlink.org/).
+
+The same key also sits behind a few smaller checks, which are skipped for now: whether your callsign has an account, whether your password is correct, the Message Pickup Station commands (`phat mps`), and the daily version report Pat sends to Winlink. Settings shows a warning mark beside your callsign instead of the account's status. Sending and receiving mail don't use the Winlink API and are unaffected.
+
 ## Installing
 
 Phat has no packaged releases yet. Build it from source (see Building), then run `phat http` and open http://localhost:8080/ui.
@@ -49,18 +61,6 @@ telnet://{mycall}:CMSTelnet@cms-z.winlink.org:8772/wl2k
 cms-z is a full Winlink server: mail sent through it reaches its recipients, and mail waiting for you is delivered. Radio gateways relay to the CMS, so expect the same refusal over RF until the name is approved. Peer-to-peer sessions don't involve the CMS and work as they do in Pat.
 
 Phat also uses services set up for Pat, with Pat's maintainer's agreement. It fetches form template updates from Pat's server, api.getpat.io. And its default greeting to peer-to-peer stations is Pat's, "Open source Winlink client - getpat.io"; you can change it with `motd` in the config file.
-
-### Not available yet: the Winlink API
-
-Some features call the Winlink API at api.winlink.org, which needs an access key issued by the Winlink Development Team to each client program. Phat doesn't have one yet. The key issued to Pat belongs to Pat, so Phat doesn't use it, and until Phat's own key is issued these three don't work:
-
-- **RMS gateway list.** Phat can't download a fresh list. The Connect dialog still shows the list built into Phat (the one it inherited from Pat), or the copy Phat already saved if you used it before. Gateways added or changed since then won't appear, and Update cache reports the missing key.
-- **Account creation.** Phat can't register a new Winlink account, from Settings or from `phat init`.
-- **Password recovery.** Phat can't read or set your account's password recovery email.
-
-Use other means for these: Pat or another Winlink client, or your account settings at [winlink.org](https://winlink.org/).
-
-The same key also sits behind a few smaller checks, which are skipped for now: whether your callsign has an account, whether your password is correct, the Message Pickup Station commands (`phat mps`), and the daily version report Pat sends to Winlink. Settings shows a warning mark beside your callsign instead of the account's status. Sending and receiving mail don't use the Winlink API and are unaffected.
 
 ## The mailbox
 
