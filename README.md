@@ -41,20 +41,20 @@ New to Winlink? Install Pat and get it sending and receiving mail on its own fir
 Phat works on Pat's mailbox and hands its connects to your running Pat. Pat stays exactly as you installed it: its own config, its own port, started however you start it now. It runs each session under its own client name, which the CMS accepts, and the mail goes into the mailbox Phat is showing.
 
 1. Leave Pat running as usual, on its default port 8080.
-2. Start Phat on Pat's mailbox and on a port of its own:
+2. Start Phat on Pat's mailbox. Phat uses port 8081, so the two don't collide:
 
    ```
    # macOS
-   phat --mbox "$HOME/Library/Application Support/pat/mailbox" http -a localhost:8081
+   phat --mbox "$HOME/Library/Application Support/pat/mailbox" http
    # Linux
-   phat --mbox ~/.local/share/pat/mailbox http -a localhost:8081
+   phat --mbox ~/.local/share/pat/mailbox http
    ```
 
-3. Open http://localhost:8081/ui, go to Settings > General and set Connect through Pat to Pat's address, `http://localhost:8080`. Save, then Restart now.
+3. Open http://localhost:8081/ui, go to Settings > General and set Connect through Pat to Pat's address, `http://localhost:8080`. Click Save, and in the Restart required dialog that opens, click Restart now so Phat picks up the setting.
 
 Start Phat with the same `--mbox` every time, whether from a terminal or a service.
 
-Pat and Phat now show the same mail, with two exceptions. Messages you move into folders you made in Phat stay on disk, but Pat doesn't show them; move one back to Inbox or Archive and Pat shows it again. Stars and labels are Phat's alone, so Pat never shows them.
+Pat and Phat now show the same mail, with two exceptions. Messages you move into folders you made in Phat stay on disk, but Pat doesn't show them, because Pat has no folders of your own, only Inbox, Outbox, Sent and Archive. Move one back to Inbox or Archive and Pat shows it again. Stars and labels are Phat's alone, so Pat never shows them.
 
 The Connect dialog then offers Direct or Through Pat. It starts on Through Pat and remembers your choice in each browser. Through Pat, the Connect, Abort and Disconnect buttons go to Pat, and Pat's status, session log, transfer progress and prompts appear in Phat's page as they would for a session of Phat's own. Direct runs the session in Phat as before, so peer-to-peer and the test server still work without Pat. Clear the setting to remove the choice. An address that points back at Phat itself is refused.
 
@@ -70,7 +70,7 @@ Phat's default greeting to peer-to-peer stations is also Pat's, "Open source Win
 
 ## Installing
 
-Phat has no packaged releases yet. Build it from source (see Building), then run `phat http` and open http://localhost:8080/ui.
+Phat has no packaged releases yet. Build it from source (see Building), then run `phat http` and open http://localhost:8081/ui.
 
 On first run, Phat looks for a Pat installation and copies its config, mailbox and forms into Phat's own directories: `~/.config/phat` and `~/.local/share/phat` on Linux, `~/Library/Application Support/phat` on macOS. It copies rather than moves, so Pat keeps working, and it never copies into a mailbox Phat already has. Without a Pat installation, Phat opens Settings first; enter your callsign, locator and Winlink password, and Save.
 
@@ -80,7 +80,7 @@ There's no Docker image for Phat yet. Pat's Dockerfile and compose file are stil
 
 Phat and Pat install side by side: different binaries, different directories, different config files. The copy from Pat happens once, while Phat has no config of its own. After that the two mailboxes are separate copies, and mail fetched in one doesn't appear in the other, unless you start Phat on Pat's mailbox as [Connecting through Pat](#connecting-through-pat) describes.
 
-Both default to port 8080, and the copied config keeps Pat's `http_addr`. To run them at the same time, give Phat its own port, either with `phat http -a localhost:8081` or by changing `http_addr` in Phat's config file.
+Pat uses port 8080 and Phat uses 8081, so both run at the same time with no extra steps. When the first-run copy brings over a Pat config set to 8080, Phat's copy moves to 8081; Pat's own config isn't touched. To use a different port, run `phat http -a localhost:<port>` or change `http_addr` in Phat's config file.
 
 For setting up ARDOP, VARA, AX.25 and rig control, [Pat's wiki](https://github.com/la5nta/pat/wiki) applies to Phat unchanged.
 
