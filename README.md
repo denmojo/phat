@@ -40,8 +40,13 @@ New to Winlink? Install Pat and get it sending and receiving mail on its own fir
 
 Phat works on Pat's mailbox and hands its connects to your running Pat. Pat stays exactly as you installed it: its own config, its own port, started however you start it now. It runs each session under its own client name, which the CMS accepts, and the mail goes into the mailbox Phat is showing.
 
-1. Leave Pat running as usual, on its default port 8080.
-2. Start Phat on Pat's mailbox. Phat uses port 8081, so the two don't collide:
+Leave Pat running as usual, on its default port 8080, and start Phat with `phat http`. Phat uses port 8081, so the two don't collide.
+
+The first time you open http://localhost:8081/ui, Phat asks "Connect through your Pat?". Click Connect through Pat, and Phat saves Pat's mailbox, forms and address in its own config and restarts on them. That's all the setup there is. Click Use Phat on its own instead to keep a separate copy of Pat's mail.
+
+If you started Phat before this version, or chose Use Phat on its own and changed your mind, set it up by hand:
+
+1. Start Phat on Pat's mailbox:
 
    ```
    # macOS
@@ -50,9 +55,9 @@ Phat works on Pat's mailbox and hands its connects to your running Pat. Pat stay
    phat --mbox ~/.local/share/pat/mailbox http
    ```
 
-3. Open http://localhost:8081/ui, go to Settings > General and set Connect through Pat to Pat's address, `http://localhost:8080`. Click Save, and in the Restart required dialog that opens, click Restart now so Phat picks up the setting.
+2. Open http://localhost:8081/ui, go to Settings > General and set Connect through Pat to Pat's address, `http://localhost:8080`. Click Save, and in the Restart required dialog that opens, click Restart now so Phat picks up the setting.
 
-Start Phat with the same `--mbox` every time, whether from a terminal or a service.
+Started this way, Phat needs the same `--mbox` every time, whether from a terminal or a service.
 
 Pat and Phat now show the same mail, with two exceptions. Messages you move into folders you made in Phat stay on disk, but Pat doesn't show them, because Pat has no folders of your own, only Inbox, Outbox, Sent and Archive. Move one back to Inbox or Archive and Pat shows it again. Stars and labels are Phat's alone, so Pat never shows them.
 
