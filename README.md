@@ -48,7 +48,19 @@ telnet://{mycall}:CMSTelnet@cms-z.winlink.org:8772/wl2k
 
 cms-z is a full Winlink server: mail sent through it reaches its recipients, and mail waiting for you is delivered. Radio gateways relay to the CMS, so expect the same refusal over RF until the name is approved. Peer-to-peer sessions don't involve the CMS and work as they do in Pat.
 
-Phat also uses services set up for Pat. It calls the Winlink API with the access key the Winlink Development Team issued to Pat, for the RMS gateway list, account creation and password recovery. It fetches form template updates from Pat's server, api.getpat.io. And its default greeting to peer-to-peer stations is Pat's, "Open source Winlink client - getpat.io"; you can change it with `motd` in the config file.
+Phat also uses services set up for Pat, with Pat's maintainer's agreement. It fetches form template updates from Pat's server, api.getpat.io. And its default greeting to peer-to-peer stations is Pat's, "Open source Winlink client - getpat.io"; you can change it with `motd` in the config file.
+
+### Not available yet: the Winlink API
+
+Some features call the Winlink API at api.winlink.org, which needs an access key issued by the Winlink Development Team to each client program. Phat doesn't have one yet. The key issued to Pat belongs to Pat, so Phat doesn't use it, and until Phat's own key is issued these three don't work:
+
+- **RMS gateway list.** Phat can't download a fresh list. The Connect dialog still shows the list built into Phat (the one it inherited from Pat), or the copy Phat already saved if you used it before. Gateways added or changed since then won't appear, and Update cache reports the missing key.
+- **Account creation.** Phat can't register a new Winlink account, from Settings or from `phat init`.
+- **Password recovery.** Phat can't read or set your account's password recovery email.
+
+Use other means for these: Pat or another Winlink client, or your account settings at [winlink.org](https://winlink.org/).
+
+The same key also sits behind a few smaller checks, which are skipped for now: whether your callsign has an account, whether your password is correct, the Message Pickup Station commands (`phat mps`), and the daily version report Pat sends to Winlink. Settings shows a warning mark beside your callsign instead of the account's status. Sending and receiving mail don't use the Winlink API and are unaffected.
 
 ## The mailbox
 
@@ -124,7 +136,7 @@ While a session is dialing, the Connect button becomes Abort; once connected it 
 
 Settings has sections for General (callsign, locator, Winlink password, auxiliary addresses), Connect aliases, Transports, Rig control, GPSd, Schedule and Interface. Appearance, under Interface, switches between System, Light and Dark as you click. Save writes the config, and Restart now restarts Phat to apply it and reports when it's back.
 
-If your callsign has no Winlink account yet, General says so and offers Create one, which walks you through registering it.
+General checks whether your callsign has a Winlink account and offers to create one. Both need a Winlink API key, so for now General shows a warning mark instead; see [Not available yet: the Winlink API](#not-available-yet-the-winlink-api).
 
 <p align="center">
   <img src="docs/screenshot-settings.png" alt="The Settings page: a section list on the left and the General section with callsign, locator, password, auxiliary addresses and download limit" width="100%">
