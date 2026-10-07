@@ -142,7 +142,7 @@ Single keys act on the mail while no text field has focus and no dialog or menu 
 
 | key | in the message list | in an open message |
 |---|---|---|
-| `n` | new message | |
+| `n` | new message | new message |
 | `Enter` | open the message, when exactly one is ticked | |
 | `j` / `k` | | next / previous message |
 | `h` | | back to the list |
