@@ -1,8 +1,13 @@
 services:
-  pat:
-    image: la5nta/pat
+  phat:
+    image: ghcr.io/denmojo/phat
     build: .
     volumes:
-      - ./docker-data:/app/pat
+      # A named volume takes its ownership from the image, so Phat's
+      # unprivileged user can write to it.
+      - phat-data:/app/phat
     ports:
-      - 8080:8080
+      - 8081:8081
+
+volumes:
+  phat-data:

@@ -1,0 +1,63 @@
+name: docker
+# Builds the Phat image and starts it to check that the web client answers.
+# On a version tag it then pushes the image to ghcr.io/denmojo/phat.
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+      - name: Build for the smoke test
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: phat:smoke
+      - name: Smoke test
+        run: |
+          docker run -d --name phat -p 8081:8081 phat:smoke
+          for i in $(seq 30); do
+            # A fresh container has no callsign, so /ui redirects to Settings.
+            if curl -fsSL -o /dev/null http://localhost:8081/ui; then
+              echo "web client answered after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "web client never answered"
+          docker logs phat
+          exit 1
+      - name: Docker metadata
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/denmojo/phat
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+      - name: Log in to GitHub's container registry
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
