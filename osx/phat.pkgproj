@@ -736,7 +736,7 @@
 						<key>VALUE</key>
 						<dict>
 							<key>PATH</key>
-							<string>Pat-Welcome.rtfd</string>
+							<string>Phat-Welcome.rtfd</string>
 							<key>PATH_TYPE</key>
 							<integer>1</integer>
 						</dict>
@@ -755,7 +755,7 @@
 						<key>VALUE</key>
 						<dict>
 							<key>PATH</key>
-							<string>Pat-License.txt</string>
+							<string>Phat-License.txt</string>
 							<key>PATH_TYPE</key>
 							<integer>1</integer>
 						</dict>
@@ -774,7 +774,7 @@
 						<key>VALUE</key>
 						<dict>
 							<key>PATH</key>
-							<string>Pat-Info.rtfd</string>
+							<string>Phat-Info.rtfd</string>
 							<key>PATH_TYPE</key>
 							<integer>1</integer>
 						</dict>

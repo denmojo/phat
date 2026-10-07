@@ -14,7 +14,7 @@ func TestDistHandler(t *testing.T) {
 	}{
 		{
 			name:       "valid asset",
-			path:       "/dist/static/pat_logo.png",
+			path:       "/dist/static/phat_logo.png",
 			wantStatus: http.StatusOK,
 		},
 		{

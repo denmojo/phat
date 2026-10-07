@@ -25,7 +25,7 @@ export async function requestPermission(): Promise<NotifyState> {
 
 export function show(title: string, body = ''): Notification | null {
   if (!supported() || Notification.permission !== 'granted') return null;
-  return new Notification(title, { body, icon: '/dist/static/pat_logo.png' });
+  return new Notification(title, { body, icon: '/dist/static/phat_logo.png' });
 }
 
 // insecureOrigin guesses whether the browser withholds powerful features
