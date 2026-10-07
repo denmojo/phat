@@ -16,7 +16,8 @@ import {
   applyBulk, clearSelection, connectOpen, keysOpen, openSelected, drawerOpen, folders, refresh, rows, selectAll, selected, setSort, sort, status, view,
   type SortKey,
 } from './store';
-import { folderTitle } from './format';
+import { DownloadMenu, downloadItems } from './DownloadMenu';
+import { folderTitle, narrow } from './format';
 import './Toolbar.css';
 
 // Topbar sits above the message panel: the drawer button on narrow
@@ -96,6 +97,8 @@ export function Toolbar() {
     s: () => void applyBulk('star', !ticked().every((r) => r.Starred)),
     l: () => click('Label'),
     m: () => click('Move to'),
+    // On a phone Download is hidden and More actions carries the formats.
+    d: () => click(narrow() ? 'More actions' : 'Download'),
   }, n > 0);
 
   if (n === 0) {
@@ -135,10 +138,12 @@ export function Toolbar() {
       <LabelMenu />
       <Menu trigger={<IconButton icon={FolderInput} label="Move to" />}
         items={moveTargets.map((f) => ({ label: folderTitle(f.name), onSelect: () => void applyBulk('move', f.name) }))} />
+      <span class="wide-only"><DownloadMenu mids={[...selected.value]} /></span>
       <span class="narrow-only">
         <Menu align="right" trigger={<IconButton icon={Ellipsis} label="More actions" />} items={[
           { label: 'Mark unread', icon: Mail, onSelect: () => void applyBulk('read', false) },
           { label: 'Unstar', icon: StarOff, onSelect: () => void applyBulk('star', false) },
+          ...downloadItems([...selected.value]),
         ]} />
       </span>
       <span class="spacer" />

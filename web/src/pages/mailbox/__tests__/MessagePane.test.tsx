@@ -6,6 +6,7 @@ vi.mock('../../../lib/api', async (orig) => ({
   setRead: vi.fn(async (mids: string[]) => ({ ok: mids, failed: {} })),
   message: vi.fn(async () => null),
   remove: vi.fn(async (mids: string[]) => ({ ok: mids, failed: {} })),
+  download: vi.fn(),
   list: vi.fn(async () => []),
   folders: vi.fn(async () => []),
   labels: vi.fn(async () => []),
@@ -290,6 +291,25 @@ describe('message-view keys', () => {
     }
   });
 
+  test('d opens the download menu', () => {
+    render(<MessagePane />);
+    key('d');
+    expect(screen.getByRole('menuitem', { name: 'EML (email)' })).toBeInTheDocument();
+  });
+
+  test('at phone width d opens the menu that holds the download formats', () => {
+    const wide = window.matchMedia;
+    window.matchMedia = ((q: string) => ({ matches: true, media: q, addEventListener() {}, removeEventListener() {} })) as never;
+    try {
+      render(<MessagePane />);
+      key('d');
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Download as TXT' }));
+      expect(api.download).toHaveBeenCalledWith(['m1'], 'txt');
+    } finally {
+      window.matchMedia = wide;
+    }
+  });
+
   test('h goes back to the list', () => {
     render(<MessagePane />);
     key('h');
@@ -307,4 +327,12 @@ test('an Outbox message has an Edit button that opens it for editing; other fold
   expect(store.composerOpen.value).toBe(true);
   expect(store.draft.value.replaces).toBe('m1');
   store.composerOpen.value = false;
+});
+
+test('Download offers B2F, EML and TXT for this message', () => {
+  render(<MessagePane />);
+  fireEvent.click(screen.getByRole('button', { name: 'Download' }));
+  expect(screen.getAllByRole('menuitem').map((m) => m.textContent)).toEqual(['B2F (Winlink file)', 'EML (email)', 'TXT (plain text)']);
+  fireEvent.click(screen.getByRole('menuitem', { name: 'EML (email)' }));
+  expect(api.download).toHaveBeenCalledWith(['m1'], 'eml');
 });

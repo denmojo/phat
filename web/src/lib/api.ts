@@ -69,6 +69,22 @@ export const star = (mids: string[], starred: boolean) => json<BulkResult>('/api
 export const setLabels = (mids: string[], add: string[], remove: string[]) =>
   json<BulkResult>('/api/messages/labels', req('POST', { mids, add, remove }));
 export const remove = (mids: string[]) => json<BulkResult>('/api/messages/delete', req('POST', { mids }));
+
+// Download: one message comes back as its own file, several as one zip.
+export type DownloadFormat = 'b2f' | 'eml' | 'txt';
+export const downloadUrl = (mids: string[], format: DownloadFormat) =>
+  `/api/messages/download?format=${format}${mids.map((m) => `&mid=${enc(m)}`).join('')}`;
+
+// download follows a link to the file. The download attribute keeps the
+// page where it is, even when the server answers with an error.
+export function download(mids: string[], format: DownloadFormat): void {
+  const a = document.createElement('a');
+  a.href = downloadUrl(mids, format);
+  a.download = '';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
 export const send = (form: FormData) => call('/api/mailbox/out', { method: 'POST', body: form });
 
 // Config and session

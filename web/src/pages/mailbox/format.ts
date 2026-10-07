@@ -2,6 +2,10 @@
 
 const SYSTEM_NAMES: Record<string, string> = { in: 'Inbox', out: 'Outbox', sent: 'Sent', archive: 'Archive' };
 
+// narrow reports a phone-width screen, where toolbars fold some buttons
+// into their More actions menu.
+export const narrow = () => window.matchMedia?.('(max-width: 640px)').matches ?? false;
+
 export function folderTitle(name: string): string {
   return SYSTEM_NAMES[name] ?? name;
 }

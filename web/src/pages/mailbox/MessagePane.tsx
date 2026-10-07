@@ -12,10 +12,9 @@ import { MessageAttachments } from './Attachments';
 import { compose, editAsNew, editOutbox, forward, reply } from './Composer';
 import { LabelMenu } from './LabelMenu';
 import { applyBulkTo, closeMsg, folders, labels, neighbors, openMessage, stepMsg } from './store';
-import { callColor, folderTitle } from './format';
+import { DownloadMenu, downloadItems } from './DownloadMenu';
+import { callColor, folderTitle, narrow } from './format';
 import './MessagePane.css';
-
-const narrow = () => window.matchMedia?.('(max-width: 640px)').matches ?? false;
 
 const fullDate = (iso: string) => {
   const d = new Date(iso);
@@ -58,8 +57,10 @@ export function MessagePane() {
     u: () => { void applyBulkTo([m.MID], 'read', false); closeMsg(); },
     s: () => void applyBulkTo([m.MID], 'star', !m.Starred),
     l: () => click('Label'),
-    // On a phone the Move to button is hidden; More actions carries the targets there.
+    // On a phone the Move to and Download buttons are hidden; More actions
+    // carries their entries there.
     m: () => click(narrow() ? 'More actions' : 'Move to'),
+    d: () => click(narrow() ? 'More actions' : 'Download'),
   } : {}, !!m);
   if (!m) return null;
   const mids = [m.MID];
@@ -98,6 +99,7 @@ export function MessagePane() {
         <LabelMenu target={{ mids, labels: [m.Labels ?? []] }} />
         <span class="wide-only">
           <Menu trigger={<IconButton icon={FolderInput} label="Move to" />} items={moveTo()} />
+          <DownloadMenu mids={mids} />
         </span>
         <Menu align="right" trigger={<IconButton icon={Ellipsis} label="More actions" />} items={[
           ...(narrow() ? [
@@ -105,6 +107,7 @@ export function MessagePane() {
             { label: 'Forward', icon: Forward, onSelect: () => forward(m) },
             { label: 'Mark unread', icon: Mail, onSelect: () => { void applyBulkTo(mids, 'read', false); closeMsg(); } },
             ...moveTo().map((x) => ({ ...x, label: `Move to ${x.label}` })),
+            ...downloadItems(mids),
           ] : []),
           { label: 'Edit as new', icon: FilePen, onSelect: () => editAsNew(m) },
         ]} />

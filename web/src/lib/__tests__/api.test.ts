@@ -70,3 +70,16 @@ test('message fills in the folder it was read from', async () => {
   expect(calls[0]!.url).toBe('/api/mailbox/Radio%20Club/A');
   expect(m.Folder).toBe('Radio Club');
 });
+
+test('downloadUrl names the format and repeats mid for each message', () => {
+  expect(api.downloadUrl(['A1', 'B/2'], 'eml')).toBe('/api/messages/download?format=eml&mid=A1&mid=B%2F2');
+});
+
+test('download follows a link to the download URL, leaving the page where it is', () => {
+  const clicked: string[] = [];
+  const spy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { clicked.push(this.getAttribute('href') ?? ''); });
+  api.download(['A1'], 'b2f');
+  expect(clicked).toEqual(['/api/messages/download?format=b2f&mid=A1']);
+  expect(document.querySelector('a[href^="/api/messages/download"]')).toBeNull();
+  spy.mockRestore();
+});

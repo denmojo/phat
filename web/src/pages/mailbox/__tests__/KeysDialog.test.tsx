@@ -21,14 +21,14 @@ test('over the list it shows the list keys and the ones that work anywhere', () 
   store.openMessage.value = null;
   store.keysOpen.value = true;
   render(<KeysDialog />);
-  expect(shown().sort()).toEqual(['/', '?', 'Enter', 'a', 'c', 'l', 'm', 'n', 's', 't', 'u']);
+  expect(shown().sort()).toEqual(['/', '?', 'Enter', 'a', 'c', 'd', 'l', 'm', 'n', 's', 't', 'u']);
 });
 
 test('over an open message it shows the message keys and the ones that work anywhere', () => {
   store.openMessage.value = { MID: 'm1', Folder: 'in' } as never;
   store.keysOpen.value = true;
   render(<KeysDialog />);
-  expect(shown().sort()).toEqual(['/', '?', 'R', 'a', 'c', 'f', 'h', 'j', 'k', 'l', 'm', 'n', 'r', 's', 't', 'u']);
+  expect(shown().sort()).toEqual(['/', '?', 'R', 'a', 'c', 'd', 'f', 'h', 'j', 'k', 'l', 'm', 'n', 'r', 's', 't', 'u']);
   store.openMessage.value = null;
 });
 
