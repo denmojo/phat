@@ -34,7 +34,7 @@ The same key also sits behind a few smaller checks, which are skipped for now: w
 
 ## Installing
 
-New to Winlink? Install Pat and get it sending and receiving mail on its own first ([Pat's releases](https://github.com/la5nta/pat/releases), [Pat's wiki](https://github.com/la5nta/pat/wiki)). Then install Phat.
+Phat runs on its own or beside Pat. On its own it handles peer-to-peer sessions and Winlink's test server, but the production CMS refuses it (see [Winlink approval is pending](#winlink-approval-is-pending)), so regular Winlink mail goes through Pat. New to Winlink? Install Pat and get it sending and receiving mail on its own first ([Pat's releases](https://github.com/la5nta/pat/releases), [Pat's wiki](https://github.com/la5nta/pat/wiki)), then install Phat.
 
 Phat has no packaged releases yet. Build it from source (see [Building](#building)), then run `phat http` and open http://localhost:8081/ui. When the web client opens, Phat checks this repository's releases on GitHub and offers a download when a newer Phat is published.
 
