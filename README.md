@@ -36,11 +36,11 @@ The same key also sits behind a few smaller checks, which are skipped for now: w
 
 Phat runs on its own or beside Pat. On its own it handles peer-to-peer sessions and Winlink's test server, but the production CMS refuses it (see [Winlink approval is pending](#winlink-approval-is-pending)), so regular Winlink mail goes through Pat. New to Winlink? Install Pat and get it sending and receiving mail on its own first ([Pat's releases](https://github.com/la5nta/pat/releases), [Pat's wiki](https://github.com/la5nta/pat/wiki)), then install Phat.
 
-Phat has no packaged releases yet. Build it from source (see [Building](#building)), then run `phat http` and open http://localhost:8081/ui. When the web client opens, Phat checks this repository's releases on GitHub and offers a download when a newer Phat is published.
+Download Phat from this repository's [releases](https://github.com/denmojo/phat/releases). Releases from 0.1.4 on have a build for Linux on `amd64` and `arm64` (64-bit Raspberry Pi OS and other ARM boards), Windows on `amd64`, and macOS on `arm64` (Apple silicon) and `amd64` (Intel). The Linux builds include kernel AX.25 and need glibc 2.35 or later, which Debian 12, Ubuntu 22.04 and current Raspberry Pi OS have. Unpack the download and move `phat` (`phat.exe` on Windows) into a folder on your PATH, such as `/usr/local/bin`. The Windows build isn't code-signed, so Windows SmartScreen may warn the first time you run it. For anything else, including 32-bit Raspberry Pi OS, build Phat from source (see [Building](#building)). Then run `phat http` and open http://localhost:8081/ui. When the web client opens, Phat checks this repository's releases on GitHub and offers a download when a newer Phat is published.
 
-On first run, Phat looks for a Pat installation and copies its config, mailbox, forms and saved RMS list into Phat's own directories: `~/.config/phat` and `~/.local/share/phat` on Linux, `~/Library/Application Support/phat` on macOS. It copies rather than moves, so Pat keeps working, and it never copies into a mailbox Phat already has. After a copy, the page asks once whether to connect through Pat; see [Connecting through Pat](#connecting-through-pat). Without a Pat installation, Phat opens Settings first; enter your callsign, locator and Winlink password, and Save.
+On first run, Phat looks for a Pat installation and copies its config, mailbox, forms and saved RMS list into Phat's own directories: `~/.config/phat` and `~/.local/share/phat` on Linux, `~/Library/Application Support/phat` on macOS, `%LOCALAPPDATA%\phat` on Windows. It copies rather than moves, so Pat keeps working, and it never copies into a mailbox Phat already has. After a copy, the page asks once whether to connect through Pat; see [Connecting through Pat](#connecting-through-pat). Without a Pat installation, Phat opens Settings first; enter your callsign, locator and Winlink password, and Save.
 
-There's no Docker image for Phat yet. Pat's Dockerfile and compose file are still in the repository, but they build and run Pat's names and paths, so if you ran Pat in Docker, run Phat from a built binary for now.
+Phat also runs in Docker. Releases from 0.1.4 on publish an image for `amd64` and `arm64` as `ghcr.io/denmojo/phat`, and `docker compose up` with the repository's `docker-compose.yml` serves the web client on port 8081 and keeps Phat's config and mail in a Docker volume. The image has no kernel AX.25, so from a container Phat reaches the radio over telnet or through ARDOP, VARA or AGWPE running on the network. A serial TNC works too, once you pass its device into the container, for example with `--device /dev/ttyUSB0`, and set the same path as the Serial TNC device in Settings. Inside a container, `localhost` is the container itself, and Phat's default addresses for those programs all point at `localhost`. For a modem or TNC running on the host, change its address in Settings to `host.docker.internal` on Docker Desktop, or to the host's LAN address. On Linux, running the container with `--network host` makes `localhost` mean the host again.
 
 ### Running Phat beside Pat
 
@@ -73,6 +73,8 @@ If you started Phat before 0.1.3, or chose Use Phat on its own and changed your 
    phat --mbox "$HOME/Library/Application Support/pat/mailbox" http
    # Linux
    phat --mbox ~/.local/share/pat/mailbox http
+   # Windows (Command Prompt)
+   phat --mbox "%LOCALAPPDATA%\pat\mailbox" http
    ```
 
 2. Open http://localhost:8081/ui, go to Settings > General and set Connect through Pat to Pat's address, `http://localhost:8080`. Click Save, and in the Restart required dialog that opens, click Restart now so Phat picks up the setting.
