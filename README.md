@@ -171,7 +171,7 @@ On a phone the keys need a hardware keyboard, Bluetooth or USB. The on-screen ke
 Connect opens the connection dialog. Pick a transport (telnet, ARDOP, VARA HF and FM, PACTOR, AX.25), a gateway from the RMS list or by callsign, and the transport's options. A frequency is given in kHz. If Phat can't tune the radio to it (no rig control configured, or the rig refused), it strikes the frequency through and leaves it out of the connect URL. The + button saves the current settings as an alias, and the trash button beside an alias deletes it.
 
 <p align="center">
-  <img src="docs/screenshot-connect.png" alt="The Connect dialog set for ARDOP to N0GATE-10 on 3594.5 kHz, with bandwidth, tries, and the resulting connect URL" width="100%">
+  <img src="docs/screenshot-connect.png" alt="The Connect dialog set for ARDOP to N0GATE-10 on 3594.5 kHz, with bandwidth, tries, Direct or Through Pat at http://localhost:8080, and the resulting connect URL" width="100%">
   <br><em>Connect</em>
 </p>
 
