@@ -19,6 +19,7 @@ const MESSAGE: Group = ['Message view', [
   ['s', 'Star or unstar'],
   ['l', 'Labels'],
   ['m', 'Move to'],
+  ['d', 'Download as B2F, EML or TXT'],
 ]];
 
 const LIST: Group = ['Message list', [
@@ -30,6 +31,7 @@ const LIST: Group = ['Message list', [
   ['s', 'Star, or unstar if all are starred'],
   ['l', 'Labels for the selected'],
   ['m', 'Move the selected'],
+  ['d', 'Download the selected as B2F, EML or TXT'],
 ]];
 
 const ANYWHERE: Group = ['Anywhere', [

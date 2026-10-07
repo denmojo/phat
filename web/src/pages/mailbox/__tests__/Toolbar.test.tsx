@@ -1,8 +1,13 @@
+vi.mock('../../../lib/api', async (orig) => ({
+  ...(await orig<typeof import('../../../lib/api')>()),
+  download: vi.fn(),
+}));
 vi.mock('../store', async (orig) => {
   const real = await orig<typeof import('../store')>();
   return { ...real, applyBulk: vi.fn(async () => null), refresh: vi.fn(async () => {}), openMsg: vi.fn(async () => {}), openSelected: vi.fn(async () => {}) };
 });
 import { render, screen, fireEvent, within } from '@testing-library/preact';
+import * as api from '../../../lib/api';
 import * as store from '../store';
 import { Toolbar } from '../Toolbar';
 
@@ -165,10 +170,32 @@ describe('selection keys', () => {
     expect(screen.getByRole('menuitem', { name: 'Club' })).toBeInTheDocument();
   });
 
+  test('d opens the download menu, which downloads every ticked message', () => {
+    tick({ MID: 'a' }, { MID: 'b' });
+    render(<Toolbar />);
+    key('d');
+    fireEvent.click(screen.getByRole('menuitem', { name: 'B2F (Winlink file)' }));
+    expect(api.download).toHaveBeenCalledWith(['a', 'b'], 'b2f');
+  });
+
+  test('at phone width d opens the menu that holds the download formats', () => {
+    const wide = window.matchMedia;
+    window.matchMedia = ((q: string) => ({ matches: true, media: q, addEventListener() {}, removeEventListener() {} })) as never;
+    try {
+      tick({ MID: 'a' }, { MID: 'b' });
+      render(<Toolbar />);
+      key('d');
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Download as EML' }));
+      expect(api.download).toHaveBeenCalledWith(['a', 'b'], 'eml');
+    } finally {
+      window.matchMedia = wide;
+    }
+  });
+
   test('with nothing ticked they do nothing', () => {
     store.selected.value = new Set();
     render(<Toolbar />);
-    for (const k of ['a', 'u', 's', 'l', 'm']) key(k);
+    for (const k of ['a', 'u', 's', 'l', 'm', 'd']) key(k);
     expect(store.applyBulk).not.toHaveBeenCalled();
     expect(screen.queryByRole('menu')).toBeNull();
   });

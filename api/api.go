@@ -108,6 +108,7 @@ func NewHandler(app *app.App) *Handler {
 	r.HandleFunc("/api/messages/star", h.bulkStarHandler).Methods("POST")
 	r.HandleFunc("/api/messages/labels", h.bulkLabelsHandler).Methods("POST")
 	r.HandleFunc("/api/messages/delete", h.bulkDeleteHandler).Methods("POST")
+	r.HandleFunc("/api/messages/download", h.downloadHandler).Methods("GET")
 
 	r.HandleFunc("/api/mailbox/{box}", h.mailboxHandler).Methods("GET")
 	r.HandleFunc("/api/mailbox/{box}/{mid}", h.messageHandler).Methods("GET")

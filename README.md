@@ -111,7 +111,7 @@ Phat's default greeting to peer-to-peer stations is also Pat's, "Open source Win
 
 **Labels and stars.** The + beside Labels creates a label with a name and a color, picked from a palette or a custom color picker. A label's ⋯ menu (or a right-click) edits its name and color or deletes it, and deleting says how many messages it comes off. A message can wear several labels. Select messages and use the tag button to add or remove them; a dash means some of the selection has that label, a check means all of it does. Hover a label chip in the list and click its x to take that one label off that one message. The Starred view collects starred mail from every folder.
 
-**Selecting and acting.** Click the checkboxes, or Shift-click for a range. The toolbar then archives, deletes, marks read or unread, stars, labels or moves the whole selection. Delete asks first: Phat keeps no trash, so deleted mail is gone. If part of a bulk action fails, the failed messages stay selected and a toast says why. The sort button orders the list by date, correspondent or subject.
+**Selecting and acting.** Click the checkboxes, or Shift-click for a range. The toolbar then archives, deletes, marks read or unread, stars, labels, moves or downloads the whole selection. A download of several messages comes as one zip, with a file per message in the format you pick (see [Reading and writing](#reading-and-writing)). Delete asks first: Phat keeps no trash, so deleted mail is gone. If part of a bulk action fails, the failed messages stay selected and a toast says why. The sort button orders the list by date, correspondent or subject.
 
 **Drag and drop.** Drag a message onto a folder to move it, onto a label to apply it, or onto Starred to star it. Grab a selected row and the whole selection goes with it.
 
@@ -121,7 +121,7 @@ Phat's default greeting to peer-to-peer stations is also Pat's, "Open source Win
 
 ## Reading and writing
 
-Opening a message shows quoted text as an indented block and previews image attachments inline; click an image for full size. Reply, Reply all and Forward sit on the toolbar, with Edit as new under the ⋯ menu. A message still waiting in the Outbox also gets an Edit button, which opens it in the composer as it is, P2P only included. Sending puts the edited version in the Outbox and then removes the original, so it goes out once; if you discard the edit, or the send is refused, the original stays as it was. On an archived message, the archive button becomes Move to Inbox. The up and down arrows beside Back step to the previous and next message in the order the list shows, without going back to it.
+Opening a message shows quoted text as an indented block and previews image attachments inline; click an image for full size. Reply, Reply all and Forward sit on the toolbar, with Edit as new under the ⋯ menu. A message still waiting in the Outbox also gets an Edit button, which opens it in the composer as it is, P2P only included. Sending puts the edited version in the Outbox and then removes the original, so it goes out once; if you discard the edit, or the send is refused, the original stays as it was. On an archived message, the archive button becomes Move to Inbox. Download saves the message in one of three formats: B2F is the Winlink file exactly as Phat stores it, EML is an email file with the attachments inside that Apple Mail, Thunderbird and most other mail apps open, and TXT is the header lines and the body, listing attachment names without their contents. At phone width, in a message or with messages ticked, the Download formats move under the ⋯ menu. The up and down arrows beside Back step to the previous and next message in the order the list shows, without going back to it.
 
 New message opens the composer. Type callsigns or addresses into To and Cc, separated by commas, semicolons or spaces, or press Enter after each. Attach adds files, and images show a thumbnail. On sending, Phat re-encodes an image as a JPEG no wider than 600 pixels whenever that makes it smaller, as Pat does. P2P only keeps a message off the CMS. Clicking outside the composer leaves it open. Escape, the X and Cancel close it, and if you've typed anything Phat asks before throwing the draft away.
 
@@ -152,6 +152,7 @@ Single keys act on the mail while no text field has focus and no dialog or menu 
 | `s` | all starred: unstar; otherwise star | star or unstar |
 | `l` | label menu | label menu |
 | `m` | move menu | move menu |
+| `d` | download menu | download menu |
 
 Anywhere, `c` opens Connect, `/` jumps to the search box and `?` lists the keys. Delete still asks first, with Delete focused, so Enter confirms it.
 
