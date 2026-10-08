@@ -30,6 +30,8 @@ beforeEach(() => {
   localStorage.clear();
   store.mycall.value = 'N0CALL';
   store.connectOpen.value = true;
+  store.quickConnect.value = false;
+  store.logOpen.value = false;
 });
 
 test('opens on the last URL used and shows only the fields its transport uses', async () => {
@@ -231,4 +233,50 @@ test('with no default bandwidth the select says so and the URL leaves bw out', a
   await waitFor(() => expect(urlField().value).toContain('bw=2000MAX'));
   change(bw, '');
   await waitFor(() => expect(urlField().value).not.toContain('bw='));
+});
+
+test('a quick connect starts the last URL at once and opens the session log', async () => {
+  localStorage.setItem('pat_connect_url_N0CALL', 'ax25+agwpe:///N0DE-10');
+  store.quickConnect.value = true;
+  render(<ConnectDialog />);
+  await waitFor(() => expect(api.connect).toHaveBeenCalledWith('ax25+agwpe:///N0DE-10', false));
+  expect(api.connect).toHaveBeenCalledTimes(1);
+  expect(store.connectOpen.value).toBe(false);
+  expect(store.logOpen.value).toBe(true);
+  expect(store.quickConnect.value).toBe(false);
+});
+
+test('a quick connect keeps the remembered route through Pat or direct', async () => {
+  mock(api.config).mockResolvedValue({ connect_via: 'http://localhost:8080' });
+  localStorage.setItem('pat_connect_url_N0CALL', 'telnet:///wl2k');
+  store.quickConnect.value = true;
+  const { unmount } = render(<ConnectDialog />);
+  await waitFor(() => expect(api.connect).toHaveBeenLastCalledWith('telnet:///wl2k', true));
+  unmount();
+  localStorage.setItem('phat_connect_route', 'direct');
+  store.connectOpen.value = true;
+  store.quickConnect.value = true;
+  render(<ConnectDialog />);
+  await waitFor(() => expect(api.connect).toHaveBeenLastCalledWith('telnet:///wl2k', false));
+  mock(api.config).mockReset();
+});
+
+test('a quick connect with nothing remembered leaves the dialog open and starts nothing', async () => {
+  store.quickConnect.value = true;
+  render(<ConnectDialog />);
+  await waitFor(() => expect(store.quickConnect.value).toBe(false));
+  expect(api.connect).not.toHaveBeenCalled();
+  expect(store.connectOpen.value).toBe(true);
+  expect(screen.getByRole('dialog', { name: 'Connect' })).toBeInTheDocument();
+});
+
+test('a quick connect that cannot read the config starts nothing', async () => {
+  mock(api.config).mockRejectedValueOnce(new api.ApiError(500, 'config unreadable'));
+  localStorage.setItem('pat_connect_url_N0CALL', 'telnet:///wl2k');
+  store.quickConnect.value = true;
+  render(<ConnectDialog />);
+  await waitFor(() => expect(api.config).toHaveBeenCalled());
+  await new Promise((r) => setTimeout(r, 0));
+  expect(api.connect).not.toHaveBeenCalled();
+  expect(store.connectOpen.value).toBe(true);
 });

@@ -156,7 +156,7 @@ Single keys act on the mail while no text field has focus and no dialog or menu 
 | `m` | move menu | move menu |
 | `d` | download menu | download menu |
 
-Anywhere, `c` opens Connect, `/` jumps to the search box and `?` lists the keys. Delete still asks first, with Delete focused, so Enter confirms it.
+Anywhere, `c` opens Connect and `C` connects again with the last connection, its mode and its route included. `/` jumps to the search box and `?` lists the keys. Delete still asks first, with Delete focused, so Enter confirms it.
 
 After Enter opens a ticked message, going back puts focus on that row's checkbox, so Space unticks it. The tick stays if you come back from the same message; if `j` or `k` took you to another, the tick clears and focus goes to the row of the message you left.
 

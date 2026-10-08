@@ -36,6 +36,7 @@ const LIST: Group = ['Message list', [
 
 const ANYWHERE: Group = ['Anywhere', [
   ['c', 'Connect'],
+  ['C', 'Connect again with the last connection'],
   ['/', 'Search'],
   ['?', 'This list'],
 ]];

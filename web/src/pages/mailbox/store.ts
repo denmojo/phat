@@ -46,6 +46,9 @@ export const draft = signal<Draft>(emptyDraft());
 // drawerOpen shows the sidebar as a drawer on narrow screens.
 export const drawerOpen = signal(false);
 export const connectOpen = signal(false);
+// quickConnect asks the Connect dialog, as it opens, to start the last
+// connection at once (C, shifted c).
+export const quickConnect = signal(false);
 export const positionOpen = signal(false);
 export const logOpen = signal(false);
 // keysOpen shows the keyboard shortcut sheet.

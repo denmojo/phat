@@ -15,6 +15,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   store.wsUp.value = true;
   store.connectOpen.value = false;
+  store.quickConnect.value = false;
 });
 
 test('idle: Ready, or the listeners, and Connect opens the dialog', () => {
@@ -77,4 +78,20 @@ test('c opens Connect while idle and does nothing during a session', () => {
   render(<Topbar />);
   fireEvent.keyDown(document.body, { key: 'c' });
   expect(store.connectOpen.value).toBe(false);
+});
+
+test('C opens Connect for a quick connect while idle and does nothing during a session', () => {
+  store.status.value = st();
+  const { unmount } = render(<Topbar />);
+  fireEvent.keyDown(document.body, { key: 'C', shiftKey: true });
+  expect(store.connectOpen.value).toBe(true);
+  expect(store.quickConnect.value).toBe(true);
+  unmount();
+  store.connectOpen.value = false;
+  store.quickConnect.value = false;
+  store.status.value = st({ connected: true });
+  render(<Topbar />);
+  fireEvent.keyDown(document.body, { key: 'C', shiftKey: true });
+  expect(store.connectOpen.value).toBe(false);
+  expect(store.quickConnect.value).toBe(false);
 });

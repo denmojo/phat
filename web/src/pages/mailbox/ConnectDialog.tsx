@@ -8,7 +8,7 @@ import { Dialog } from '../../ui/Dialog';
 import { IconButton } from '../../ui/IconButton';
 import { toast } from '../../ui/Toast';
 import { RmsList, modeFor } from './RmsList';
-import { connectOpen, logOpen, mycall } from './store';
+import { connectOpen, logOpen, mycall, quickConnect } from './store';
 import './ConnectDialog.css';
 
 const TRANSPORTS: [string, string][] = [
@@ -117,12 +117,20 @@ function ConnectForm() {
   };
 
   useEffect(() => {
+    // A quick connect waits for the config, which says whether the
+    // remembered route through Pat is open; with nothing remembered, or no
+    // config to read, the dialog stays open and starts nothing.
+    const quick = quickConnect.value;
+    quickConnect.value = false;
     api.connectAliases().then((a) => setAliases(a ?? {})).catch(() => {});
     api.config().then((c) => {
       const cfg = c as { ardop?: { connect_requests?: number }; connect_via?: string } | null;
       const n = cfg?.ardop?.connect_requests;
       if (n) setTriesHint(String(n));
-      setVia(cfg?.connect_via?.trim() ?? '');
+      const v = cfg?.connect_via?.trim() ?? '';
+      setVia(v);
+      const last = stored();
+      if (quick && last) connect(last, !!v && storedRoute() === 'pat');
     }).catch(() => {});
   }, []);
 

@@ -13,7 +13,7 @@ import { LabelMenu } from './LabelMenu';
 import { compose } from './Composer';
 import { useHotkeys } from '../../lib/hotkeys';
 import {
-  applyBulk, clearSelection, connectOpen, keysOpen, openSelected, drawerOpen, folders, refresh, rows, selectAll, selected, setSort, sort, status, view,
+  applyBulk, clearSelection, connectOpen, keysOpen, quickConnect, openSelected, drawerOpen, folders, refresh, rows, selectAll, selected, setSort, sort, status, view,
   type SortKey,
 } from './store';
 import { DownloadMenu, downloadItems } from './DownloadMenu';
@@ -32,8 +32,12 @@ export function Topbar() {
     setStopping(true);
     api.disconnect(dirty).catch((err) => toast(err instanceof Error ? err.message : String(err), { kind: 'error' }));
   };
-  // c opens Connect from either screen, while there's no session to stop.
-  useHotkeys({ c: () => { connectOpen.value = true; } }, !live);
+  // c opens Connect from either screen, while there's no session to stop;
+  // C opens it and starts the last connection.
+  useHotkeys({
+    c: () => { connectOpen.value = true; },
+    C: () => { quickConnect.value = true; connectOpen.value = true; },
+  }, !live);
   let button;
   if (!live) {
     button = <Button variant="primary" label="Connect" onClick={() => { connectOpen.value = true; }}><RadioTower /><span class="label">Connect</span></Button>;
