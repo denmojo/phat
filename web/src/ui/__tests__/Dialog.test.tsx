@@ -54,3 +54,11 @@ test('dismissable false has no Close button and ignores Escape and the backdrop'
   fireEvent.click(document.querySelector('.ui-scrim')!);
   expect(onClose).not.toHaveBeenCalled();
 });
+
+test('a re-render with a new onClose leaves focus where it is', () => {
+  const { rerender } = render(<Dialog open title="Form" onClose={() => {}}><input aria-label="Field" /></Dialog>);
+  const field = screen.getByLabelText('Field');
+  field.focus();
+  rerender(<Dialog open title="Form" onClose={() => {}}><input aria-label="Field" /></Dialog>);
+  expect(document.activeElement).toBe(field);
+});

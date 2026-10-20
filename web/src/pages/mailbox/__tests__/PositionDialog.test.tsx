@@ -59,3 +59,36 @@ test('a geolocation error is shown and raised in the status panel', async () => 
   expect(store.geoError.value).toBe('User denied Geolocation');
   vi.unstubAllGlobals();
 });
+
+test('typing a position by hand keeps focus in the field', async () => {
+  gps.mockRejectedValue(new Error('no gps'));
+  vi.stubGlobal('navigator', { ...navigator, geolocation: undefined });
+  render(<PositionDialog />);
+  await screen.findByText('No GPS device, and this browser has no geolocation.');
+  for (const name of ['Latitude', 'Longitude', 'Comment']) {
+    const field = screen.getByLabelText(name) as HTMLInputElement;
+    field.focus();
+    for (const v of ['3', '38', '38.']) {
+      fireEvent.input(field, { target: { value: v } });
+      expect(document.activeElement).toBe(field);
+    }
+  }
+  vi.unstubAllGlobals();
+});
+
+test('a browser fix arriving after manual typing does not overwrite it', async () => {
+  gps.mockRejectedValue(new Error('no gps'));
+  let ok: (p: unknown) => void = () => {};
+  const clearWatch = vi.fn();
+  vi.stubGlobal('navigator', { ...navigator, geolocation: {
+    watchPosition: (cb: (p: unknown) => void) => { ok = cb; return 3; },
+    clearWatch,
+  } });
+  render(<PositionDialog />);
+  await screen.findByText('Waiting for a position from the browser…');
+  fireEvent.input(screen.getByLabelText('Latitude'), { target: { value: '40.1' } });
+  expect(clearWatch).toHaveBeenCalledWith(3);
+  ok({ coords: { latitude: 38.6, longitude: -121.5 }, timestamp: Date.now() });
+  expect((screen.getByLabelText('Latitude') as HTMLInputElement).value).toBe('40.1');
+  vi.unstubAllGlobals();
+});
