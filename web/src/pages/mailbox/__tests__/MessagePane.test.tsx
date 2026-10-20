@@ -196,7 +196,7 @@ test('the arrows\' tooltips name their keys', () => {
 });
 
 describe('message-view keys', () => {
-  const key = (k: string) => fireEvent.keyDown(document.body, { key: k });
+  const key = (k: string) => fireEvent.keyDown(document.body, { key: k, shiftKey: /^[A-Z]$/.test(k) });
   afterEach(() => { store.composerOpen.value = false; });
 
   test('n starts a new message with the message still open', () => {

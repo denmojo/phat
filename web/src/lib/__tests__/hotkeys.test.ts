@@ -105,3 +105,16 @@ test('keys stand down while a menu is open', () => {
   press('t');
   expect(t).toHaveBeenCalledOnce();
 });
+
+test('Caps Lock without Shift reaches the plain letter, and Shift reaches the capital', () => {
+  const c = vi.fn();
+  const C = vi.fn();
+  renderHook(() => useHotkeys({ c, C }));
+  press('C', { modifierCapsLock: true });
+  expect(c).toHaveBeenCalledOnce();
+  expect(C).not.toHaveBeenCalled();
+  press('C', { shiftKey: true, modifierCapsLock: true });
+  press('c', { shiftKey: true });
+  expect(C).toHaveBeenCalledTimes(2);
+  expect(c).toHaveBeenCalledOnce();
+});
