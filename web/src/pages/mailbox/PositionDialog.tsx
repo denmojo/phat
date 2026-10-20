@@ -66,6 +66,12 @@ function PositionForm() {
     return () => { live = false; stopWatch(); };
   }, []);
 
+  // A coordinate typed by hand ends the browser watch, so the next fix
+  // doesn't overwrite it.
+  const typed = (set: (v: string) => void) => (e: { currentTarget: HTMLInputElement }) => {
+    stopWatch();
+    set(e.currentTarget.value);
+  };
   const cancel = () => { stopWatch(); close(); };
   const post = async () => {
     setPosting(true);
@@ -94,8 +100,8 @@ function PositionForm() {
       <form class="position" onSubmit={(e) => { e.preventDefault(); if (ready) void post(); }}>
         <p class="pos-note" role="status">{note}</p>
         <div class="pos-grid">
-          <label><span>Latitude</span><input inputMode="decimal" value={lat} onInput={(e) => setLat(e.currentTarget.value)} /></label>
-          <label><span>Longitude</span><input inputMode="decimal" value={lon} onInput={(e) => setLon(e.currentTarget.value)} /></label>
+          <label><span>Latitude</span><input inputMode="decimal" value={lat} onInput={typed(setLat)} /></label>
+          <label><span>Longitude</span><input inputMode="decimal" value={lon} onInput={typed(setLon)} /></label>
         </div>
         <label><span>Comment</span><input value={comment} onInput={(e) => setComment(e.currentTarget.value)} /></label>
       </form>

@@ -32,6 +32,11 @@ const focusable = 'button:not([disabled]), [href], input:not([disabled]), select
 export function Dialog({ open, title, onClose, footer, wide, closeOnBackdrop = true, dismissable = true, children }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  // Callers pass a fresh onClose on every render; reading it through a ref
+  // keeps the open effect from re-running, which would pull focus back to
+  // the first control on every keystroke in a field.
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
@@ -45,7 +50,7 @@ export function Dialog({ open, title, onClose, footer, wide, closeOnBackdrop = t
       if (e.key === 'Escape') {
         e.stopPropagation();
         if (!dismissable) return;
-        onClose();
+        closeRef.current();
         return;
       }
       if (e.key !== 'Tab' || !box.current) return;
@@ -67,7 +72,7 @@ export function Dialog({ open, title, onClose, footer, wide, closeOnBackdrop = t
       stack.splice(stack.indexOf(me), 1);
       before?.focus?.();
     };
-  }, [open, onClose, dismissable]);
+  }, [open, dismissable]);
 
   if (!open) return null;
   return createPortal(
