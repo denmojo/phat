@@ -9,3 +9,4 @@ docker-data/
 .preview/
 .DS_Store
 .superpowers/
+/dist-mac/
