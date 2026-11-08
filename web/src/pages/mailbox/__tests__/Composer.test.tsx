@@ -344,3 +344,82 @@ describe('drafts', () => {
     expect(api.remove).not.toHaveBeenCalled();
   });
 });
+
+describe('minimizing the composer', () => {
+  afterEach(() => { store.composerMinimized.value = false; });
+
+  test('Minimize hides the dialog and shows a bar named for the message, with nothing lost', async () => {
+    reply(msg, false);
+    render(<Composer />);
+    store.draft.value = { ...store.draft.value, body: 'Typed so far', files: [new File(['a'], 'a.txt')] };
+    fireEvent.click(screen.getByRole('button', { name: 'Minimize' }));
+    expect(screen.queryByRole('dialog', { name: 'Reply' })).not.toBeInTheDocument();
+    expect(document.querySelector('[aria-modal="true"]')).toBeNull();
+    const bar = screen.getByRole('region', { name: 'Minimized message' });
+    expect(bar).toHaveTextContent('Re: Shelter status');
+    expect(store.composerOpen.value).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Restore Re: Shelter status' }));
+    expect(await screen.findByRole('dialog', { name: 'Reply' })).toBeInTheDocument();
+    expect(store.draft.value.body).toBe('Typed so far');
+    expect(store.draft.value.files.map((f) => f.name)).toEqual(['a.txt']);
+    expect(store.draft.value.to).toEqual(['EOC-1']);
+  });
+
+  test('a message with no subject shows as New message on the bar', () => {
+    compose();
+    render(<Composer />);
+    fireEvent.click(screen.getByRole('button', { name: 'Minimize' }));
+    expect(screen.getByRole('button', { name: 'Restore New message' })).toBeInTheDocument();
+  });
+
+  test('closing a typed message from the bar asks first and can save it as a draft', async () => {
+    compose();
+    render(<Composer />);
+    store.draft.value = { ...store.draft.value, subject: 'Net check-in' };
+    fireEvent.click(screen.getByRole('button', { name: 'Minimize' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close Net check-in' }));
+    expect(await screen.findByText('Discard this message?')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() => expect(api.saveDraft).toHaveBeenCalled());
+    await waitFor(() => expect(store.composerOpen.value).toBe(false));
+    expect(screen.queryByRole('region', { name: 'Minimized message' })).not.toBeInTheDocument();
+  });
+
+  test('closing an untouched message from the bar closes it without asking', () => {
+    compose();
+    render(<Composer />);
+    fireEvent.click(screen.getByRole('button', { name: 'Minimize' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close New message' }));
+    expect(store.composerOpen.value).toBe(false);
+    expect(store.composerMinimized.value).toBe(false);
+  });
+
+  test('Reply while a typed message is minimized brings that one back instead of replacing it', async () => {
+    compose();
+    render(<Composer />);
+    store.draft.value = { ...store.draft.value, body: 'Do not lose me' };
+    fireEvent.click(screen.getByRole('button', { name: 'Minimize' }));
+    reply(msg, false);
+    expect(store.composerMinimized.value).toBe(false);
+    expect(store.draft.value.body).toBe('Do not lose me');
+    expect(toast).toHaveBeenCalledWith('Finish, save or close the message you are writing first.');
+  });
+
+  test('an untouched minimized message is simply replaced by a new one', () => {
+    compose();
+    render(<Composer />);
+    fireEvent.click(screen.getByRole('button', { name: 'Minimize' }));
+    reply(msg, false);
+    expect(store.composerMinimized.value).toBe(false);
+    expect(store.draft.value.subject).toBe('Re: Shelter status');
+  });
+
+  test('a new composer always opens full size', () => {
+    compose();
+    render(<Composer />);
+    fireEvent.click(screen.getByRole('button', { name: 'Minimize' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close New message' }));
+    compose();
+    expect(store.composerMinimized.value).toBe(false);
+  });
+});

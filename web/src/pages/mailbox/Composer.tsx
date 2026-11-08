@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'preact/hooks';
-import { FileText, Paperclip, Save, Send } from 'lucide-preact';
+import { FileText, Maximize2, Minus, Paperclip, Save, Send, X } from 'lucide-preact';
 import * as api from '../../lib/api';
 import { replyFormFor, stopFormPolling } from '../../lib/forms';
 import type { Message } from '../../lib/types';
 import { Button } from '../../ui/Button';
 import { Dialog } from '../../ui/Dialog';
+import { IconButton } from '../../ui/IconButton';
 import { TokenField } from '../../ui/TokenField';
 import { toast } from '../../ui/Toast';
 import { DraftAttachments } from './Attachments';
 import { FormCatalog } from './FormCatalog';
-import { type Draft, closeMsg, composerOpen, draft, emptyDraft, mycall, openMessage, refresh, refreshSidebar } from './store';
+import { type Draft, closeMsg, composerMinimized, composerOpen, draft, emptyDraft, mycall, openMessage, refresh, refreshSidebar } from './store';
 import './Composer.css';
 
 const addrs = (list: { Addr: string }[] | null | undefined) => (list ?? []).map((a) => a.Addr);
@@ -34,16 +35,26 @@ function replyCc(m: Message): string[] {
 // untouched reply doesn't ask about the quote it started with.
 let opened: Draft = emptyDraft();
 
-function open(d: Draft) {
-  opened = d;
-  draft.value = d;
-  composerOpen.value = true;
-}
-
 function edited(d: Draft): boolean {
   return d.subject !== opened.subject || d.body !== opened.body || d.p2pOnly !== opened.p2pOnly
     || d.to.join() !== opened.to.join() || d.cc.join() !== opened.cc.join()
     || d.files.length !== opened.files.length;
+}
+
+// open shows d in the composer, full size. While a minimized composer holds
+// typed work, that one comes back instead and open reports false, so a
+// Reply clicked while reading the original can't wipe the reply to it.
+function open(d: Draft): boolean {
+  if (composerOpen.value && edited(draft.value)) {
+    composerMinimized.value = false;
+    toast('Finish, save or close the message you are writing first.');
+    return false;
+  }
+  opened = d;
+  draft.value = d;
+  composerMinimized.value = false;
+  composerOpen.value = true;
+  return true;
 }
 
 // reattach fetches the message's files and adds them to the draft, the
@@ -67,42 +78,38 @@ export function compose() {
 }
 
 export function reply(m: Message, all: boolean) {
-  open({
+  if (!open({
     ...emptyDraft(),
     to: [m.From.Addr],
     cc: all ? replyCc(m) : [],
     subject: /^re:/i.test(m.Subject) ? m.Subject : `Re: ${m.Subject}`,
     body: `\n\n${quote(m)}`,
     inReplyTo: `${m.Folder}/${m.MID}`,
-  });
+  })) return;
   // A form-based message opens its reply form, which fills the composer.
   void replyFormFor(m);
 }
 
 export function forward(m: Message) {
-  open({ ...emptyDraft(), subject: `Fw: ${m.Subject}`, body: quote(m) });
-  reattach(m);
+  if (open({ ...emptyDraft(), subject: `Fw: ${m.Subject}`, body: quote(m) })) reattach(m);
 }
 
 export function editAsNew(m: Message) {
-  open({ ...emptyDraft(), to: addrs(m.To), cc: addrs(m.Cc), subject: m.Subject, body: m.Body });
-  reattach(m);
+  if (open({ ...emptyDraft(), to: addrs(m.To), cc: addrs(m.Cc), subject: m.Subject, body: m.Body })) reattach(m);
 }
 
 // editOutbox opens a message still waiting in the Outbox for editing.
 // Send posts the edited version and then deletes this one, so the Outbox
 // holds it once; a refused post or a discard leaves the original as it was.
 export function editOutbox(m: Message) {
-  open({ ...emptyDraft(), to: addrs(m.To), cc: addrs(m.Cc), subject: m.Subject, body: m.Body, p2pOnly: m.P2POnly, replaces: m.MID });
-  reattach(m);
+  if (open({ ...emptyDraft(), to: addrs(m.To), cc: addrs(m.Cc), subject: m.Subject, body: m.Body, p2pOnly: m.P2POnly, replaces: m.MID })) reattach(m);
 }
 
 // editDraft opens a saved draft. Send queues it and Save draft writes a new
 // version; either one deletes this copy afterwards, so a draft is never
 // both queued and kept, and a refused write leaves it as it was.
 export function editDraft(m: Message) {
-  open({ ...emptyDraft(), to: addrs(m.To), cc: addrs(m.Cc), subject: m.Subject, body: m.Body, p2pOnly: m.P2POnly, replaces: m.MID, fromDrafts: true });
-  reattach(m);
+  if (open({ ...emptyDraft(), to: addrs(m.To), cc: addrs(m.Cc), subject: m.Subject, body: m.Body, p2pOnly: m.P2POnly, replaces: m.MID, fromDrafts: true })) reattach(m);
 }
 
 // closeComposer discards the draft without asking: Send calls it after a
@@ -110,6 +117,7 @@ export function editDraft(m: Message) {
 export function closeComposer() {
   stopFormPolling();
   composerOpen.value = false;
+  composerMinimized.value = false;
   draft.value = emptyDraft();
 }
 
@@ -156,6 +164,7 @@ export function Composer() {
   const subjectId = useId();
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const isOpen = composerOpen.value;
+  const minimized = composerMinimized.value;
   const d = draft.value;
   // Escape, the X and Cancel ask first when anything was typed.
   const tryClose = useCallback(() => {
@@ -209,6 +218,8 @@ export function Composer() {
       toast('Draft saved');
       await Promise.all([refresh(), refreshSidebar()]);
     } catch (err) {
+      // A save started from the minimized bar shows its error in the composer.
+      composerMinimized.value = false;
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
@@ -223,10 +234,13 @@ export function Composer() {
     input.value = '';
   };
 
+  const minimize = () => { setCatalog(false); composerMinimized.value = true; };
+  const restore = () => { composerMinimized.value = false; };
   const title = d.fromDrafts ? 'Draft' : d.replaces ? 'Edit message' : d.inReplyTo ? 'Reply' : 'New message';
   return (
     <>
-      <Dialog open={isOpen} title={title} onClose={tryClose} wide closeOnBackdrop={false}
+      <Dialog open={isOpen && !minimized} title={title} onClose={tryClose} wide closeOnBackdrop={false}
+        actions={<IconButton icon={Minus} label="Minimize" title="Minimize to read the mailbox" onClick={minimize} />}
         footer={(
           <>
             <label class="ui-btn ui-btn-default ui-btn-md attach">
@@ -257,7 +271,10 @@ export function Composer() {
           <DraftAttachments files={d.files} onRemove={(i) => set({ files: draft.value.files.filter((_, j) => j !== i) })} />
         </div>
       </Dialog>
-      <FormCatalog open={isOpen && catalog} onClose={closeCatalog} />
+      {isOpen && minimized && (
+        <MinimizedBar name={d.subject.trim() || title} onRestore={restore} onClose={tryClose} />
+      )}
+      <FormCatalog open={isOpen && !minimized && catalog} onClose={closeCatalog} />
       <Dialog open={isOpen && confirmDiscard} title="Discard this message?" onClose={keepEditing}
         footer={(
           <>
@@ -272,3 +289,18 @@ export function Composer() {
   );
 }
 
+
+// MinimizedBar stands in for a minimized composer at the foot of the page.
+// Its name restores the composer as it was; its X closes it under the same
+// rules as Cancel, asking first when anything was typed.
+function MinimizedBar({ name, onRestore, onClose }: { name: string; onRestore: () => void; onClose: () => void }) {
+  return (
+    <div class="composer-bar" role="region" aria-label="Minimized message">
+      <button type="button" class="restore" aria-label={`Restore ${name}`} title="Restore" onClick={onRestore}>
+        <span class="name">{name}</span>
+        <Maximize2 aria-hidden="true" />
+      </button>
+      <IconButton icon={X} label={`Close ${name}`} onClick={onClose} />
+    </div>
+  );
+}

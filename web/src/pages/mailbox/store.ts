@@ -26,6 +26,9 @@ export const configChanged = signal(false);
 // composerOpen is set by the composer; a config change while it is open
 // waits for the user instead of reloading the page under them.
 export const composerOpen = signal(false);
+// composerMinimized folds an open composer into a bar so the mailbox
+// behind it can be read; the draft stays in draft meanwhile.
+export const composerMinimized = signal(false);
 
 // Draft is the message being written in the composer.
 export interface Draft {
