@@ -336,3 +336,37 @@ test('Download offers B2F, EML and TXT for this message', () => {
   fireEvent.click(screen.getByRole('menuitem', { name: 'EML (email)' }));
   expect(api.download).toHaveBeenCalledWith(['m1'], 'eml');
 });
+
+describe('a saved draft', () => {
+  const draftMsg = { ...msg, MID: 'd1', Folder: 'drafts', From: { Addr: 'N0CALL' }, To: [{ Addr: 'EOC-1' }], Labels: [] };
+  beforeEach(() => {
+    store.openMessage.value = draftMsg as never;
+    store.composerOpen.value = false;
+    vi.stubGlobal('fetch', vi.fn());
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  test('has Edit, which opens it in the composer as the draft it is', () => {
+    render(<MessagePane />);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(store.composerOpen.value).toBe(true);
+    expect(store.draft.value.replaces).toBe('d1');
+    expect(store.draft.value.fromDrafts).toBe(true);
+  });
+
+  test('offers no reply, forward, archive or move, since a draft is sent or deleted', () => {
+    render(<MessagePane />);
+    for (const name of ['Reply', 'Reply all', 'Forward', 'Archive', 'Move to']) {
+      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
+    }
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+  });
+
+  test('the archive and reply keys do nothing on a draft', () => {
+    render(<MessagePane />);
+    fireEvent.keyDown(document, { key: 'a' });
+    fireEvent.keyDown(document, { key: 'r' });
+    expect(api.move).not.toHaveBeenCalled();
+    expect(store.composerOpen.value).toBe(false);
+  });
+});

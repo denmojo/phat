@@ -83,7 +83,7 @@ Started this way, Phat needs the same `--mbox` every time, whether from a termin
 
 Either way, the Connect dialog then offers Direct or Through Pat. It starts on Through Pat and remembers your choice in each browser. Through Pat, the Connect, Abort and Disconnect buttons go to Pat, and Pat's status, session log, transfer progress and prompts appear in Phat's page as they would for a session of Phat's own. Direct runs the session in Phat as before, so peer-to-peer and the test server still work without Pat. Clear the setting to remove the choice. Make sure the address is Pat's (8080), not Phat's own (8081). If it points at Phat by mistake, a connect through Pat fails with an error saying so.
 
-Pat and Phat now show the same mail, with two exceptions. Messages you move into folders you made in Phat stay on disk, but Pat doesn't show them, because Pat has no folders of your own, only Inbox, Outbox, Sent and Archive. Move one back to Inbox or Archive and Pat shows it again. Stars and labels are Phat's alone, so Pat never shows them.
+Pat and Phat now show the same mail, with two exceptions. Messages you move into folders you made in Phat stay on disk, but Pat doesn't show them, because Pat has no folders of your own, only Inbox, Outbox, Sent and Archive. Move one back to Inbox or Archive and Pat shows it again. Stars, labels and drafts are Phat's alone, so Pat never shows them.
 
 ## Winlink CMS access
 
@@ -109,7 +109,7 @@ Phat's default greeting to peer-to-peer stations is also Pat's, "Open source Win
 
 ## The mailbox
 
-**Folders.** Inbox, Outbox, Sent and Archive, plus folders of your own. The + beside Folders adds one; hover a folder (or right-click it) for Rename and Delete. A folder that still holds mail can't be deleted.
+**Folders.** Inbox, Drafts, Outbox, Sent and Archive, plus folders of your own. The + beside Folders adds one; hover a folder (or right-click it) for Rename and Delete. A folder that still holds mail can't be deleted.
 
 **Labels and stars.** The + beside Labels creates a label with a name and a color, picked from a palette or a custom color picker. A label's ⋯ menu (or a right-click) edits its name and color or deletes it, and deleting says how many messages it comes off. A message can wear several labels. Select messages and use the tag button to add or remove them; a dash means some of the selection has that label, a check means all of it does. Hover a label chip in the list and click its x to take that one label off that one message. The Starred view collects starred mail from every folder.
 
@@ -125,7 +125,9 @@ Phat's default greeting to peer-to-peer stations is also Pat's, "Open source Win
 
 Opening a message shows quoted text as an indented block and previews image attachments inline; click an image for full size. Reply, Reply all and Forward sit on the toolbar, with Edit as new under the ⋯ menu. A message still waiting in the Outbox also gets an Edit button, which opens it in the composer as it is, P2P only included. Sending puts the edited version in the Outbox and then removes the original, so it goes out once; if you discard the edit, or the send is refused, the original stays as it was. On an archived message, the archive button becomes Move to Inbox. Download saves the message in one of three formats: B2F is the Winlink file exactly as Phat stores it, EML is an email file with the attachments inside that Apple Mail, Thunderbird and most other mail apps open, and TXT is the header lines and the body, listing attachment names without their contents. At phone width, in a message or with messages ticked, the Download formats move under the ⋯ menu. The up and down arrows beside Back step to the previous and next message in the order the list shows, without going back to it.
 
-New message opens the composer. Type callsigns or addresses into To and Cc, separated by commas, semicolons or spaces, or press Enter after each. Attach adds files, and images show a thumbnail. On sending, Phat re-encodes an image as a JPEG no wider than 600 pixels whenever that makes it smaller, as Pat does. P2P only keeps a message off the CMS. Clicking outside the composer leaves it open. Escape, the X and Cancel close it, and if you've typed anything Phat asks before throwing the draft away.
+New message opens the composer. Type callsigns or addresses into To and Cc, separated by commas, semicolons or spaces, or press Enter after each. Attach adds files, and images show a thumbnail. On sending, Phat re-encodes an image as a JPEG no wider than 600 pixels whenever that makes it smaller, as Pat does. P2P only keeps a message off the CMS. Clicking outside the composer leaves it open. Escape, the X and Cancel close it; if you've typed anything, Phat asks first and offers to save a draft instead of throwing it away.
+
+**Drafts.** Save draft in the composer files what you've written in Drafts and closes the composer, with no recipient, subject or body required. Nothing in Drafts is ever sent, whatever connects, so a reply can wait there while you go back and read the message it answers. Open a draft and press Edit to pick it up again. Saving it again replaces the old copy, and Send queues it in the Outbox and then removes it from Drafts, so it goes out once. A send without a recipient is refused and the draft stays as it was. Drafts are sent or deleted, never moved, and dragging mail into Drafts does nothing. Saving an Outbox message you're editing as a draft takes it out of the Outbox.
 
 <p align="center">
   <img src="docs/screenshot-compose.png" alt="The composer over the inbox: an EOC-1 token in To, a subject, a message body, and Attach, Forms, P2P only, Cancel and Send along the bottom" width="100%">

@@ -15,10 +15,16 @@ import (
 
 const FileName = "index.db"
 
-var systemFolders = map[string]bool{"in": true, "out": true, "sent": true, "archive": true}
+var systemFolders = map[string]bool{"in": true, "drafts": true, "out": true, "sent": true, "archive": true}
+
+// DraftsFolder holds messages saved from the composer before they are
+// finished. The exchange never reads it, so nothing in it is ever sent;
+// Pat ignores it like any folder it did not make.
+const DraftsFolder = "drafts"
 
 // IsSystemFolder reports whether name is one of the four folders wl2k-go
-// and the exchange code write to. Exact match; system names are lowercase.
+// and the exchange code write to, or Drafts. Exact match; system names are
+// lowercase.
 func IsSystemFolder(name string) bool { return systemFolders[name] }
 
 // Index is the SQLite index beside one callsign's mailbox directory.
@@ -71,6 +77,11 @@ func Open(mboxPath string) (*Index, error) {
 			db.Close()
 			return nil, fmt.Errorf("mailindex: apply schema: %w", err)
 		}
+	}
+	// wl2k-go's Prepare makes only the folders it writes to.
+	if err := os.MkdirAll(filepath.Join(mboxPath, DraftsFolder), 0o755); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("mailindex: create drafts folder: %w", err)
 	}
 	return &Index{mboxPath: mboxPath, db: db}, nil
 }

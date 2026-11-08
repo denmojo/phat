@@ -151,7 +151,7 @@ func TestFoldersListsSystemThenCustom(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"in", "out", "sent", "archive", "Radio Club", "ares"}
+	want := []string{"in", "drafts", "out", "sent", "archive", "Radio Club", "ares"}
 	if len(got) != len(want) {
 		t.Fatalf("got %v want %v", got, want)
 	}

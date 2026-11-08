@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'preact/hooks';
-import { FileText, Paperclip, Send } from 'lucide-preact';
+import { FileText, Paperclip, Save, Send } from 'lucide-preact';
 import * as api from '../../lib/api';
 import { replyFormFor, stopFormPolling } from '../../lib/forms';
 import type { Message } from '../../lib/types';
@@ -97,6 +97,14 @@ export function editOutbox(m: Message) {
   reattach(m);
 }
 
+// editDraft opens a saved draft. Send queues it and Save draft writes a new
+// version; either one deletes this copy afterwards, so a draft is never
+// both queued and kept, and a refused write leaves it as it was.
+export function editDraft(m: Message) {
+  open({ ...emptyDraft(), to: addrs(m.To), cc: addrs(m.Cc), subject: m.Subject, body: m.Body, p2pOnly: m.P2POnly, replaces: m.MID, fromDrafts: true });
+  reattach(m);
+}
+
 // closeComposer discards the draft without asking: Send calls it after a
 // post, and Discard after the user has confirmed.
 export function closeComposer() {
@@ -105,19 +113,36 @@ export function closeComposer() {
   draft.value = emptyDraft();
 }
 
-// removeOriginal deletes the Outbox message an edit replaced and closes it
-// if it is open. A delete that fails (a connect sent it meanwhile) is
-// reported, since the new version is already queued beside it.
-async function removeOriginal(mid: string) {
+// removeOriginal deletes the Outbox message or draft an edit replaced and
+// closes it if it is open. A delete that fails (a connect sent it
+// meanwhile) is reported, since the new version is already written beside
+// it; lead says what was written and what names the copy left behind.
+async function removeOriginal(mid: string, lead: string, what: string) {
+  const report = (why: string) => toast(`${lead}, but the ${what} could not be removed: ${why}`, { kind: 'error' });
   try {
     const res = await api.remove([mid]);
     const why = res?.failed?.[mid];
-    if (why) toast(`The edit is queued, but the original could not be removed: ${why}`, { kind: 'error' });
+    if (why) report(why);
   } catch (err) {
-    const why = err instanceof api.ApiError ? err.result?.failed?.[mid] ?? err.message : err instanceof Error ? err.message : String(err);
-    toast(`The edit is queued, but the original could not be removed: ${why}`, { kind: 'error' });
+    report(err instanceof api.ApiError ? err.result?.failed?.[mid] ?? err.message : err instanceof Error ? err.message : String(err));
   }
   if (openMessage.value?.MID === mid) closeMsg();
+}
+
+// formFor turns the draft into the form the server reads. A message being
+// sent gets placeholders for an empty subject and body, as Pat does; a
+// draft being saved keeps exactly what was typed.
+function formFor(cur: Draft, sending: boolean): FormData {
+  const form = new FormData();
+  form.append('to', cur.to.join(','));
+  form.append('cc', cur.cc.join(','));
+  form.append('subject', sending ? cur.subject || '<No subject>' : cur.subject);
+  form.append('body', sending ? cur.body || '<No message body>' : cur.body);
+  for (const f of cur.files) form.append('files', f, f.name);
+  form.append('date', new Date().toJSON());
+  if (cur.inReplyTo) form.append('in_reply_to', cur.inReplyTo);
+  if (cur.p2pOnly) form.append('p2ponly', 'on');
+  return form;
 }
 
 const set = (patch: Partial<Draft>) => { draft.value = { ...draft.value, ...patch }; };
@@ -139,6 +164,7 @@ export function Composer() {
   }, []);
   const keepEditing = useCallback(() => setConfirmDiscard(false), []);
   const discard = () => { setConfirmDiscard(false); closeComposer(); };
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -150,21 +176,14 @@ export function Composer() {
   const send = async () => {
     // Read the draft now: leaving an address field commits its pending text.
     const cur = draft.value;
-    const form = new FormData();
-    form.append('to', cur.to.join(','));
-    form.append('cc', cur.cc.join(','));
-    form.append('subject', cur.subject || '<No subject>');
-    form.append('body', cur.body || '<No message body>');
-    for (const f of cur.files) form.append('files', f, f.name);
-    form.append('date', new Date().toJSON());
-    if (cur.inReplyTo) form.append('in_reply_to', cur.inReplyTo);
-    if (cur.p2pOnly) form.append('p2ponly', 'on');
     setSending(true);
     setError('');
     try {
-      const result = await api.send(form);
-      // The edited version is in the Outbox now; only then does the original go.
-      if (cur.replaces) await removeOriginal(cur.replaces);
+      const result = await api.send(formFor(cur, true));
+      // The new version is in the Outbox now; only then does the original go.
+      if (cur.replaces) {
+        await (cur.fromDrafts ? removeOriginal(cur.replaces, 'The message is queued', 'draft') : removeOriginal(cur.replaces, 'The edit is queued', 'original'));
+      }
       closeComposer();
       toast(result || 'Message posted');
       await Promise.all([refresh(), refreshSidebar()]);
@@ -172,6 +191,27 @@ export function Composer() {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setSending(false);
+    }
+  };
+
+  // saveDraft writes the composer's contents to Drafts and closes it. An
+  // edit of a saved draft or a queued message replaces that one, once the
+  // new draft is safely written.
+  const saveDraft = async () => {
+    const cur = draft.value;
+    setConfirmDiscard(false);
+    setSaving(true);
+    setError('');
+    try {
+      await api.saveDraft(formFor(cur, false));
+      if (cur.replaces) await removeOriginal(cur.replaces, 'The draft is saved', cur.fromDrafts ? 'old draft' : 'queued message');
+      closeComposer();
+      toast('Draft saved');
+      await Promise.all([refresh(), refreshSidebar()]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -183,7 +223,7 @@ export function Composer() {
     input.value = '';
   };
 
-  const title = d.replaces ? 'Edit message' : d.inReplyTo ? 'Reply' : 'New message';
+  const title = d.fromDrafts ? 'Draft' : d.replaces ? 'Edit message' : d.inReplyTo ? 'Reply' : 'New message';
   return (
     <>
       <Dialog open={isOpen} title={title} onClose={tryClose} wide closeOnBackdrop={false}
@@ -200,7 +240,8 @@ export function Composer() {
             </label>
             <span class="spacer" />
             <Button onClick={tryClose}>Cancel</Button>
-            <Button variant="primary" disabled={sending} onClick={() => void send()}><Send /><span>Send</span></Button>
+            <Button disabled={saving || sending} onClick={() => void saveDraft()}><Save /><span>Save draft</span></Button>
+            <Button variant="primary" disabled={sending || saving} onClick={() => void send()}><Send /><span>Send</span></Button>
           </>
         )}>
         <div class="composer">
@@ -221,10 +262,11 @@ export function Composer() {
         footer={(
           <>
             <Button onClick={keepEditing}>Keep editing</Button>
+            <Button disabled={saving} onClick={() => void saveDraft()}>Save draft</Button>
             <Button variant="danger" onClick={discard}>Discard</Button>
           </>
         )}>
-        <p>What you've written will be lost.</p>
+        <div class="dialog-pad"><p>What you've written will be lost unless you save it as a draft.</p></div>
       </Dialog>
     </>
   );

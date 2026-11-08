@@ -209,35 +209,101 @@ func (h Handler) attachmentHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) postMessageHandler(w http.ResponseWriter, r *http.Request) {
-	if mux.Vars(r)["box"] != "out" {
+	switch mux.Vars(r)["box"] {
+	case "out":
+		h.postOutboundMessageHandler(w, r)
+	case mailindex.DraftsFolder:
+		h.postDraftHandler(w, r)
+	default:
 		http.Error(w, "Not implemented", http.StatusNotImplemented)
-		return
 	}
-	h.postOutboundMessageHandler(w, r)
 }
 
 func (h Handler) postOutboundMessageHandler(w http.ResponseWriter, r *http.Request) {
+	msg, err := h.messageFromForm(r)
+	if err != nil {
+		writeHTTPError(w, err)
+		return
+	}
+
+	if err := msg.Validate(); err != nil {
+		http.Error(w, "Validation error: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Post to outbox
+	if err := h.Mailbox().AddOut(msg); err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	var buf bytes.Buffer
+	_ = msg.Write(&buf)
+	_, _ = fmt.Fprintf(w, "Message posted (%.2f kB)", float64(buf.Len())/1024)
+}
+
+// postDraftHandler saves the composer's contents to Drafts. A draft is
+// unfinished, so it skips the validation the Outbox applies; it is
+// validated when it is sent. The file is written beside its final name and
+// renamed into place, and the index is levelled before the reply, so the
+// list the client fetches next already holds it.
+func (h Handler) postDraftHandler(w http.ResponseWriter, r *http.Request) {
+	msg, err := h.messageFromForm(r)
+	if err != nil {
+		writeHTTPError(w, err)
+		return
+	}
+	data, err := msg.Bytes()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	dir := h.Index().FolderDir(mailindex.DraftsFolder)
+	tmp, err := os.CreateTemp(dir, ".draft-*")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	_, werr := tmp.Write(data)
+	cerr := tmp.Close()
+	if werr == nil {
+		werr = cerr
+	}
+	if werr == nil {
+		werr = os.Rename(tmp.Name(), path.Join(dir, msg.MID()+mailbox.Ext))
+	}
+	if werr != nil {
+		os.Remove(tmp.Name())
+		log.Println(werr)
+		http.Error(w, werr.Error(), http.StatusInternalServerError)
+		return
+	}
+	if _, err := h.Index().Reconcile(); err != nil {
+		log.Printf("mailindex reconcile: %v", err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(struct{ MID string }{msg.MID()})
+}
+
+// messageFromForm builds a message from the composer's form: recipients,
+// subject, body, attachments, P2P only and date. It does not validate.
+func (h Handler) messageFromForm(r *http.Request) (*fbb.Message, error) {
 	err := r.ParseMultipartForm(10 * (1024 ^ 2)) // 10Mb
 	if err != nil {
 		if err := r.ParseForm(); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return nil, HTTPError{err, http.StatusInternalServerError}
 		}
 	}
 	msg := fbb.NewMessage(fbb.Private, h.Options().MyCall)
 
 	// files
 	if r.MultipartForm != nil {
-		files := r.MultipartForm.File["files"]
-		for _, f := range files {
-			err := addAttachmentFromMultipartFile(msg, f)
-			switch err := err.(type) {
-			case nil:
-				// No problem
-			case HTTPError:
-				http.Error(w, err.Error(), err.StatusCode)
-			default:
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+		for _, f := range r.MultipartForm.File["files"] {
+			if err := addAttachmentFromMultipartFile(msg, f); err != nil {
+				return nil, err
 			}
 		}
 	}
@@ -251,8 +317,7 @@ func (h Handler) postOutboundMessageHandler(w http.ResponseWriter, r *http.Reque
 		formData, ok := h.FormsManager().GetPostedFormData(cookie.Value)
 		if !ok {
 			debug.Printf("form instance key (%q) not valid", cookie.Value)
-			http.Error(w, "form instance key not valid", http.StatusBadRequest)
-			return
+			return nil, HTTPError{errors.New("form instance key not valid"), http.StatusBadRequest}
 		}
 		for _, f := range formData.Attachments {
 			msg.AddFile(f)
@@ -277,36 +342,28 @@ func (h Handler) postOutboundMessageHandler(w http.ResponseWriter, r *http.Reque
 	if v := r.Form["p2ponly"]; len(v) == 1 && v[0] != "" {
 		msg.Header.Set("X-P2POnly", "true")
 	}
-	if v := r.Form["date"]; len(v) == 1 {
-		t, err := time.Parse(time.RFC3339, v[0])
-		if err != nil {
-			log.Printf("Unable to parse message date: %s", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		msg.SetDate(t)
-	} else {
+	v := r.Form["date"]
+	if len(v) != 1 {
 		log.Printf("Missing date value")
-		http.Error(w, "Missing date value", http.StatusBadRequest)
+		return nil, HTTPError{errors.New("Missing date value"), http.StatusBadRequest}
+	}
+	t, err := time.Parse(time.RFC3339, v[0])
+	if err != nil {
+		log.Printf("Unable to parse message date: %s", err)
+		return nil, HTTPError{err, http.StatusBadRequest}
+	}
+	msg.SetDate(t)
+	return msg, nil
+}
+
+// writeHTTPError replies with an HTTPError's status, or 500 for any other error.
+func writeHTTPError(w http.ResponseWriter, err error) {
+	var he HTTPError
+	if errors.As(err, &he) {
+		http.Error(w, he.Error(), he.StatusCode)
 		return
 	}
-
-	if err := msg.Validate(); err != nil {
-		http.Error(w, "Validation error: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Post to outbox
-	if err := h.Mailbox().AddOut(msg); err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusCreated)
-	var buf bytes.Buffer
-	_ = msg.Write(&buf)
-	_, _ = fmt.Fprintf(w, "Message posted (%.2f kB)", float64(buf.Len())/1024)
+	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
 func addAttachmentFromMultipartFile(msg *fbb.Message, f *multipart.FileHeader) error {

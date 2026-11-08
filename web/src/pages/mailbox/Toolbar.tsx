@@ -127,7 +127,7 @@ export function Toolbar() {
     );
   }
 
-  const moveTargets = folders.value.filter((f) => f.name !== here && f.name !== 'out');
+  const moveTargets = folders.value.filter((f) => f.name !== here && f.name !== 'out' && f.name !== 'drafts');
   return (
     <div class="toolbar" ref={bar}>
       <Checkbox label="Select all" checked={all} indeterminate={!all} onClick={toggleAll} />

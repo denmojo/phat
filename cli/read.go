@@ -22,7 +22,7 @@ import (
 	"github.com/la5nta/wl2k-go/mailbox"
 )
 
-var mailboxes = []string{"in", "out", "sent", "archive"}
+var mailboxes = []string{"in", "out", "sent", "archive", "drafts"}
 
 func ReadHandle(ctx context.Context, app *app.App, _ []string) {
 	cancel := exitOnContextCancellation(ctx)

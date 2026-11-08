@@ -1,6 +1,7 @@
 vi.mock('../../../lib/api', async (orig) => ({
   ...(await orig<typeof import('../../../lib/api')>()),
   send: vi.fn(async () => 'Message posted (0.00 kB)'),
+  saveDraft: vi.fn(async () => ({ MID: 'd2' })),
   remove: vi.fn(async (mids: string[]) => ({ ok: mids, failed: {} })),
   list: vi.fn(async () => []),
   folders: vi.fn(async () => []),
@@ -12,7 +13,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/preact';
 import { toast } from '../../../ui/Toast';
 import * as api from '../../../lib/api';
 import * as store from '../store';
-import { Composer, compose, editAsNew, editOutbox, forward, reply } from '../Composer';
+import { Composer, compose, editAsNew, editDraft, editOutbox, forward, reply } from '../Composer';
 import type { Message } from '../../../lib/types';
 
 const msg: Message = {
@@ -228,5 +229,118 @@ describe('editing a message in the Outbox', () => {
     expect(store.draft.value.replaces).toBeNull();
     editAsNew(queued);
     expect(store.draft.value.replaces).toBeNull();
+  });
+});
+
+describe('drafts', () => {
+  const saved = () => (api.saveDraft as unknown as { mock: { calls: [FormData][] } }).mock.calls[0]![0];
+  const draftMsg: Message = { ...msg, MID: 'd1', Folder: 'drafts', From: { Addr: 'N0CALL' }, To: [{ Addr: 'EOC-1' }], Cc: null, Subject: '', Body: 'Half a thought', P2POnly: true };
+  afterEach(() => { store.openMessage.value = null; });
+
+  test('Save draft posts what was typed as it is, with no placeholder subject or body, and closes', async () => {
+    compose();
+    render(<Composer />);
+    store.draft.value = { ...store.draft.value, body: 'Started a reply' };
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() => expect(api.saveDraft).toHaveBeenCalled());
+    const f = saved();
+    expect(f.get('subject')).toBe('');
+    expect(f.get('body')).toBe('Started a reply');
+    expect(f.get('to')).toBe('');
+    expect(Number.isNaN(Date.parse(String(f.get('date'))))).toBe(false);
+    expect(api.send).not.toHaveBeenCalled();
+    await waitFor(() => expect(store.composerOpen.value).toBe(false));
+    expect(toast).toHaveBeenCalledWith('Draft saved');
+  });
+
+  test('Save draft carries attachments and P2P only', async () => {
+    compose();
+    store.draft.value = { ...store.draft.value, p2pOnly: true, files: [new File(['a'], 'a.txt')] };
+    render(<Composer />);
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() => expect(api.saveDraft).toHaveBeenCalled());
+    expect((saved().getAll('files') as File[]).map((x) => x.name)).toEqual(['a.txt']);
+    expect(saved().get('p2ponly')).toBe('on');
+  });
+
+  test('closing a typed message offers Save draft beside Discard', async () => {
+    compose();
+    render(<Composer />);
+    store.draft.value = { ...store.draft.value, subject: 'Net check-in' };
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(await screen.findByText('Discard this message?')).toBeInTheDocument();
+    const buttons = screen.getAllByRole('button', { name: 'Save draft' });
+    fireEvent.click(buttons[buttons.length - 1]!);
+    await waitFor(() => expect(api.saveDraft).toHaveBeenCalled());
+    expect(saved().get('subject')).toBe('Net check-in');
+    await waitFor(() => expect(store.composerOpen.value).toBe(false));
+  });
+
+  test('a refused save keeps the composer open and shows why', async () => {
+    (api.saveDraft as unknown as { mockRejectedValueOnce: (e: unknown) => void })
+      .mockRejectedValueOnce(new api.ApiError(500, 'disk full'));
+    compose();
+    render(<Composer />);
+    store.draft.value = { ...store.draft.value, body: 'x' };
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('disk full');
+    expect(store.composerOpen.value).toBe(true);
+  });
+
+  test('a draft opens as it was, titled Draft', async () => {
+    editDraft(draftMsg);
+    render(<Composer />);
+    const d = store.draft.value;
+    expect(d.to).toEqual(['EOC-1']);
+    expect(d.subject).toBe('');
+    expect(d.body).toBe('Half a thought');
+    expect(d.p2pOnly).toBe(true);
+    expect(d.replaces).toBe('d1');
+    expect(await screen.findByRole('dialog', { name: 'Draft' })).toBeInTheDocument();
+  });
+
+  test('saving a draft again writes the new version, then removes the old one', async () => {
+    store.openMessage.value = draftMsg as never;
+    editDraft(draftMsg);
+    render(<Composer />);
+    store.draft.value = { ...store.draft.value, body: 'A whole thought' };
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() => expect(api.remove).toHaveBeenCalledWith(['d1']));
+    const savedFirst = (api.saveDraft as unknown as { mock: { invocationCallOrder: number[] } }).mock.invocationCallOrder[0]!;
+    const removedAfter = (api.remove as unknown as { mock: { invocationCallOrder: number[] } }).mock.invocationCallOrder[0]!;
+    expect(savedFirst).toBeLessThan(removedAfter);
+    expect(store.openMessage.value).toBeNull();
+  });
+
+  test('sending a draft queues it, then removes it from Drafts, so it goes out once', async () => {
+    editDraft(draftMsg);
+    render(<Composer />);
+    store.draft.value = { ...store.draft.value, subject: 'Shelter status' };
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await waitFor(() => expect(api.remove).toHaveBeenCalledWith(['d1']));
+    expect(sent().get('subject')).toBe('Shelter status');
+    expect(api.saveDraft).not.toHaveBeenCalled();
+    await waitFor(() => expect(store.composerOpen.value).toBe(false));
+  });
+
+  test('when a sent draft cannot be removed, the toast says the message is queued and the draft stayed', async () => {
+    (api.remove as unknown as { mockRejectedValueOnce: (e: unknown) => void })
+      .mockRejectedValueOnce(new api.ApiError(404, '{"ok":[],"failed":{"d1":"not found"}}', { ok: [], failed: { d1: 'not found' } }));
+    editDraft(draftMsg);
+    render(<Composer />);
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await waitFor(() => expect(toast).toHaveBeenCalledWith(
+      'The message is queued, but the draft could not be removed: not found', { kind: 'error' }));
+  });
+
+  test('discarding changes to a draft leaves the saved draft alone', async () => {
+    editDraft(draftMsg);
+    render(<Composer />);
+    store.draft.value = { ...store.draft.value, body: 'Changed my mind.' };
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Discard' }));
+    expect(store.composerOpen.value).toBe(false);
+    expect(api.saveDraft).not.toHaveBeenCalled();
+    expect(api.remove).not.toHaveBeenCalled();
   });
 });
