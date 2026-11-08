@@ -1,6 +1,6 @@
 // Display helpers for the mailbox page.
 
-const SYSTEM_NAMES: Record<string, string> = { in: 'Inbox', out: 'Outbox', sent: 'Sent', archive: 'Archive' };
+const SYSTEM_NAMES: Record<string, string> = { in: 'Inbox', drafts: 'Drafts', out: 'Outbox', sent: 'Sent', archive: 'Archive' };
 
 // narrow reports a phone-width screen, where toolbars fold some buttons
 // into their More actions menu.

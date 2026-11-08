@@ -9,7 +9,7 @@ import { Dialog } from '../../ui/Dialog';
 import { IconButton } from '../../ui/IconButton';
 import { Menu } from '../../ui/Menu';
 import { MessageAttachments } from './Attachments';
-import { compose, editAsNew, editOutbox, forward, reply } from './Composer';
+import { compose, editAsNew, editDraft, editOutbox, forward, reply } from './Composer';
 import { LabelMenu } from './LabelMenu';
 import { applyBulkTo, closeMsg, folders, labels, neighbors, openMessage, stepMsg } from './store';
 import { DownloadMenu, downloadItems } from './DownloadMenu';
@@ -44,28 +44,32 @@ export function MessagePane() {
   // menus open exactly as they do by mouse. n starts a new message, as it
   // does over the list, which is unmounted while a message is open.
   const click = (label: string) => bar.current?.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)?.click();
+  // A draft is sent or deleted from here, never answered, archived or moved.
+  const isDraft = m?.Folder === 'drafts';
   useHotkeys(m ? {
     j: () => void stepMsg(1),
     k: () => void stepMsg(-1),
     h: closeMsg,
-    r: () => reply(m, false),
-    R: () => reply(m, true),
-    f: () => forward(m),
+    ...(isDraft ? {} : {
+      r: () => reply(m, false),
+      R: () => reply(m, true),
+      f: () => forward(m),
+      a: () => void applyBulkTo([m.MID], 'move', m.Folder === 'archive' ? 'in' : 'archive'),
+      m: () => click(narrow() ? 'More actions' : 'Move to'),
+    }),
     n: compose,
-    a: () => void applyBulkTo([m.MID], 'move', m.Folder === 'archive' ? 'in' : 'archive'),
     t: () => setConfirmDelete(true),
     u: () => { void applyBulkTo([m.MID], 'read', false); closeMsg(); },
     s: () => void applyBulkTo([m.MID], 'star', !m.Starred),
     l: () => click('Label'),
     // On a phone the Move to and Download buttons are hidden; More actions
     // carries their entries there.
-    m: () => click(narrow() ? 'More actions' : 'Move to'),
     d: () => click(narrow() ? 'More actions' : 'Download'),
   } : {}, !!m);
   if (!m) return null;
   const mids = [m.MID];
   const colors = new Map(labels.value.map((l) => [l.name, l.color]));
-  const targets = folders.value.filter((f) => f.name !== m.Folder && f.name !== 'out');
+  const targets = folders.value.filter((f) => f.name !== m.Folder && f.name !== 'out' && f.name !== 'drafts');
   const from = m.From?.Addr ?? '';
   const to = (m.To ?? []).map((a) => a.Addr).join(', ');
   const cc = (m.Cc ?? []).map((a) => a.Addr).join(', ');
@@ -78,15 +82,20 @@ export function MessagePane() {
         <IconButton icon={ChevronUp} label="Previous message" title="Previous message (k)" disabled={!neighbors.value.prev} onClick={() => void step(-1)} />
         <IconButton icon={ChevronDown} label="Next message" title="Next message (j)" disabled={!neighbors.value.next} onClick={() => void step(1)} />
         <span class="sep" />
-        <IconButton icon={Reply} label="Reply" onClick={() => reply(m, false)} />
-        <span class="wide-only">
-          <IconButton icon={ReplyAll} label="Reply all" onClick={() => reply(m, true)} />
-          <IconButton icon={Forward} label="Forward" onClick={() => forward(m)} />
-        </span>
-        {/* A message still waiting in the Outbox can be edited in place. */}
+        {!isDraft && (
+          <>
+            <IconButton icon={Reply} label="Reply" onClick={() => reply(m, false)} />
+            <span class="wide-only">
+              <IconButton icon={ReplyAll} label="Reply all" onClick={() => reply(m, true)} />
+              <IconButton icon={Forward} label="Forward" onClick={() => forward(m)} />
+            </span>
+          </>
+        )}
+        {/* A message still waiting in the Outbox, or a saved draft, can be edited in place. */}
         {m.Folder === 'out' && <IconButton icon={Pencil} label="Edit" onClick={() => editOutbox(m)} />}
+        {isDraft && <IconButton icon={Pencil} label="Edit" onClick={() => editDraft(m)} />}
         <span class="sep" />
-        {archived
+        {isDraft ? null : archived
           ? <IconButton icon={Inbox} label="Move to Inbox" onClick={() => void applyBulkTo(mids, 'move', 'in')} />
           : <IconButton icon={Archive} label="Archive" onClick={() => void applyBulkTo(mids, 'move', 'archive')} />}
         <IconButton icon={Trash2} label="Delete" onClick={() => setConfirmDelete(true)} />
@@ -98,15 +107,17 @@ export function MessagePane() {
           onClick={() => void applyBulkTo(mids, 'star', !m.Starred)} />
         <LabelMenu target={{ mids, labels: [m.Labels ?? []] }} />
         <span class="wide-only">
-          <Menu trigger={<IconButton icon={FolderInput} label="Move to" />} items={moveTo()} />
+          {!isDraft && <Menu trigger={<IconButton icon={FolderInput} label="Move to" />} items={moveTo()} />}
           <DownloadMenu mids={mids} />
         </span>
         <Menu align="right" trigger={<IconButton icon={Ellipsis} label="More actions" />} items={[
           ...(narrow() ? [
-            { label: 'Reply all', icon: ReplyAll, onSelect: () => reply(m, true) },
-            { label: 'Forward', icon: Forward, onSelect: () => forward(m) },
+            ...(isDraft ? [] : [
+              { label: 'Reply all', icon: ReplyAll, onSelect: () => reply(m, true) },
+              { label: 'Forward', icon: Forward, onSelect: () => forward(m) },
+            ]),
             { label: 'Mark unread', icon: Mail, onSelect: () => { void applyBulkTo(mids, 'read', false); closeMsg(); } },
-            ...moveTo().map((x) => ({ ...x, label: `Move to ${x.label}` })),
+            ...(isDraft ? [] : moveTo().map((x) => ({ ...x, label: `Move to ${x.label}` }))),
             ...downloadItems(mids),
           ] : []),
           { label: 'Edit as new', icon: FilePen, onSelect: () => editAsNew(m) },

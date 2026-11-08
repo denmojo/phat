@@ -11,7 +11,7 @@ function folderMessage(err: unknown): string {
   if (err instanceof ApiError) {
     if (err.status === 409) return 'A folder with that name exists';
     if (err.status === 400) return 'Letters, digits, space, - and _ only, 32 max';
-    if (err.status === 403) return 'Inbox, Outbox, Sent and Archive cannot be renamed';
+    if (err.status === 403) return 'Inbox, Drafts, Outbox, Sent and Archive cannot be renamed';
   }
   return err instanceof Error ? err.message : String(err);
 }

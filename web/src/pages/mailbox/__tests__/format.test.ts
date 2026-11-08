@@ -9,5 +9,6 @@ test('today shows the time, this year the day, older the year too', () => {
 });
 test('system folders get display names', () => {
   expect(folderTitle('in')).toBe('Inbox');
+  expect(folderTitle('drafts')).toBe('Drafts');
   expect(folderTitle('Radio Club')).toBe('Radio Club');
 });

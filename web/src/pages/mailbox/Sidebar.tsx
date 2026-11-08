@@ -1,7 +1,7 @@
 import { useRef, useState } from 'preact/hooks';
 import type { LucideIcon } from 'lucide-preact';
 import {
-  Archive, EllipsisVertical, Folder, Inbox, MailCheck, MailPlus, MapPin, Pencil, Plus, RadioTower, ScrollText, Send, Settings, Star, Trash2, CircleQuestionMark,
+  Archive, EllipsisVertical, FilePen, Folder, Inbox, MailCheck, MailPlus, MapPin, Pencil, Plus, RadioTower, ScrollText, Send, Settings, Star, Trash2, CircleQuestionMark,
 } from 'lucide-preact';
 import * as api from '../../lib/api';
 import type { Label, View } from '../../lib/types';
@@ -19,7 +19,7 @@ import { dropTarget, type DropKind } from './dnd';
 import { compose } from './Composer';
 import './Sidebar.css';
 
-const SYSTEM: [string, LucideIcon][] = [['in', Inbox], ['out', Send], ['sent', MailCheck], ['archive', Archive]];
+const SYSTEM: [string, LucideIcon][] = [['in', Inbox], ['drafts', FilePen], ['out', Send], ['sent', MailCheck], ['archive', Archive]];
 
 function same(a: View, b: View): boolean {
   if (a.kind !== b.kind) return false;
@@ -141,11 +141,12 @@ export function Sidebar() {
       <nav aria-label="Mailbox" class="side-nav">
         {SYSTEM.map(([name, icon]) => {
           const f = byName.get(name);
-          // Inbox counts unread mail; Outbox counts what waits to be sent.
-          const count = name === 'out' ? f?.count : name === 'in' ? f?.unread : undefined;
-          // The outbox is filled by composing, not by dropping old mail in.
+          // Inbox counts unread mail; Outbox and Drafts count what they hold.
+          const composed = name === 'out' || name === 'drafts';
+          const count = composed ? f?.count : name === 'in' ? f?.unread : undefined;
+          // The Outbox and Drafts are filled by composing, not by dropping old mail in.
           return <Entry key={name} to={{ kind: 'folder', name }} icon={icon} name={folderTitle(name)} count={count}
-            drop={name === 'out' ? undefined : ['folder', name]} />;
+            drop={composed ? undefined : ['folder', name]} />;
         })}
         <Entry to={{ kind: 'starred' }} icon={Star} name="Starred" drop={['starred']} />
 

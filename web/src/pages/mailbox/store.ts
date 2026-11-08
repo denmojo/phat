@@ -26,6 +26,9 @@ export const configChanged = signal(false);
 // composerOpen is set by the composer; a config change while it is open
 // waits for the user instead of reloading the page under them.
 export const composerOpen = signal(false);
+// composerMinimized folds an open composer into a bar so the mailbox
+// behind it can be read; the draft stays in draft meanwhile.
+export const composerMinimized = signal(false);
 
 // Draft is the message being written in the composer.
 export interface Draft {
@@ -37,11 +40,13 @@ export interface Draft {
   // inReplyTo is "<folder>/<mid>" of the message being answered.
   inReplyTo: string | null;
   p2pOnly: boolean;
-  // replaces is the MID of the Outbox message this draft is an edit of;
-  // Send deletes that message once the new version is posted.
+  // replaces is the MID of the Outbox message or saved draft this is an
+  // edit of; Send and Save draft delete it once the new version is written.
   replaces: string | null;
+  // fromDrafts says replaces names a saved draft rather than queued mail.
+  fromDrafts: boolean;
 }
-export const emptyDraft = (): Draft => ({ to: [], cc: [], subject: '', body: '', files: [], inReplyTo: null, p2pOnly: false, replaces: null });
+export const emptyDraft = (): Draft => ({ to: [], cc: [], subject: '', body: '', files: [], inReplyTo: null, p2pOnly: false, replaces: null, fromDrafts: false });
 export const draft = signal<Draft>(emptyDraft());
 // drawerOpen shows the sidebar as a drawer on narrow screens.
 export const drawerOpen = signal(false);
@@ -119,7 +124,7 @@ export function setSort(s: Sort): void {
 // correspondent is the address a row is shown under: the recipient for
 // mail this station wrote, the sender otherwise.
 export function correspondent(r: Row): string {
-  return r.Folder === 'out' || r.Folder === 'sent' ? r.To : r.From;
+  return r.Folder === 'out' || r.Folder === 'sent' || r.Folder === 'drafts' ? r.To : r.From;
 }
 
 // sortedRows is rows in display order. Search results keep the server's

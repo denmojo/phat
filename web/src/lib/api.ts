@@ -86,6 +86,9 @@ export function download(mids: string[], format: DownloadFormat): void {
   a.remove();
 }
 export const send = (form: FormData) => call('/api/mailbox/out', { method: 'POST', body: form });
+// saveDraft writes the composer's contents to Drafts, unvalidated; the
+// reply names the saved draft's MID.
+export const saveDraft = (form: FormData) => json<{ MID: string }>('/api/mailbox/drafts', { method: 'POST', body: form });
 
 // Config and session
 export const config = () => json<Config>('/api/config');

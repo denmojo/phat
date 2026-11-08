@@ -18,7 +18,7 @@ import (
 // Stats reports what one Reconcile changed.
 type Stats struct{ Added, Updated, Removed, Skipped int }
 
-// Folders returns the four system folders in their fixed order, then every
+// Folders returns the system folders in their fixed order, then every
 // custom folder directory sorted by name. Only directories count; a stray
 // file in the mailbox root is ignored, as is index.db.
 func (ix *Index) Folders() ([]string, error) {
@@ -34,7 +34,7 @@ func (ix *Index) Folders() ([]string, error) {
 		custom = append(custom, e.Name())
 	}
 	sort.Strings(custom)
-	return append([]string{"in", "out", "sent", "archive"}, custom...), nil
+	return append([]string{"in", DraftsFolder, "out", "sent", "archive"}, custom...), nil
 }
 
 // FolderDir is the directory holding a folder's files.

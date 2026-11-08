@@ -21,7 +21,7 @@ func TestFoldersListCreateRenameDelete(t *testing.T) {
 		Unread int    `json:"unread"`
 	}
 	json.Unmarshal(body, &folders)
-	if len(folders) != 4 || folders[0].Name != "in" || !folders[0].System || folders[0].Count != 1 {
+	if len(folders) != 5 || folders[0].Name != "in" || folders[1].Name != "drafts" || !folders[0].System || folders[0].Count != 1 {
 		t.Fatalf("folders: %+v", folders)
 	}
 

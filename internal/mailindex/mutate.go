@@ -18,6 +18,7 @@ var (
 	ErrFolderNotEmpty    = errors.New("mailindex: folder not empty")
 	ErrSystemFolder      = errors.New("mailindex: system folder")
 	ErrDestinationExists = errors.New("mailindex: destination already holds this message")
+	ErrDraftsMove        = errors.New("mailindex: drafts are sent or deleted, not moved")
 )
 
 var folderNameRe = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9 _-]{0,31}$`)
@@ -75,6 +76,11 @@ func (ix *Index) Move(mid, to string) error {
 	}
 	if from == target {
 		return nil
+	}
+	// A draft leaves Drafts by being sent from the composer, which validates
+	// it, or by being deleted; and received mail never becomes a draft.
+	if from == DraftsFolder || target == DraftsFolder {
+		return ErrDraftsMove
 	}
 	dst := filepath.Join(ix.FolderDir(target), mid+mailbox.Ext)
 	if _, err := os.Stat(dst); err == nil {

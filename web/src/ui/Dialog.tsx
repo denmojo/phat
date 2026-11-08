@@ -17,6 +17,8 @@ type Props = {
   // dismissable false drops the Close button, Escape and the backdrop, for
   // dialogs that must be answered with one of their own buttons.
   dismissable?: boolean;
+  // actions are extra buttons in the header, before Close.
+  actions?: ComponentChildren;
   children: ComponentChildren;
 };
 
@@ -29,7 +31,7 @@ const focusable = 'button:not([disabled]), [href], input:not([disabled]), select
 // Dialog renders a modal into document.body. Escape, the close button and
 // a click on the backdrop close it; Tab stays inside while it is open, and
 // focus returns to where it was when it closes.
-export function Dialog({ open, title, onClose, footer, wide, closeOnBackdrop = true, dismissable = true, children }: Props) {
+export function Dialog({ open, title, onClose, footer, wide, closeOnBackdrop = true, dismissable = true, actions, children }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const titleId = useId();
   // Callers pass a fresh onClose on every render; reading it through a ref
@@ -80,6 +82,7 @@ export function Dialog({ open, title, onClose, footer, wide, closeOnBackdrop = t
       <div ref={box} class={`ui-dialog${wide ? ' wide' : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <div class="ui-dialog-head">
           <h2 id={titleId}>{title}</h2>
+          {actions}
           {dismissable && <IconButton icon={X} label="Close" onClick={onClose} />}
         </div>
         <div class="ui-dialog-body">{children}</div>

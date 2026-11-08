@@ -18,6 +18,7 @@ beforeEach(() => {
     { name: 'archive', system: true, count: 5, unread: 0 },
     { name: 'in', system: true, count: 9, unread: 3 },
     { name: 'out', system: true, count: 2, unread: 0 },
+    { name: 'drafts', system: true, count: 1, unread: 0 },
     { name: 'sent', system: true, count: 4, unread: 0 },
   ];
   store.labels.value = [{ name: 'Radio Club/ARES', color: '#2563eb', count: 1 }];
@@ -28,7 +29,7 @@ test('system folders first, then custom folders, then Starred, then labels', () 
   render(<Sidebar />);
   const nav = screen.getByRole('navigation', { name: 'Mailbox' });
   const names = within(nav).getAllByRole('link').map((a) => a.querySelector('.name')?.textContent);
-  expect(names).toEqual(['Inbox', 'Outbox', 'Sent', 'Archive', 'Starred', 'Club', 'Radio Club/ARES']);
+  expect(names).toEqual(['Inbox', 'Drafts', 'Outbox', 'Sent', 'Archive', 'Starred', 'Club', 'Radio Club/ARES']);
 });
 
 test('hovering the name spells out the acronym with the initials in bold', () => {
@@ -96,4 +97,9 @@ test('Escape closes the label dialog', async () => {
   const input = screen.getByRole('textbox', { name: 'Name' });
   fireEvent.keyDown(input, { key: 'Escape' });
   await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+});
+
+test('Drafts counts the drafts it holds', () => {
+  render(<Sidebar />);
+  expect(screen.getByRole('link', { name: /Drafts/ })).toHaveTextContent('1');
 });

@@ -16,3 +16,15 @@
   .ui-dialog-foot .spacer + .ui-btn { margin-left: auto; }
   .composer textarea.body { min-height: 180px; }
 }
+/* A minimized composer: a bar at the foot of the page, over the mailbox. */
+.composer-bar { position: fixed; right: var(--space-4); bottom: 0; z-index: 30; width: 320px; display: flex; align-items: center;
+  gap: var(--space-1); padding: var(--space-1) var(--space-1) var(--space-1) 0; border: 1px solid var(--border);
+  border-bottom: 0; border-radius: var(--radius) var(--radius) 0 0; background: var(--surface); box-shadow: 0 -4px 16px rgb(0 0 0 / 0.12); }
+.composer-bar .restore { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3);
+  border: 0; background: none; color: var(--text); font: 600 var(--text-sm)/1.3 var(--font-sans); text-align: left; cursor: pointer; }
+.composer-bar .restore .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.composer-bar .restore svg { width: 14px; height: 14px; color: var(--text-muted); flex: none; }
+.composer-bar .restore:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+@media (max-width: 640px) {
+  .composer-bar { left: 0; right: 0; width: auto; border-radius: 0; }
+}
