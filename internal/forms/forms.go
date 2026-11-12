@@ -210,7 +210,12 @@ func (m *Manager) PostFormDataHandler(mboxRoot string) http.HandlerFunc {
 		var inReplyToMsg *fbb.Message
 		if inReplyTo != "" {
 			var err error
-			inReplyToMsg, err = mailbox.OpenMessage(filepath.Join(mboxRoot, inReplyTo+mailbox.Ext))
+			inReplyToPath := filepath.Join(mboxRoot, inReplyTo+mailbox.Ext)
+			if !directories.IsInPath(mboxRoot, inReplyToPath) {
+				http.Error(w, fmt.Sprintf("invalid in-reply-to (%q)", inReplyTo), http.StatusBadRequest)
+				return
+			}
+			inReplyToMsg, err = mailbox.OpenMessage(inReplyToPath)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				log.Printf("failed to load in-reply-to (%q): %v", inReplyTo, err)
@@ -300,7 +305,12 @@ func (m *Manager) GetTemplateDataHandler(mboxRoot string) http.HandlerFunc {
 		var inReplyToMsg *fbb.Message
 		if inReplyTo := r.URL.Query().Get("in-reply-to"); inReplyTo != "" {
 			var err error
-			inReplyToMsg, err = mailbox.OpenMessage(filepath.Join(mboxRoot, inReplyTo+mailbox.Ext))
+			inReplyToPath := filepath.Join(mboxRoot, inReplyTo+mailbox.Ext)
+			if !directories.IsInPath(mboxRoot, inReplyToPath) {
+				http.Error(w, fmt.Sprintf("invalid in-reply-to (%q)", inReplyTo), http.StatusBadRequest)
+				return
+			}
+			inReplyToMsg, err = mailbox.OpenMessage(inReplyToPath)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				log.Printf("failed to load in-reply-to (%q): %v", inReplyTo, err)

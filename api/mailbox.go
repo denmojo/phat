@@ -11,12 +11,14 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/la5nta/pat/app"
 	"github.com/la5nta/pat/internal/debug"
+	"github.com/la5nta/pat/internal/directories"
 	"github.com/la5nta/pat/internal/mailindex"
 	"github.com/la5nta/wl2k-go/fbb"
 	"github.com/la5nta/wl2k-go/mailbox"
@@ -175,7 +177,12 @@ func (h Handler) attachmentHandler(w http.ResponseWriter, r *http.Request) {
 		var inReplyToMsg *fbb.Message
 		if inReplyTo != "" {
 			var err error
-			inReplyToMsg, err = mailbox.OpenMessage(path.Join(h.Mailbox().MBoxPath, inReplyTo+mailbox.Ext))
+			inReplyToPath := filepath.Join(h.Mailbox().MBoxPath, inReplyTo+mailbox.Ext)
+			if !directories.IsInPath(h.Mailbox().MBoxPath, inReplyToPath) {
+				http.Error(w, fmt.Sprintf("Invalid in-reply-to message (%q)", inReplyTo), http.StatusBadRequest)
+				return
+			}
+			inReplyToMsg, err = mailbox.OpenMessage(inReplyToPath)
 			if err != nil {
 				err = fmt.Errorf("Failed to load in-reply-to message (%q): %v", inReplyTo, err)
 				log.Println(err)
