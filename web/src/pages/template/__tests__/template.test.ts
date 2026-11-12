@@ -103,6 +103,30 @@ test('no template named says so', async () => {
   expect(fetchMock).not.toHaveBeenCalled();
 });
 
+// Pat v1.0.1 sandboxed its template editor (upstream 9c1ab17) because it put
+// template text into the page as HTML, and insertion tags can carry text from
+// the message being replied to. This editor builds the page from text nodes
+// and attributes only; markup in a template has to stay text.
+test('markup in a template is shown as text, never parsed', async () => {
+  fetchMock.mockImplementation(async () => new Response([
+    'Subj: Re: <img src=x onerror="window.pwned=1">',
+    'Msg:',
+    '<script>window.pwned=2</script>',
+    'Pick: <Select Pick:"><img src=x onerror="window.pwned=3">=a,b>',
+    'Note: <Ask Note (" onfocus="window.pwned=4)>',
+  ].join('\n'), { status: 200 }));
+  const app = document.getElementById('app')!;
+  await mount(app, '?template=x.txt');
+  await tick();
+  expect(app.querySelector('img, script')).toBeNull();
+  expect(app.textContent).toContain('<img src=x onerror="window.pwned=1">');
+  expect(app.textContent).toContain('<script>window.pwned=2</script>');
+  expect(app.querySelectorAll('input, select, textarea').length).toBe(2);
+  const handlers = Array.from(app.querySelectorAll('*')).flatMap((e) => e.getAttributeNames().filter((n) => n.startsWith('on')));
+  expect(handlers).toEqual([]);
+  expect((window as unknown as { pwned?: number }).pwned).toBeUndefined();
+});
+
 test('Cancel closes the window', async () => {
   const close = vi.spyOn(window, 'close').mockImplementation(() => {});
   const app = document.getElementById('app')!;
